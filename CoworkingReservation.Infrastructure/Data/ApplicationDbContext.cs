@@ -9,11 +9,12 @@ namespace CoworkingReservation.Infrastructure.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         // DbSets
-        public DbSet<User> Users { get; set; }
+        public DbSet<Address> Addresses { get; set; }
         public DbSet<CoworkingSpace> CoworkingSpaces { get; set; }
+        public DbSet<FavoriteCoworkingSpace> FavoriteCoworkingSpaces { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Address> Addresses { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

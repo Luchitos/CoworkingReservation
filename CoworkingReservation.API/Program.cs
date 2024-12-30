@@ -26,6 +26,14 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
+// Ejecutar la Seed
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync(); // Aplicar migraciones
+    await DatabaseSeeder.SeedAsync(context); // Ejecutar la seed
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
