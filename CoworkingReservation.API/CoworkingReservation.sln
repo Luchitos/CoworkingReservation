@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoworkingReservation.API", "CoworkingReservation.API.csproj", "{1A3876FD-015F-4C79-BF79-6540B5BA1060}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoworkingReservation.Domain", "..\CoworkingReservation.Domain\CoworkingReservation.Domain.csproj", "{C466BC7E-5E4A-4648-AC0F-15014906F86C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoworkingReservation.Application", "..\CoworkingReservation.Application\CoworkingReservation.Application.csproj", "{13C7F5FC-7F3A-48BF-AB47-A8A253DD675C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoworkingReservation.Infrastructure", "..\CoworkingReservation.Infrastructure\CoworkingReservation.Infrastructure.csproj", "{50B6546E-062C-44D7-AF16-D7BB3899813C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A3876FD-015F-4C79-BF79-6540B5BA1060}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A3876FD-015F-4C79-BF79-6540B5BA1060}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A3876FD-015F-4C79-BF79-6540B5BA1060}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A3876FD-015F-4C79-BF79-6540B5BA1060}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C466BC7E-5E4A-4648-AC0F-15014906F86C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C466BC7E-5E4A-4648-AC0F-15014906F86C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C466BC7E-5E4A-4648-AC0F-15014906F86C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C466BC7E-5E4A-4648-AC0F-15014906F86C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13C7F5FC-7F3A-48BF-AB47-A8A253DD675C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13C7F5FC-7F3A-48BF-AB47-A8A253DD675C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13C7F5FC-7F3A-48BF-AB47-A8A253DD675C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13C7F5FC-7F3A-48BF-AB47-A8A253DD675C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50B6546E-062C-44D7-AF16-D7BB3899813C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50B6546E-062C-44D7-AF16-D7BB3899813C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50B6546E-062C-44D7-AF16-D7BB3899813C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50B6546E-062C-44D7-AF16-D7BB3899813C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
