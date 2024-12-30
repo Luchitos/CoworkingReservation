@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CoworkingReservation.Domain.Entities
+﻿namespace CoworkingReservation.Domain.Entities
 {
     public class CoworkingSpace
     {
