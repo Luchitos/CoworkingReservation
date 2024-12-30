@@ -398,3 +398,20 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Excluir archivos y carpetas de Visual Studio
+.vs/
+*.vsidx
+*.vsp
+*.user
+*.suo
+*.cache
+*.ide
+
+# Archivos de compilación
+bin/
+obj/
+
+# Configuración de usuario
+*.userosscache
+*.userprefs
