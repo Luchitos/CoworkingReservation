@@ -17,6 +17,34 @@ namespace CoworkingReservation.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configurar clave primaria compuesta para FavoriteCoworkingSpace
+            modelBuilder.Entity<FavoriteCoworkingSpace>()
+                .HasKey(fcs => new { fcs.UserId, fcs.CoworkingSpaceId });
+
+            modelBuilder.Entity<FavoriteCoworkingSpace>()
+                .HasOne(fcs => fcs.User)
+                .WithMany(u => u.FavoriteCoworkingSpaces)
+                .HasForeignKey(fcs => fcs.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FavoriteCoworkingSpace>()
+                .HasOne(fcs => fcs.CoworkingSpace)
+                .WithMany(cs => cs.FavoritedByUsers)
+                .HasForeignKey(fcs => fcs.CoworkingSpaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Photo)
+                .WithMany() // Configuración unidireccional
+                .HasForeignKey(u => u.PhotoId)
+                .OnDelete(DeleteBehavior.SetNull); // Permitir fotos nulas sin eliminar usuario
+
+            modelBuilder.Entity<UserPhoto>()
+                .HasOne(up => up.User)
+                .WithMany() // Cambia si necesitas navegación inversa
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Evitar eliminación en cascada
+
             // Configuración de relaciones y restricciones
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.User)

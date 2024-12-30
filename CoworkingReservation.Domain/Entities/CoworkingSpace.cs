@@ -1,4 +1,6 @@
-﻿namespace CoworkingReservation.Domain.Entities
+﻿using System.Collections.Generic;
+
+namespace CoworkingReservation.Domain.Entities
 {
     public class CoworkingSpace
     {
@@ -12,8 +14,11 @@
         // Relaciones
         public int AddressId { get; set; } // Relación con dirección
         public Address Address { get; set; }
+
         public List<Reservation> Reservations { get; set; } = new List<Reservation>();
         public List<Review> Reviews { get; set; } = new List<Review>();
+
+        // Relación con Favoritos
+        public ICollection<FavoriteCoworkingSpace> FavoritedByUsers { get; set; } = new List<FavoriteCoworkingSpace>();
     }
 }
-
