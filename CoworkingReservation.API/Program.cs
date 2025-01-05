@@ -4,6 +4,10 @@ using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
 using CoworkingReservation.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using CoworkingReservation.Infrastructure.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +25,35 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Registrar el repositorio genérico
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// Registrar el servicio de User
+// Registrar los servicios
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+
+// Agregar configuración de JWT
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
+    };
+});
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 

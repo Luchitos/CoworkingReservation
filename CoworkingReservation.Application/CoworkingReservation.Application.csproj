@@ -7,7 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CoworkingReservation.Domain\CoworkingReservation.Domain.csproj" />
+    <ProjectReference Include="..\CoworkingReservation.Infrastructure\CoworkingReservation.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

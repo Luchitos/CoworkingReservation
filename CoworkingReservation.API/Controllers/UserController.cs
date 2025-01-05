@@ -1,9 +1,13 @@
-﻿using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.Entities;
+﻿using CoworkingReservation.API.Responses;
+using CoworkingReservation.Application.DTOs.User;
+using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoworkingReservation.API.Controllers
 {
+    /// <summary>
+    /// Controlador para la gestión de usuarios.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -15,43 +19,23 @@ namespace CoworkingReservation.API.Controllers
             _userService = userService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        /// <summary>
+        /// Registra un nuevo usuario.
+        /// </summary>
+        /// <param name="userDto">Datos del usuario.</param>
+        /// <returns>Usuario creado.</returns>
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] UserRegisterDTO userDto)
         {
-            var users = await _userService.GetAllAsync();
-            return Ok(users);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var user = await _userService.GetByIdAsync(id);
-            if (user == null) return NotFound();
-
-            return Ok(user);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Add([FromBody] User user)
-        {
-            await _userService.AddAsync(user);
-            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] User user)
-        {
-            if (id != user.Id) return BadRequest("ID mismatch.");
-
-            await _userService.UpdateAsync(user);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _userService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                var user = await _userService.RegisterAsync(userDto);
+                return Ok(Responses.Response.Success(user));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Responses.Response.Failure(ex.Message));
+            }
         }
     }
 }
