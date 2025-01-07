@@ -1,5 +1,4 @@
-﻿using CoworkingReservation.API.Responses;
-using CoworkingReservation.Application.DTOs.User;
+﻿using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
