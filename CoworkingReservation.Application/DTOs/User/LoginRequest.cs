@@ -22,5 +22,3 @@ namespace CoworkingReservation.Application.DTOs.User
         public string Password { get; set; }
     }
 }
-
-}

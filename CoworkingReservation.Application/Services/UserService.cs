@@ -7,20 +7,27 @@ using System.Text;
 
 namespace CoworkingReservation.Application.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de usuarios.
+    /// </summary>
     public class UserService : IUserService
     {
-        private readonly IRepository<User> _userRepository;
-        private readonly IRepository<UserPhoto> _photoRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(IRepository<User> userRepository, IRepository<UserPhoto> photoRepository)
+        public UserService(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
-            _photoRepository = photoRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync() => await _userRepository.GetAllAsync();
+        public async Task<IEnumerable<User>> GetAllAsync()
+        {
+            return await _unitOfWork.Users.GetAllAsync();
+        }
 
-        public async Task<User> GetByIdAsync(int id) => await _userRepository.GetByIdAsync(id);
+        public async Task<User> GetByIdAsync(int id)
+        {
+            return await _unitOfWork.Users.GetByIdAsync(id);
+        }
 
         public async Task<User> RegisterAsync(UserRegisterDTO userDto)
         {
@@ -32,7 +39,7 @@ namespace CoworkingReservation.Application.Services
                 throw new ArgumentException("CUIT is required.");
 
             // Verificar si el CUIT o correo ya existen
-            var existingUser = (await _userRepository.GetAllAsync())
+            var existingUser = (await _unitOfWork.Users.GetAllAsync())
                 .FirstOrDefault(u => u.Email == userDto.Email || u.Cuit == userDto.Cuit);
 
             if (existingUser != null)
@@ -49,7 +56,7 @@ namespace CoworkingReservation.Application.Services
                 PasswordHash = HashPassword(userDto.Password),
             };
 
-            await _userRepository.AddAsync(newUser);
+            await _unitOfWork.Users.AddAsync(newUser);
 
             // Manejar la foto de perfil después de que el usuario ha sido creado
             if (userDto.ProfilePhoto != null)
@@ -65,19 +72,21 @@ namespace CoworkingReservation.Application.Services
                     UserId = newUser.Id // Asociar la foto al usuario recién creado
                 };
 
-                await _photoRepository.AddAsync(photo);
+                await _unitOfWork.Users.AddAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Actualizar el usuario con la referencia de la foto
                 newUser.PhotoId = photo.Id;
-                await _userRepository.UpdateAsync(newUser);
+                await _unitOfWork.Users.UpdateAsync(newUser);
             }
 
+            await _unitOfWork.SaveChangesAsync(); // Guardar todos los cambios de manera transaccional
             return newUser;
         }
 
         public async Task<User> AuthenticateAsync(string email, string password)
         {
-            var user = (await _userRepository.GetAllAsync())
+            var user = (await _unitOfWork.Users.GetAllAsync())
                 .FirstOrDefault(u => u.Email == email);
 
             if (user == null || !VerifyPassword(password, user.PasswordHash))
@@ -102,4 +111,3 @@ namespace CoworkingReservation.Application.Services
         }
     }
 }
-
