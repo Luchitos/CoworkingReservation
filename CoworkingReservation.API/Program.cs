@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using CoworkingReservation.Infrastructure.UnitOfWork;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
 
 // Registrar el contexto de la base de datos
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -51,8 +52,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
+        ValidIssuer = jwtSettings.Issuer, // Asegúrate de que coincida con el token
+        ValidAudience = jwtSettings.Audience, // Asegúrate de que coincida con el token
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
     };
     options.Events = new JwtBearerEvents
@@ -68,8 +69,40 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please insert JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
 
-builder.Services.AddAuthorization();
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ClientPolicy", policy =>
+        policy.RequireRole("Client"));
+
+    options.AddPolicy("HosterPolicy", policy =>
+        policy.RequireRole("Hoster"));
+});
 
 var app = builder.Build();
 

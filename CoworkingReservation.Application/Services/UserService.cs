@@ -109,5 +109,23 @@ namespace CoworkingReservation.Application.Services
             var inputHash = HashPassword(inputPassword);
             return inputHash == storedHash;
         }
+
+        public async Task ToggleActiveStatusAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            user.IsActive = !user.IsActive;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task BecomeHosterAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            user.IsHosterRequestPending = true;
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }

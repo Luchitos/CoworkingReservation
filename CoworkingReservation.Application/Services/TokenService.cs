@@ -27,9 +27,9 @@ namespace CoworkingReservation.Application.Services
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), // Contiene el ID del usuario
+                new Claim(JwtRegisteredClaimNames.Email, email),        // Contiene el email
+                new Claim(ClaimTypes.Role, role),                      // Contiene el rol
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -45,5 +45,6 @@ namespace CoworkingReservation.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }

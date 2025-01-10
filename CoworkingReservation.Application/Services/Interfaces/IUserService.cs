@@ -27,5 +27,16 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// Autentica un usuario por correo y contraseña.
         /// </summary>
         Task<User> AuthenticateAsync(string email, string password);
+
+        /// <summary>
+        /// Cambia el estado activo/inactivo del usuario.
+        /// </summary>
+        Task ToggleActiveStatusAsync(int userId);
+
+        /// <summary>
+        /// Solicita el cambio de rol a hoster.
+        /// </summary>
+        Task BecomeHosterAsync(int userId);
+
     }
 }
