@@ -1,16 +1,10 @@
-﻿using CoworkingReservation.Application.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -27,10 +21,13 @@ namespace CoworkingReservation.Application.Services
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), // Contiene el ID del usuario
-                new Claim(JwtRegisteredClaimNames.Email, email),        // Contiene el email
-                new Claim(ClaimTypes.Role, role),                      // Contiene el rol
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()), // Identificador único del usuario
+                new Claim(JwtRegisteredClaimNames.Email, email),          // Email del usuario
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),  // ID del usuario con el esquema estándar
+                new Claim(ClaimTypes.Name, email),                        // Nombre del usuario (usamos el email)
+                new Claim(ClaimTypes.Role, role),                         // Rol del usuario
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // ID único del JWT
+                new Claim("userId", userId.ToString())                    // Reclamación personalizada con el UserID
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
@@ -45,6 +42,5 @@ namespace CoworkingReservation.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

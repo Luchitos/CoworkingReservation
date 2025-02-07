@@ -1,4 +1,4 @@
-using CoworkingReservation.Application.Services.Interfaces;
+ï»¿using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Application.Services;
 using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using CoworkingReservation.Infrastructure.UnitOfWork;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar el repositorio genérico
+// Registrar el repositorio genÃ©rico
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -35,7 +36,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 
-// Agregar configuración de JWT
+// Agregar configuraciÃ³n de JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
@@ -52,21 +53,13 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer, // Asegúrate de que coincida con el token
-        ValidAudience = jwtSettings.Audience, // Asegúrate de que coincida con el token
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnChallenge = context =>
-        {
-            // Personalizar la respuesta cuando el usuario no está autorizado
-            context.HandleResponse();
-            context.Response.StatusCode = 401;
-            context.Response.ContentType = "application/json";
-            var result = JsonSerializer.Serialize(new { Message = "You are not authorized to access this resource." });
-            return context.Response.WriteAsync(result);
-        }
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+
+        // ðŸ”¥ IMPORTANTE: Especificar los nombres correctos de las reclamaciones (claims)
+        NameClaimType = ClaimTypes.Name,
+        RoleClaimType = ClaimTypes.Role
     };
 });
 builder.Services.AddSwaggerGen(options =>

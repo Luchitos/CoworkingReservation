@@ -3,6 +3,7 @@ using CoworkingReservation.Application.Services;
 using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace CoworkingReservation.API.Controllers
@@ -26,10 +27,20 @@ namespace CoworkingReservation.API.Controllers
         [Authorize]
         public IActionResult DebugToken()
         {
-            var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+            var claims = new
+            {
+                userId = User.FindFirstValue(ClaimTypes.NameIdentifier), // Extrae el UserID
+                email = User.FindFirstValue(ClaimTypes.Email), // Extrae el email
+                role = User.FindFirstValue(ClaimTypes.Role), // Extrae el rol
+                sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub), // Extrae el Subject (User ID)
+                jwtId = User.FindFirstValue(JwtRegisteredClaimNames.Jti), // Extrae el JWT ID
+                issuer = User.FindFirst(ClaimTypes.Name)?.Issuer, // Extrae el emisor
+                audience = User.FindFirst(ClaimTypes.Name)?.Value, // Extrae la audiencia
+                expiration = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value // Extrae la expiración
+            };
+
             return Ok(Responses.Response.Success(claims));
         }
-
         /// <summary>
         /// Registra un nuevo usuario.
         /// </summary>
