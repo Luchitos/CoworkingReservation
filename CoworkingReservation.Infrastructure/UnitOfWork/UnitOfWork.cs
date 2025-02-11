@@ -26,6 +26,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IRepository<CoworkingSpace> CoworkingSpaces { get; private set; }
         public IRepository<Reservation> Reservations { get; private set; }
         public IRepository<Review> Reviews { get; private set; }
+        public IRepository<Address> Addresses { get; private set; }
 
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.

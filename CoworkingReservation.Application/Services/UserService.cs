@@ -125,6 +125,8 @@ namespace CoworkingReservation.Application.Services
             if (user == null) throw new KeyNotFoundException("User not found.");
 
             user.IsHosterRequestPending = true;
+            // Actualizar rol del usuario
+            user.Role = "Hoster";
             await _unitOfWork.SaveChangesAsync();
         }
     }

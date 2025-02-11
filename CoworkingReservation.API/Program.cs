@@ -34,7 +34,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Registrar los servicios
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
 
 // Agregar configuración de JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));

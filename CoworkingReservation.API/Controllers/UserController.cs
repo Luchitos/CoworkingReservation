@@ -92,11 +92,11 @@ namespace CoworkingReservation.API.Controllers
             {
                 var userId = GetUserIdFromToken();
                 await _userService.BecomeHosterAsync(userId);
-                return Ok(new { Message = "Hoster request submitted successfully." });
+                return Ok(Responses.Response.Success("Role changed to Hoster successfully."));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                return BadRequest(Responses.Response.Failure($"{ex.Message}"));
             }
         }
 
