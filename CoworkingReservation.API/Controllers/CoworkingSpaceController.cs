@@ -40,7 +40,7 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success("Coworking space created successfully."));
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}")]   
         [Authorize(Roles = "Hoster")]
         public async Task<IActionResult> Update(int id, [FromBody] CreateCoworkingSpaceDTO dto)
         {

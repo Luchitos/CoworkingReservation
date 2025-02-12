@@ -26,7 +26,6 @@ namespace CoworkingReservation.Application.Services
                 Description = spaceDto.Description,
                 Capacity = spaceDto.Capacity,
                 PricePerDay = spaceDto.PricePerDay,
-                Id = hosterId,
                 Address = new Address
                 {
                     City = spaceDto.Address.City,
@@ -41,17 +40,16 @@ namespace CoworkingReservation.Application.Services
                 Photos = new List<Photo>()
             };
 
-            // Procesar y almacenar fotos
+            //spaceDto.Photos = new List<Photo>();
             if (spaceDto.Photos != null && spaceDto.Photos.Count > 0)
             {
-                // Extensiones de imagen permitidas
                 string[] allowedMimeTypes = { "image/jpeg", "image/png", "image/jpg" };
 
                 foreach (var photo in spaceDto.Photos)
                 {
                     if (!allowedMimeTypes.Contains(photo.ContentType.ToLower()))
                     {
-                        throw new ArgumentException($"Formato de archivo no permitido: {photo.ContentType}");
+                        throw new ArgumentException($"Invalid file format: {photo.ContentType}");
                     }
 
                     using var memoryStream = new MemoryStream();
@@ -66,7 +64,6 @@ namespace CoworkingReservation.Application.Services
                     });
                 }
 
-                // 📌 Marcar la primera foto como portada sin indexar directamente
                 var firstPhoto = coworkingSpace.Photos.FirstOrDefault();
                 if (firstPhoto != null)
                 {

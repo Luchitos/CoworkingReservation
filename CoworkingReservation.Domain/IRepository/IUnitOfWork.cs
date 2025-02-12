@@ -12,12 +12,14 @@ namespace CoworkingReservation.Domain.IRepository
     /// </summary>
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<User> Users { get; }
+        IUserRepository Users { get; }
         IRepository<CoworkingSpace> CoworkingSpaces { get; }
         IRepository<Reservation> Reservations { get; }
         IRepository<Review> Reviews { get; }
         IRepository<Address> Addresses { get; }
         //IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
+
+        IRepository<UserPhoto> UserPhotos { get; }
 
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.

@@ -2,6 +2,7 @@
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -13,10 +14,13 @@ namespace CoworkingReservation.Application.Services
     public class UserService : IUserService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public UserService(IUnitOfWork unitOfWork)
+
+        public UserService(IUnitOfWork unitOfWork, IPasswordHasher<User> passwordHasher)
         {
             _unitOfWork = unitOfWork;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
@@ -38,14 +42,11 @@ namespace CoworkingReservation.Application.Services
             if (string.IsNullOrEmpty(userDto.Cuit))
                 throw new ArgumentException("CUIT is required.");
 
-            // Verificar si el CUIT o correo ya existen
-            var existingUser = (await _unitOfWork.Users.GetAllAsync())
-                .FirstOrDefault(u => u.Email == userDto.Email || u.Cuit == userDto.Cuit);
-
-            if (existingUser != null)
+            // **Verificar si el usuario ya existe usando un método más eficiente**
+            if (await _unitOfWork.Users.ExistsByEmailOrCuit(userDto.Email, userDto.Cuit))
                 throw new InvalidOperationException("A user with this email or CUIT already exists.");
-
-            // Crear el nuevo usuario sin foto aún
+           
+            // Crear el usuario
             var newUser = new User
             {
                 Name = userDto.Name,
@@ -53,12 +54,16 @@ namespace CoworkingReservation.Application.Services
                 UserName = userDto.UserName,
                 Cuit = userDto.Cuit,
                 Email = userDto.Email,
-                PasswordHash = HashPassword(userDto.Password),
+                Role = "Client",
             };
 
+            // **Corregido: Usar la instancia real en lugar de null**
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, userDto.Password);
+            
             await _unitOfWork.Users.AddAsync(newUser);
+            await _unitOfWork.SaveChangesAsync(); // Guardar usuario antes de manejar la foto
 
-            // Manejar la foto de perfil después de que el usuario ha sido creado
+            // Manejar la foto de perfil solo si está presente
             if (userDto.ProfilePhoto != null)
             {
                 using var memoryStream = new MemoryStream();
@@ -69,18 +74,18 @@ namespace CoworkingReservation.Application.Services
                     FileName = userDto.ProfilePhoto.FileName,
                     MimeType = userDto.ProfilePhoto.ContentType,
                     FilePath = Convert.ToBase64String(memoryStream.ToArray()),
-                    UserId = newUser.Id // Asociar la foto al usuario recién creado
+                    UserId = newUser.Id // Asignar después de guardar el usuario
                 };
 
-                await _unitOfWork.Users.AddAsync(newUser);
+                await _unitOfWork.UserPhotos.AddAsync(photo);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Actualizar el usuario con la referencia de la foto
+                // Asociar la foto al usuario y guardar cambios
                 newUser.PhotoId = photo.Id;
                 await _unitOfWork.Users.UpdateAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
             }
 
-            await _unitOfWork.SaveChangesAsync(); // Guardar todos los cambios de manera transaccional
             return newUser;
         }
 
@@ -89,13 +94,21 @@ namespace CoworkingReservation.Application.Services
             var user = (await _unitOfWork.Users.GetAllAsync())
                 .FirstOrDefault(u => u.Email == email);
 
-            if (user == null || !VerifyPassword(password, user.PasswordHash))
+            if (user == null)
             {
-                return null; // Retornar null si no coincide
+                return null; // El usuario no existe
+            }
+
+            // Verificar la contraseña correctamente usando _passwordHasher
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+            if (result != PasswordVerificationResult.Success)
+            {
+                return null; // La contraseña es incorrecta
             }
 
             return user;
         }
+
 
         private string HashPassword(string password)
         {

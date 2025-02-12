@@ -13,18 +13,21 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(ApplicationDbContext context)
+        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository)
         {
             _context = context;
-            Users = new Repository<User>(_context);
+            Users = userRepository;
             CoworkingSpaces = new Repository<CoworkingSpace>(_context);
             Reservations = new Repository<Reservation>(_context);
             Reviews = new Repository<Review>(_context);
             Addresses = new Repository<Address>(_context);
             Photos = new Repository<Photo>(_context);
-        }
+            UserPhotos = new Repository<UserPhoto>(_context); ;
 
-        public IRepository<User> Users { get; private set; }
+        }
+        public IRepository<UserPhoto> UserPhotos { get; private set; }
+
+        public IUserRepository Users { get; private set; }
         public IRepository<CoworkingSpace> CoworkingSpaces { get; private set; }
         public IRepository<Reservation> Reservations { get; private set; }
         public IRepository<Review> Reviews { get; private set; }

@@ -25,7 +25,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 
         [Required]
         public AddressDTO Address { get; set; }
-        public List<IFormFile> Photos { get; set; } = new List<IFormFile>();  // Recibe archivos
+        public List<IFormFile>? Photos { get; set; } // Recibe archivos
     }
 
     public class AddressDTO
