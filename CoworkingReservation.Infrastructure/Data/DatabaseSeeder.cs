@@ -102,7 +102,6 @@ namespace CoworkingReservation.Infrastructure.Data
                         Description = "A modern coworking space in Buenos Aires.",
                         Capacity = 20,
                         PricePerDay = 1500,
-                        AddressId = addresses[0].Id,
                         IsActive = true
                     },
                     new CoworkingSpace
@@ -111,7 +110,6 @@ namespace CoworkingReservation.Infrastructure.Data
                         Description = "A cozy coworking space in Córdoba.",
                         Capacity = 15,
                         PricePerDay = 1200,
-                        AddressId = addresses[1].Id,
                         IsActive = true
                     }
                 };

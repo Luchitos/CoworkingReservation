@@ -10,11 +10,9 @@ namespace CoworkingReservation.Application.Services.Interfaces
 {
     public interface ICoworkingSpaceService
     {
-        Task<IEnumerable<CoworkingSpace>> GetAllActiveSpacesAsync();
-
-        //Task<IEnumerable<CoworkingSpace>> GetAllAsync();
-        Task<CoworkingSpace> GetByIdAsync(int id);
-        Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO space, int hosterId);
+        Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync();
+        Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id);
+        Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int hosterId);
         Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId);
         Task DeleteAsync(int id, int hosterId);
 

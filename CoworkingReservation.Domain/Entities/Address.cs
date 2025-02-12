@@ -1,4 +1,6 @@
-﻿namespace CoworkingReservation.Domain.Entities
+﻿using System.Text.Json.Serialization;
+
+namespace CoworkingReservation.Domain.Entities
 {
     public class Address
     {

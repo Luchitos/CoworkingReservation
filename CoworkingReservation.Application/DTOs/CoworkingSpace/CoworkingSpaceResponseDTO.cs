@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoworkingReservation.Application.DTOs.CoworkingSpace
+{
+    public class CoworkingSpaceResponseDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int Capacity { get; set; }
+        public decimal PricePerDay { get; set; }
+        public bool IsActive { get; set; }
+        public AddressDTO Address { get; set; }
+        public List<PhotoResponseDTO> Photos { get; set; }
+    }
+
+    public class PhotoResponseDTO
+    {
+        public string FileName { get; set; }
+        public bool IsCoverPhoto { get; set; }
+        public string ContentType { get; set; }
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace CoworkingReservation.Domain.Entities
 {
@@ -12,13 +13,22 @@ namespace CoworkingReservation.Domain.Entities
         public bool IsActive { get; set; } = true; // Indica si está activo
 
         // Relaciones
-        public int AddressId { get; set; } // Relación con dirección
-        public Address Address { get; set; }
+        public Address Address { get; set; } = new Address();
+
+        public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
 
         public List<Reservation> Reservations { get; set; } = new List<Reservation>();
         public List<Review> Reviews { get; set; } = new List<Review>();
 
         // Relación con Favoritos
         public ICollection<FavoriteCoworkingSpace> FavoritedByUsers { get; set; } = new List<FavoriteCoworkingSpace>();
+
+        public CoworkingSpace()
+        {
+            Photos = new List<Photo>();
+            Reservations = new List<Reservation>();
+            Reviews = new List<Review>();
+            FavoritedByUsers = new List<FavoriteCoworkingSpace>();
+        }
     }
 }
