@@ -3,6 +3,7 @@ using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Application.DTOs.User;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoworkingReservation.API.Controllers
 {
@@ -63,6 +64,16 @@ namespace CoworkingReservation.API.Controllers
             {
                 return StatusCode(500, Responses.Response.Failure(ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Invalida el token en el frontend eliminándolo del almacenamiento local.
+        /// </summary>
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            return Ok(Responses.Response.Success("User logged out successfully."));
         }
     }
 }
