@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using CoworkingReservation.Domain.Enums;
 
@@ -14,6 +15,10 @@ namespace CoworkingReservation.Domain.Entities
         public bool IsActive { get; set; } = true; // Indica si está activo
 
         public CoworkingStatus Status { get; set; } = CoworkingStatus.Pending;
+        [ForeignKey("Hoster")]
+        public int HosterId { get; set; }
+        public virtual User Hoster { get; set; }
+
 
         // Relaciones
         public Address Address { get; set; } = new Address();

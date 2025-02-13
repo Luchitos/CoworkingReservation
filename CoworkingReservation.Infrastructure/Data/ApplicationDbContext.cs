@@ -76,6 +76,12 @@ namespace CoworkingReservation.Infrastructure.Data
                 .Property(cs => cs.PricePerDay)
                 .HasColumnType("decimal(18,2)");
 
+            modelBuilder.Entity<CoworkingSpace>()
+                .HasOne(cs => cs.Hoster)
+                .WithMany()
+                .HasForeignKey(cs => cs.HosterId)
+                .OnDelete(DeleteBehavior.Restrict); // Evita ON DELETE CASCADE
+
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.TotalPrice)
                 .HasColumnType("decimal(18,2)");

@@ -30,6 +30,7 @@ namespace CoworkingReservation.Application.Services
                 Description = spaceDto.Description,
                 Capacity = spaceDto.Capacity,
                 PricePerDay = spaceDto.PricePerDay,
+                HosterId = hosterId,
                 Address = new Address
                 {
                     City = spaceDto.Address.City,
@@ -240,5 +241,23 @@ namespace CoworkingReservation.Application.Services
                 }).ToList() ?? new List<PhotoResponseDTO>()
             };
         }
+
+        public async Task ToggleActiveStatusAsync(int coworkingSpaceId, int userId, string userRole)
+        {
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
+            if (coworkingSpace == null)
+                throw new KeyNotFoundException("Coworking space not found.");
+
+            // Solo el hoster del espacio o un admin pueden cambiar el estado
+            if (coworkingSpace.HosterId != userId && userRole != "Admin")
+                throw new UnauthorizedAccessException("You do not have permission to perform this action.");
+
+            // Cambiar estado
+            coworkingSpace.IsActive = !coworkingSpace.IsActive;
+
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
     }
 }

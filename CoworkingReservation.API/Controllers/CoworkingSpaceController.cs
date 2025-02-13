@@ -62,6 +62,33 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success("Coworking space updated successfully."));
         }
 
+        [HttpPatch("{id}/toggle-status")]
+        [Authorize(Roles = "Hoster,Admin")]
+        public async Task<IActionResult> ToggleActiveStatus(int id)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                await _coworkingSpaceService.ToggleActiveStatusAsync(id, userId, userRole);
+                return Ok(Responses.Response.Success("Coworking space status updated successfully."));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(Responses.Response.Failure(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, Responses.Response.Failure(ex.Message));
+            }
+        }
+
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Hoster")]
         public async Task<IActionResult> Delete(int id)

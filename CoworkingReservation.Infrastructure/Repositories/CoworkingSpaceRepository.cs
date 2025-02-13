@@ -76,5 +76,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Include(cs => cs.Photos)
                 .Where(cs => cs.Status == CoworkingStatus.Approved && cs.IsActive);
         }
+
+
     }
 }
