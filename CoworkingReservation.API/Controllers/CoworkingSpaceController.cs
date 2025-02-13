@@ -58,7 +58,8 @@ namespace CoworkingReservation.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CreateCoworkingSpaceDTO dto)
         {
             var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _coworkingSpaceService.UpdateAsync(id, dto, hosterId);
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            await _coworkingSpaceService.UpdateAsync(id, dto, hosterId, userRole);
             return Ok(Responses.Response.Success("Coworking space updated successfully."));
         }
 

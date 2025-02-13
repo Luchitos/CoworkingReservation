@@ -53,14 +53,34 @@ namespace CoworkingReservation.Application.Services
             return coworkingSpace;
         }
 
-        public async Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId)
+        public async Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id, "Photos");
             if (coworkingSpace == null)
-                throw new KeyNotFoundException("Coworking space not found");
+            {
+                await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+                {
+                    Action = "UpdateCoworkingSpace",
+                    UserId = hosterId,
+                    UserRole = userRole,
+                    Success = false,
+                    Description = "Coworking space not found."
+                });
+                throw new KeyNotFoundException("Coworking space not found.");
+            }
 
-            if (coworkingSpace.Id != hosterId)
-                throw new UnauthorizedAccessException("You can only update your own coworking spaces.");
+            if (coworkingSpace.HosterId != hosterId && userRole != "Admin")
+            {
+                await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+                {
+                    Action = "UpdateCoworkingSpace",
+                    UserId = hosterId,
+                    UserRole = userRole,
+                    Success = false,
+                    Description = "User does not have permission."
+                });
+                throw new UnauthorizedAccessException("You do not have permission to perform this action.");
+            }
 
             // Actualizar propiedades
             coworkingSpace.Name = dto.Name;
@@ -77,16 +97,19 @@ namespace CoworkingReservation.Application.Services
             coworkingSpace.Address.Street = dto.Address.Street;
             coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
 
-            // Eliminar fotos anteriores
-            if (dto.Photos != null && dto.Photos.Count > 0)
-            {
-                coworkingSpace.Photos.Clear();
-                await AddPhotosToCoworkingSpace(dto.Photos, coworkingSpace.Id);
-            }
-
             await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
             await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+            {
+                Action = "UpdateCoworkingSpace",
+                UserId = hosterId,
+                UserRole = userRole,
+                Success = true,
+                Description = $"Coworking space {coworkingSpace.Name} updated successfully."
+            });
         }
+
 
         private async Task AddPhotosToCoworkingSpace(List<IFormFile> photos, int coworkingSpaceId)
         {
@@ -246,18 +269,47 @@ namespace CoworkingReservation.Application.Services
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
             if (coworkingSpace == null)
+            {
+                await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+                {
+                    Action = "ToggleActiveStatus",
+                    UserId = userId,
+                    UserRole = userRole,
+                    Success = false,
+                    Description = "Coworking space not found."
+                });
                 throw new KeyNotFoundException("Coworking space not found.");
+            }
 
             // Solo el hoster del espacio o un admin pueden cambiar el estado
             if (coworkingSpace.HosterId != userId && userRole != "Admin")
+            {
+                await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+                {
+                    Action = "ToggleActiveStatus",
+                    UserId = userId,
+                    UserRole = userRole,
+                    Success = false,
+                    Description = "User does not have permission."
+                });
                 throw new UnauthorizedAccessException("You do not have permission to perform this action.");
+            }
 
             // Cambiar estado
             coworkingSpace.IsActive = !coworkingSpace.IsActive;
-
             await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
             await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.AuditLogs.LogAsync(new AuditLog
+            {
+                Action = "ToggleActiveStatus",
+                UserId = userId,
+                UserRole = userRole,
+                Success = true,
+                Description = $"Coworking space {coworkingSpace.Name} status changed to {(coworkingSpace.IsActive ? "Active" : "Inactive")}."
+            });
         }
+
 
     }
 }

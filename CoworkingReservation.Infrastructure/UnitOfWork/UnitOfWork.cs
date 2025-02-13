@@ -1,4 +1,5 @@
-﻿using CoworkingReservation.Domain.Entities;
+﻿using System.Security.AccessControl;
+using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
 using CoworkingReservation.Infrastructure.Repositories;
@@ -13,7 +14,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository)
+        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository)
         {
             _context = context;
             Users = userRepository;
@@ -22,7 +23,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             Reviews = new Repository<Review>(_context);
             Addresses = new Repository<Address>(_context);
             CoworkingSpacePhotos = new Repository<CoworkingSpacePhoto>(_context);
-            UserPhotos = new Repository<UserPhoto>(_context); ;
+            UserPhotos = new Repository<UserPhoto>(_context);
+            AuditLogs = auditLogRepository;
 
         }
         public IRepository<UserPhoto> UserPhotos { get; private set; }
@@ -33,7 +35,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IRepository<Review> Reviews { get; private set; }
         public IRepository<Address> Addresses { get; private set; }
         public IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; private set; }
-
+        public IAuditLogRepository AuditLogs { get; private set; }
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.
         /// </summary>
