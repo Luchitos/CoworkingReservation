@@ -11,6 +11,7 @@ namespace CoworkingReservation.Domain.IRepository
         Task<IEnumerable<T>> GetAllAsync(string includeProperties = "");
         Task<T> GetByIdAsync(int id, string includeProperties = "");
         Task AddAsync(T entity);
+        Task AddRangeAsync(IEnumerable<T> entities);
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
     }

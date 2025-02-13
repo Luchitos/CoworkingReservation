@@ -21,7 +21,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             Reservations = new Repository<Reservation>(_context);
             Reviews = new Repository<Review>(_context);
             Addresses = new Repository<Address>(_context);
-            Photos = new Repository<Photo>(_context);
+            CoworkingSpacePhotos = new Repository<CoworkingSpacePhoto>(_context);
             UserPhotos = new Repository<UserPhoto>(_context); ;
 
         }
@@ -32,7 +32,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IRepository<Reservation> Reservations { get; private set; }
         public IRepository<Review> Reviews { get; private set; }
         public IRepository<Address> Addresses { get; private set; }
-        public IRepository<Photo> Photos { get; private set; }
+        public IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; private set; }
 
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.

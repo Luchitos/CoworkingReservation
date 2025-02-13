@@ -23,5 +23,6 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public string FileName { get; set; }
         public bool IsCoverPhoto { get; set; }
         public string ContentType { get; set; }
+        public string FilePath { get; set; }
     }
 }

@@ -2,6 +2,8 @@
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -36,45 +38,83 @@ namespace CoworkingReservation.Application.Services
                     Province = spaceDto.Address.Province,
                     Street = spaceDto.Address.Street,
                     ZipCode = spaceDto.Address.ZipCode
-                },
-                Photos = new List<Photo>()
+                }
             };
 
-            //spaceDto.Photos = new List<Photo>();
-            if (spaceDto.Photos != null && spaceDto.Photos.Count > 0)
-            {
-                string[] allowedMimeTypes = { "image/jpeg", "image/png", "image/jpg" };
-
-                foreach (var photo in spaceDto.Photos)
-                {
-                    if (!allowedMimeTypes.Contains(photo.ContentType.ToLower()))
-                    {
-                        throw new ArgumentException($"Invalid file format: {photo.ContentType}");
-                    }
-
-                    using var memoryStream = new MemoryStream();
-                    await photo.CopyToAsync(memoryStream);
-
-                    coworkingSpace.Photos.Add(new Photo
-                    {
-                        FileName = photo.FileName,
-                        FotoData = memoryStream.ToArray(),
-                        ContentType = photo.ContentType,
-                        IsCoverPhoto = false
-                    });
-                }
-
-                var firstPhoto = coworkingSpace.Photos.FirstOrDefault();
-                if (firstPhoto != null)
-                {
-                    firstPhoto.IsCoverPhoto = true;
-                }
-            }
-
             await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(); // Guardar espacio antes de manejar las fotos
+
+            // Agregar fotos si hay
+            await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
 
             return coworkingSpace;
+        }
+
+        public async Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId)
+        {
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id, "Photos");
+            if (coworkingSpace == null)
+                throw new KeyNotFoundException("Coworking space not found");
+
+            if (coworkingSpace.Id != hosterId)
+                throw new UnauthorizedAccessException("You can only update your own coworking spaces.");
+
+            // Actualizar propiedades
+            coworkingSpace.Name = dto.Name;
+            coworkingSpace.Description = dto.Description;
+            coworkingSpace.PricePerDay = dto.PricePerDay;
+            coworkingSpace.Capacity = dto.Capacity;
+
+            coworkingSpace.Address.City = dto.Address.City;
+            coworkingSpace.Address.Country = dto.Address.Country;
+            coworkingSpace.Address.Apartment = dto.Address.Apartment;
+            coworkingSpace.Address.Floor = dto.Address.Floor;
+            coworkingSpace.Address.Number = dto.Address.Number;
+            coworkingSpace.Address.Province = dto.Address.Province;
+            coworkingSpace.Address.Street = dto.Address.Street;
+            coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
+
+            // Eliminar fotos anteriores
+            if (dto.Photos != null && dto.Photos.Count > 0)
+            {
+                coworkingSpace.Photos.Clear();
+                await AddPhotosToCoworkingSpace(dto.Photos, coworkingSpace.Id);
+            }
+
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task AddPhotosToCoworkingSpace(List<IFormFile> photos, int coworkingSpaceId)
+        {
+            if (photos != null && photos.Count > 0)
+            {
+                if (photos.Count > 6)
+                    throw new ArgumentException("You can upload up to 6 photos only.");
+
+                var coworkingPhotos = new List<CoworkingSpacePhoto>();
+
+                for (int i = 0; i < photos.Count; i++)
+                {
+                    using var memoryStream = new MemoryStream();
+                    await photos[i].CopyToAsync(memoryStream);
+
+                    var coworkingPhoto = new CoworkingSpacePhoto
+                    {
+                        FileName = photos[i].FileName,
+                        FilePath = Convert.ToBase64String(memoryStream.ToArray()),
+                        MimeType = photos[i].ContentType,
+                        UploadedAt = DateTime.UtcNow,
+                        CoworkingSpaceId = coworkingSpaceId,
+                        IsCoverPhoto = (i == 0) // La primera imagen será la portada
+                    };
+
+                    coworkingPhotos.Add(coworkingPhoto);
+                }
+
+                await _unitOfWork.CoworkingSpacePhotos.AddRangeAsync(coworkingPhotos);
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
 
         public async Task DeleteAsync(int id, int hosterId)
@@ -114,7 +154,8 @@ namespace CoworkingReservation.Application.Services
                     {
                         FileName = p.FileName,
                         IsCoverPhoto = p.IsCoverPhoto,
-                        ContentType = p.ContentType
+                        FilePath = p.FilePath,
+                        ContentType = p.MimeType
                     }).ToList() ?? new List<PhotoResponseDTO>()
                 })
                 .ToList();
@@ -148,67 +189,10 @@ namespace CoworkingReservation.Application.Services
                 {
                     FileName = p.FileName,
                     IsCoverPhoto = p.IsCoverPhoto,
-                    ContentType = p.ContentType
+                    FilePath = p.FilePath,
+                    ContentType = p.MimeType
                 }).ToList() ?? new List<PhotoResponseDTO>()
             };
-        }
-
-        public async Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId)
-        {
-            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id);
-            if (coworkingSpace == null)
-                throw new KeyNotFoundException("Coworking space not found");
-
-            if (coworkingSpace.Id != hosterId)
-                throw new UnauthorizedAccessException("You can only update your own coworking spaces.");
-
-            // Actualizar propiedades básicas
-            coworkingSpace.Name = dto.Name;
-            coworkingSpace.Description = dto.Description;
-            coworkingSpace.PricePerDay = dto.PricePerDay;
-            coworkingSpace.Capacity = dto.Capacity;
-
-            // Actualizar dirección
-            coworkingSpace.Address.City = dto.Address.City;
-            coworkingSpace.Address.Country = dto.Address.Country;
-            coworkingSpace.Address.Apartment = dto.Address.Apartment;
-            coworkingSpace.Address.Floor = dto.Address.Floor;
-            coworkingSpace.Address.Number = dto.Address.Number;
-            coworkingSpace.Address.Province = dto.Address.Province;
-            coworkingSpace.Address.Street = dto.Address.Street;
-            coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
-
-            // Manejo de fotos si se proporcionan nuevas
-            if (dto.Photos != null && dto.Photos.Count > 0)
-            {
-                coworkingSpace.Photos.Clear(); // Eliminar fotos antiguas
-
-                foreach (var photo in dto.Photos)
-                {
-                    using var memoryStream = new MemoryStream();
-                    await photo.CopyToAsync(memoryStream);
-
-                    var newPhoto = new Photo
-                    {
-                        FileName = photo.FileName,
-                        FotoData = memoryStream.ToArray(),
-                        ContentType = photo.ContentType,
-                        IsCoverPhoto = false
-                    };
-
-                    coworkingSpace.Photos.Add(newPhoto);
-                }
-
-                // Marcar la primera foto como portada sin indexar directamente
-                var firstPhoto = coworkingSpace.Photos.FirstOrDefault();
-                if (firstPhoto != null)
-                {
-                    firstPhoto.IsCoverPhoto = true;
-                }
-            }
-
-            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
-            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

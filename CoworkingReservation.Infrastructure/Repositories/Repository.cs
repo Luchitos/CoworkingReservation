@@ -47,6 +47,10 @@ namespace CoworkingReservation.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+        {
+            await _dbSet.AddRangeAsync(entities);
+        }
         public async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);

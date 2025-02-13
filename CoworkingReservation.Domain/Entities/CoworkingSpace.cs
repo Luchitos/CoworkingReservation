@@ -15,7 +15,7 @@ namespace CoworkingReservation.Domain.Entities
         // Relaciones
         public Address Address { get; set; } = new Address();
 
-        public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
+        public virtual ICollection<CoworkingSpacePhoto> Photos { get; set; } = new List<CoworkingSpacePhoto>();
 
         public List<Reservation> Reservations { get; set; } = new List<Reservation>();
         public List<Review> Reviews { get; set; } = new List<Review>();
@@ -25,7 +25,7 @@ namespace CoworkingReservation.Domain.Entities
 
         public CoworkingSpace()
         {
-            Photos = new List<Photo>();
+            Photos = new List<CoworkingSpacePhoto>();
             Reservations = new List<Reservation>();
             Reviews = new List<Review>();
             FavoritedByUsers = new List<FavoriteCoworkingSpace>();

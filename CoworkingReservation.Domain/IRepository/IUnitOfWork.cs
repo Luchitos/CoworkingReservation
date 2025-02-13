@@ -17,7 +17,7 @@ namespace CoworkingReservation.Domain.IRepository
         IRepository<Reservation> Reservations { get; }
         IRepository<Review> Reviews { get; }
         IRepository<Address> Addresses { get; }
-        //IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
+        IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
 
         IRepository<UserPhoto> UserPhotos { get; }
 

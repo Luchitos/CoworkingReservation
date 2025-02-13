@@ -8,21 +8,14 @@ using System.Threading.Tasks;
 
 namespace CoworkingReservation.Domain.Entities
 {
-    public class Photo
+    public class CoworkingSpacePhoto
     {
-        [Key]
-        public int Id { get; set; } // Identificador único de la foto
-
-        [Required]
+        public int Id { get; set; } // Clave primaria
+        public string FilePath { get; set; } // Ruta del archivo de la foto
         public string FileName { get; set; } // Nombre del archivo
-
-        [Required]
-        public byte[] FotoData { get; set; } // 📌 Debe ser `byte[]`, no `string` 
-
-        public bool IsCoverPhoto { get; set; } // Indica si es la foto de portada
-
-        [Required]
-        public string ContentType { get; set; } // Tipo MIME (ej: "image/jpeg")
+        public string MimeType { get; set; } // Tipo MIME (e.g., image/jpeg)
+        public DateTime UploadedAt { get; set; } = DateTime.UtcNow; // Fecha de subida
+        public bool IsCoverPhoto { get; set; } = false;
 
         // Relación con `CoworkingSpace`
         [ForeignKey("CoworkingSpace")]
