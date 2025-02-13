@@ -12,6 +12,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
     {
         Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync();
         Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id);
+        Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location);
         Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int hosterId);
         Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId);
         Task DeleteAsync(int id, int hosterId);

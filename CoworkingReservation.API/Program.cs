@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
 using CoworkingReservation.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using CoworkingReservation.Application.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Registrar el repositorio genérico
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserRepository, UserRepository>(); 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -46,6 +48,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
+
+builder.Services.AddScoped<CoworkingApprovalJob>();
 
 
 // Agregar configuración de JWT

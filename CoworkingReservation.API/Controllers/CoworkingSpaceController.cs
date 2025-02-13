@@ -31,6 +31,19 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success(spaces));
         }
 
+        /// <summary>
+        /// Obtiene los coworkings filtrados por capacidad y/o ubicación.
+        /// </summary>
+        /// <param name="capacity">Capacidad exacta (opcional).</param>
+        /// <param name="location">Ubicación (ciudad, provincia o calle) (opcional).</param>
+        /// <returns>Lista de espacios aprobados y activos.</returns>
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
+        {
+            var spaces = await _coworkingSpaceService.GetAllFilteredAsync(capacity, location);
+            return Ok(Responses.Response.Success(spaces));
+        }
+
         [HttpPost]
         [Authorize(Roles = "Hoster")]
         public async Task<IActionResult> Create([FromForm] CreateCoworkingSpaceDTO dto)
