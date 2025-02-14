@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoworkingReservation.Domain.Entities
+{
+    public class ServiceOffered
+    {
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        [Required]
+        public string Description { get; set; }
+
+        // Relación con los espacios de coworking
+        public ICollection<CoworkingSpace> CoworkingSpaces { get; set; } = new List<CoworkingSpace>();
+    }
+}

@@ -44,6 +44,13 @@ namespace CoworkingReservation.Application.Services
                 }
             };
 
+            var selectedServices = await _unitOfWork.Services.GetAllAsync();
+            coworkingSpace.Services = selectedServices.Where(s => spaceDto.ServiceIds.Contains(s.Id)).ToList();
+
+            var selectedBenefits = await _unitOfWork.Benefits.GetAllAsync();
+            coworkingSpace.Benefits = selectedBenefits.Where(b => spaceDto.BenefitIds.Contains(b.Id)).ToList();
+
+
             await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
             await _unitOfWork.SaveChangesAsync(); // Guardar espacio antes de manejar las fotos
 

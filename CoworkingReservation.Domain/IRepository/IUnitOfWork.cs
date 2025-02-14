@@ -22,6 +22,9 @@ namespace CoworkingReservation.Domain.IRepository
 
         IRepository<UserPhoto> UserPhotos { get; }
 
+        IRepository<ServiceOffered> Services { get; }
+        IRepository<Benefit> Benefits { get; }
+
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.
         /// </summary>

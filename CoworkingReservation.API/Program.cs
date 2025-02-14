@@ -49,6 +49,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
+builder.Services.AddScoped<IBenefitService, BenefitService>();
+builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 

@@ -30,6 +30,8 @@ namespace CoworkingReservation.Domain.Entities
 
         // Relación con Favoritos
         public ICollection<FavoriteCoworkingSpace> FavoritedByUsers { get; set; } = new List<FavoriteCoworkingSpace>();
+        public virtual ICollection<ServiceOffered> Services { get; set; } = new List<ServiceOffered>();
+        public virtual ICollection<Benefit> Benefits { get; set; } = new List<Benefit>();
 
         public CoworkingSpace()
         {
@@ -37,6 +39,8 @@ namespace CoworkingReservation.Domain.Entities
             Reservations = new List<Reservation>();
             Reviews = new List<Review>();
             FavoritedByUsers = new List<FavoriteCoworkingSpace>();
+            Services = new List<ServiceOffered>();
+            Benefits = new List<Benefit>();
         }
     }
 }

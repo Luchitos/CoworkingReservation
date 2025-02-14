@@ -102,7 +102,9 @@ namespace CoworkingReservation.Infrastructure.Data
                         Description = "A modern coworking space in Buenos Aires.",
                         Capacity = 20,
                         PricePerDay = 1500,
-                        IsActive = true
+                        IsActive = true,
+                        Address = addresses[0], // 👈 Asignamos la dirección
+                        HosterId = users.First(u => u.UserName == "carlosl").Id // 👈 Asignamos un hoster
                     },
                     new CoworkingSpace
                     {
@@ -110,9 +112,51 @@ namespace CoworkingReservation.Infrastructure.Data
                         Description = "A cozy coworking space in Córdoba.",
                         Capacity = 15,
                         PricePerDay = 1200,
-                        IsActive = true
+                        IsActive = true,
+                        Address = addresses[1], // 👈 Asignamos la dirección
+                        HosterId = users.First(u => u.UserName == "carlosl").Id // 👈 Asignamos un hoster
                     }
                 };
+
+                if (!await context.ServicesOffered.AnyAsync())
+                {
+                    var services = new List<ServiceOffered>
+                {
+                    new ServiceOffered { Name = "Internet de alta velocidad", Description = "Conexión estable y rápida para todos los usuarios." },
+                    new ServiceOffered { Name = "Oficinas privadas", Description = "Espacios cerrados para mayor privacidad." },
+                    new ServiceOffered { Name = "Salas de reuniones", Description = "Salas equipadas con tecnología para conferencias." },
+                    new ServiceOffered { Name = "Escritorios compartidos", Description = "Zonas de trabajo abiertas para networking." },
+                    new ServiceOffered { Name = "Cafetería y bebidas", Description = "Café, té y otras bebidas incluidas." },
+                    new ServiceOffered { Name = "Acceso 24/7", Description = "Disponibilidad total para trabajar en cualquier horario." },
+                    new ServiceOffered { Name = "Impresoras y escáneres", Description = "Acceso a impresión y escaneo de documentos." },
+                    new ServiceOffered { Name = "Gestión de correo", Description = "Recepción y manejo de correspondencia." },
+                    new ServiceOffered { Name = "Eventos y talleres", Description = "Capacitaciones y networking en el espacio." },
+                    new ServiceOffered { Name = "Espacios de descanso", Description = "Áreas de relajación para mayor comodidad." }
+                };
+
+                    await context.ServicesOffered.AddRangeAsync(services);
+                    await context.SaveChangesAsync();
+                }
+
+                if (!await context.Benefits.AnyAsync())
+                {
+                    var benefits = new List<Benefit>
+                {
+                    new Benefit { Name = "Descuentos en servicios profesionales", Description = "Acceso a tarifas preferenciales en asesorías y consultorías." },
+                    new Benefit { Name = "Acceso a gimnasios/actividades deportivas", Description = "Convenios con gimnasios y clubes deportivos." },
+                    new Benefit { Name = "Descuentos en software y herramientas", Description = "Ofertas especiales en plataformas digitales." },
+                    new Benefit { Name = "Descuento en transporte público/privado", Description = "Tarifas reducidas en movilidad urbana." },
+                    new Benefit { Name = "Acceso a salas de eventos", Description = "Espacios exclusivos para reuniones y presentaciones." },
+                    new Benefit { Name = "Descuentos en cafeterías/restaurantes", Description = "Ofertas en establecimientos cercanos." },
+                    new Benefit { Name = "Cursos y formación con descuento", Description = "Acceso a capacitaciones a menor costo." },
+                    new Benefit { Name = "Acceso a redes de inversionistas", Description = "Conexión con potenciales inversores y financiamiento." },
+                    new Benefit { Name = "Descuento en eventos de networking", Description = "Participación en encuentros de negocios a precio especial." },
+                    new Benefit { Name = "Alquiler gratuito de equipos/salas", Description = "Uso de recursos sin costo adicional." }
+                };
+
+                    await context.Benefits.AddRangeAsync(benefits);
+                    await context.SaveChangesAsync();
+                }
 
                 await context.CoworkingSpaces.AddRangeAsync(coworkingSpaces);
                 await context.SaveChangesAsync();
