@@ -16,6 +16,9 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public bool IsActive { get; set; }
         public AddressDTO Address { get; set; }
         public List<PhotoResponseDTO> Photos { get; set; }
+        public List<ServiceOfferedDTO> Services { get; set; }
+        public List<BenefitDTO> Benefits { get; set; }
+
     }
 
     public class PhotoResponseDTO
@@ -24,5 +27,17 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public bool IsCoverPhoto { get; set; }
         public string ContentType { get; set; }
         public string FilePath { get; set; }
+    }
+
+    public class ServiceOfferedDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class BenefitDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

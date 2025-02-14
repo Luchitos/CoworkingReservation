@@ -13,6 +13,8 @@ namespace CoworkingReservation.Domain.IRepository
         Task<IEnumerable<CoworkingSpace>> GetActiveSpacesAsync();
         Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location);
         IQueryable<CoworkingSpace> GetFilteredQuery();
+        IQueryable<CoworkingSpace> GetQueryable(string includeProperties = "");
+
 
     }
 }

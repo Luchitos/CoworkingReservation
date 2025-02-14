@@ -44,15 +44,22 @@ namespace CoworkingReservation.Application.Services
                 }
             };
 
-            var selectedServices = await _unitOfWork.Services.GetAllAsync();
-            coworkingSpace.Services = selectedServices.Where(s => spaceDto.ServiceIds.Contains(s.Id)).ToList();
+            // Asociar Servicios
+            if (spaceDto.ServiceIds?.Any() == true)
+            {
+                coworkingSpace.Services = (await _unitOfWork.Services
+                    .GetAllAsync(s => spaceDto.ServiceIds.Contains(s.Id))).ToList();
+            }
 
-            var selectedBenefits = await _unitOfWork.Benefits.GetAllAsync();
-            coworkingSpace.Benefits = selectedBenefits.Where(b => spaceDto.BenefitIds.Contains(b.Id)).ToList();
-
+            // Asociar Beneficios
+            if (spaceDto.BenefitIds?.Any() == true)
+            {
+                coworkingSpace.Benefits = (await _unitOfWork.Benefits
+                    .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
+            }
 
             await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
-            await _unitOfWork.SaveChangesAsync(); // Guardar espacio antes de manejar las fotos
+            await _unitOfWork.SaveChangesAsync();
 
             // Agregar fotos si hay
             await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
@@ -60,9 +67,12 @@ namespace CoworkingReservation.Application.Services
             return coworkingSpace;
         }
 
-        public async Task UpdateAsync(int id, CreateCoworkingSpaceDTO dto, int hosterId, string userRole)
+
+        public async Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
-            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id, "Photos");
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces
+                .GetByIdAsync(id, "Address,Photos,Services,Benefits");
+
             if (coworkingSpace == null)
             {
                 await _unitOfWork.AuditLogs.LogAsync(new AuditLog
@@ -71,12 +81,15 @@ namespace CoworkingReservation.Application.Services
                     UserId = hosterId,
                     UserRole = userRole,
                     Success = false,
-                    Description = "Coworking space not found."
+                    Description = $"Coworking space with ID {id} not found."
                 });
+
                 throw new KeyNotFoundException("Coworking space not found.");
             }
 
-            if (coworkingSpace.HosterId != hosterId && userRole != "Admin")
+            // Validar permisos (Solo el hoster del espacio o un Admin pueden modificarlo)
+            bool isAdmin = userRole == "Admin";
+            if (coworkingSpace.HosterId != hosterId && !isAdmin)
             {
                 await _unitOfWork.AuditLogs.LogAsync(new AuditLog
                 {
@@ -84,17 +97,19 @@ namespace CoworkingReservation.Application.Services
                     UserId = hosterId,
                     UserRole = userRole,
                     Success = false,
-                    Description = "User does not have permission."
+                    Description = $"User {hosterId} attempted to modify coworking space {id} without permission."
                 });
+
                 throw new UnauthorizedAccessException("You do not have permission to perform this action.");
             }
 
-            // Actualizar propiedades
+            // **Actualizar propiedades principales**
             coworkingSpace.Name = dto.Name;
             coworkingSpace.Description = dto.Description;
             coworkingSpace.PricePerDay = dto.PricePerDay;
             coworkingSpace.Capacity = dto.Capacity;
 
+            // **Actualizar Dirección**
             coworkingSpace.Address.City = dto.Address.City;
             coworkingSpace.Address.Country = dto.Address.Country;
             coworkingSpace.Address.Apartment = dto.Address.Apartment;
@@ -103,6 +118,22 @@ namespace CoworkingReservation.Application.Services
             coworkingSpace.Address.Province = dto.Address.Province;
             coworkingSpace.Address.Street = dto.Address.Street;
             coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
+
+            // **Actualizar Servicios**
+            coworkingSpace.Services.Clear();
+            if (dto.ServiceIds?.Any() == true)
+            {
+                coworkingSpace.Services = (await _unitOfWork.Services
+                    .GetAllAsync(s => dto.ServiceIds.Contains(s.Id))).ToList();
+            }
+
+            // **Actualizar Beneficios**
+            coworkingSpace.Benefits.Clear();
+            if (dto.BenefitIds?.Any() == true)
+            {
+                coworkingSpace.Benefits = (await _unitOfWork.Benefits
+                    .GetAllAsync(b => dto.BenefitIds.Contains(b.Id))).ToList();
+            }
 
             await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
             await _unitOfWork.SaveChangesAsync();
@@ -113,10 +144,9 @@ namespace CoworkingReservation.Application.Services
                 UserId = hosterId,
                 UserRole = userRole,
                 Success = true,
-                Description = $"Coworking space {coworkingSpace.Name} updated successfully."
+                Description = $"Coworking space {coworkingSpace.Name} (ID: {id}) updated successfully."
             });
         }
-
 
         private async Task AddPhotosToCoworkingSpace(List<IFormFile> photos, int coworkingSpaceId)
         {
@@ -162,7 +192,7 @@ namespace CoworkingReservation.Application.Services
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync()
         {
             var spaces = await _unitOfWork.CoworkingSpaces
-                .GetAllAsync(includeProperties: "Address,Photos");
+                .GetAllAsync(includeProperties: "Address,Photos,Services,Benefits");
 
             return spaces
                 .Where(cs => cs.IsActive && cs.Status == Domain.Enums.CoworkingStatus.Approved)
@@ -189,14 +219,27 @@ namespace CoworkingReservation.Application.Services
                         IsCoverPhoto = p.IsCoverPhoto,
                         FilePath = p.FilePath,
                         ContentType = p.MimeType
-                    }).ToList() ?? new List<PhotoResponseDTO>()
+                    }).ToList() ?? new List<PhotoResponseDTO>(),
+                    Services = cs.Services?.Select(s => new ServiceOfferedDTO
+                    {
+                        Id = s.Id,
+                        Name = s.Name,
+                    }).ToList() ?? new List<ServiceOfferedDTO>(),
+                    Benefits = cs.Benefits?.Select(b => new BenefitDTO
+                    {
+                        Id = b.Id,
+                        Name = b.Name,
+                    }).ToList() ?? new List<BenefitDTO>()
                 })
                 .ToList();
         }
 
+
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location)
         {
-            var query = _unitOfWork.CoworkingSpaces.GetFilteredQuery();
+            var query = _unitOfWork.CoworkingSpaces
+                .GetQueryable(includeProperties: "Address,Photos,Services,Benefits")
+                .Where(cs => cs.Status == CoworkingStatus.Approved && cs.IsActive);
 
             if (capacity.HasValue)
             {
@@ -234,9 +277,21 @@ namespace CoworkingReservation.Application.Services
                 {
                     FileName = p.FileName,
                     ContentType = p.MimeType
-                }).ToList() ?? new List<PhotoResponseDTO>()
+                }).ToList() ?? new List<PhotoResponseDTO>(),
+                Services = cs.Services?.Select(s => new ServiceOfferedDTO
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                }).ToList() ?? new List<ServiceOfferedDTO>(),
+                Benefits = cs.Benefits?.Select(b => new BenefitDTO
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                }).ToList() ?? new List<BenefitDTO>()
             }).ToList();
         }
+
+
 
         public async Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id)
         {

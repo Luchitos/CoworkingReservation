@@ -55,7 +55,7 @@ namespace CoworkingReservation.API.Controllers
 
         [HttpPut("{id}")]   
         [Authorize(Roles = "Hoster")]
-        public async Task<IActionResult> Update(int id, [FromBody] CreateCoworkingSpaceDTO dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateCoworkingSpaceDTO dto)
         {
             var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;

@@ -17,6 +17,11 @@ namespace CoworkingReservation.Infrastructure.Repositories
             _dbSet = _context.Set<T>();
         }
 
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> filter)
+        {
+            return await _dbSet.Where(filter).ToListAsync();
+        }
+
         public async Task<IEnumerable<T>> GetAllAsync(string includeProperties = "")
         {
             IQueryable<T> query = _dbSet;

@@ -22,6 +22,20 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return await _dbSet.Where(cs => cs.IsActive).ToListAsync();
         }
 
+        public IQueryable<CoworkingSpace> GetQueryable(string includeProperties = "")
+        {
+            IQueryable<CoworkingSpace> query = _dbSet;
+
+            if (!string.IsNullOrWhiteSpace(includeProperties))
+            {
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            return query;
+        }
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location)
         {
             var query = _dbSet
