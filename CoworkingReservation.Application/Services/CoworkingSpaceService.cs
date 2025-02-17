@@ -67,7 +67,6 @@ namespace CoworkingReservation.Application.Services
             return coworkingSpace;
         }
 
-
         public async Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces
@@ -234,7 +233,6 @@ namespace CoworkingReservation.Application.Services
                 .ToList();
         }
 
-
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location)
         {
             var query = _unitOfWork.CoworkingSpaces
@@ -290,8 +288,6 @@ namespace CoworkingReservation.Application.Services
                 }).ToList() ?? new List<BenefitDTO>()
             }).ToList();
         }
-
-
 
         public async Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id)
         {
