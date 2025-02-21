@@ -14,7 +14,9 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository)
+        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository,
+                  ICoworkingAreaRepository coworkingAreaRepository,
+                  ICoworkingAvailabilityRepository coworkingAvailabilityRepository)
         {
             _context = context;
             Users = userRepository;
@@ -27,6 +29,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             AuditLogs = auditLogRepository;
             Services = new ServiceOfferedRepository(context);
             Benefits = new BenefitRepository(context);
+            CoworkingAreas = coworkingAreaRepository;
+            CoworkingAvailabilities = coworkingAvailabilityRepository;
 
         }
         public IRepository<UserPhoto> UserPhotos { get; private set; }
@@ -40,6 +44,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IAuditLogRepository AuditLogs { get; private set; }
         public IRepository<ServiceOffered> Services { get; private set; }
         public IRepository<Benefit> Benefits { get; private set; }
+        public ICoworkingAreaRepository CoworkingAreas { get; private set; }
+        public ICoworkingAvailabilityRepository CoworkingAvailabilities { get; private set; }
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.
         /// </summary>

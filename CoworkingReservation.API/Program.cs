@@ -41,6 +41,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<ICoworkingAvailabilityRepository, CoworkingAvailabilityRepository>();
+builder.Services.AddScoped<ICoworkingAreaRepository, CoworkingAreaRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
