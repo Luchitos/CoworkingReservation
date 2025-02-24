@@ -42,6 +42,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+
 
 
 // Registrar los servicios
@@ -53,6 +55,7 @@ builder.Services.AddScoped<IBenefitService, BenefitService>();
 builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
+builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
 
 
 // Agregar configuración de JWT

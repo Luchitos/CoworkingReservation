@@ -1,18 +1,19 @@
-﻿using CoworkingReservation.Domain.Entities;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
-using Microsoft.Extensions.Logging;
 
 namespace CoworkingReservation.Application.Jobs
 {
     public class CoworkingApprovalJob
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<CoworkingApprovalJob> _logger;
 
-        public CoworkingApprovalJob(IUnitOfWork unitOfWork, ILogger<CoworkingApprovalJob> logger)
+        public CoworkingApprovalJob(IServiceScopeFactory serviceScopeFactory, ILogger<CoworkingApprovalJob> logger)
         {
-            _unitOfWork = unitOfWork;
+            _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
 
@@ -20,7 +21,10 @@ namespace CoworkingReservation.Application.Jobs
         {
             _logger.LogInformation("🔄 Job de aprobación de coworkings iniciado...");
 
-            var pendingSpaces = await _unitOfWork.CoworkingSpaces.GetAllAsync("Address,Photos");
+            using var scope = _serviceScopeFactory.CreateScope();  // 🔥 Crear un nuevo scope
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var pendingSpaces = await unitOfWork.CoworkingSpaces.GetAllAsync("Address,Photos");
 
             foreach (var space in pendingSpaces.Where(s => s.Status == CoworkingStatus.Pending))
             {
@@ -35,10 +39,10 @@ namespace CoworkingReservation.Application.Jobs
                     _logger.LogWarning($"❌ Coworking '{space.Name}' rechazado por no cumplir requisitos.");
                 }
 
-                await _unitOfWork.CoworkingSpaces.UpdateAsync(space);
+                await unitOfWork.CoworkingSpaces.UpdateAsync(space);
             }
 
-            await _unitOfWork.SaveChangesAsync();
+            await unitOfWork.SaveChangesAsync();
             _logger.LogInformation("✅ Job de aprobación de coworkings finalizado.");
         }
 

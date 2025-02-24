@@ -25,7 +25,7 @@ namespace CoworkingReservation.Infrastructure.Data
                         UserName = "admin",
                         Cuit = "12345678901",
                         Email = "admin@coworking.com",
-                        PasswordHash = "hashedpassword",
+                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
                         Role = "Admin",
                         IsActive = true
                     },
@@ -36,7 +36,7 @@ namespace CoworkingReservation.Infrastructure.Data
                         UserName = "juanp",
                         Cuit = "20345678901",
                         Email = "juanp@gmail.com",
-                        PasswordHash = "hashedpassword",
+                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
                         Role = "Client",
                         IsActive = true
                     },
@@ -47,7 +47,7 @@ namespace CoworkingReservation.Infrastructure.Data
                         UserName = "mariag",
                         Cuit = "27345678901",
                         Email = "mariag@gmail.com",
-                        PasswordHash = "hashedpassword",
+                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
                         Role = "Client",
                         IsActive = true
                     },
@@ -58,7 +58,7 @@ namespace CoworkingReservation.Infrastructure.Data
                         UserName = "carlosl",
                         Cuit = "20345678902",
                         Email = "carlosl@gmail.com",
-                        PasswordHash = "hashedpassword",
+                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
                         Role = "Hoster",
                         IsActive = true
                     }
@@ -103,8 +103,8 @@ namespace CoworkingReservation.Infrastructure.Data
                         Capacity = 20,
                         PricePerDay = 1500,
                         IsActive = true,
-                        Address = addresses[0], // 👈 Asignamos la dirección
-                        HosterId = users.First(u => u.UserName == "carlosl").Id // 👈 Asignamos un hoster
+                        Address = addresses[0], 
+                        HosterId = users.First(u => u.UserName == "carlosl").Id 
                     },
                     new CoworkingSpace
                     {
@@ -113,8 +113,8 @@ namespace CoworkingReservation.Infrastructure.Data
                         Capacity = 15,
                         PricePerDay = 1200,
                         IsActive = true,
-                        Address = addresses[1], // 👈 Asignamos la dirección
-                        HosterId = users.First(u => u.UserName == "carlosl").Id // 👈 Asignamos un hoster
+                        Address = addresses[1], 
+                        HosterId = users.First(u => u.UserName == "carlosl").Id 
                     }
                 };
 

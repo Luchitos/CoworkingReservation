@@ -17,17 +17,17 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository)
+        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository, IAddressRepository addressRepository)
         {
             _context = context;
             Users = userRepository;
-            CoworkingSpaces = coworkingSpaceRepository;
             Reservations = new Repository<Reservation>(_context);
             Reviews = new Repository<Review>(_context);
-            Addresses = new Repository<Address>(_context);
             CoworkingSpacePhotos = new Repository<CoworkingSpacePhoto>(_context);
             UserPhotos = new Repository<UserPhoto>(_context);
+            Addresses = addressRepository; 
             AuditLogs = auditLogRepository;
+            CoworkingSpaces = coworkingSpaceRepository;
             Services = new ServiceOfferedRepository(context);
             Benefits = new BenefitRepository(context);
 
@@ -38,7 +38,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public ICoworkingSpaceRepository CoworkingSpaces { get; private set; }
         public IRepository<Reservation> Reservations { get; private set; }
         public IRepository<Review> Reviews { get; private set; }
-        public IRepository<Address> Addresses { get; private set; }
+        public IAddressRepository Addresses { get; private set; }
         public IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; private set; }
         public IAuditLogRepository AuditLogs { get; private set; }
         public IRepository<ServiceOffered> Services { get; private set; }

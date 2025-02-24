@@ -1,4 +1,5 @@
 ﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
@@ -12,10 +13,12 @@ namespace CoworkingReservation.Application.Services
     public class CoworkingSpaceService : ICoworkingSpaceService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly CoworkingApprovalJob _approvalJob;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob)
         {
             _unitOfWork = unitOfWork;
+            _approvalJob = approvalJob;
         }
 
         public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
@@ -92,6 +95,7 @@ namespace CoworkingReservation.Application.Services
 
                 await transaction.CommitAsync();
 
+                _ = Task.Run(async () => await _approvalJob.Run());
                 return coworkingSpace;
             }
             catch (Exception)
