@@ -1,9 +1,10 @@
-﻿using System.Security.AccessControl;
+using System.Data;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
 using CoworkingReservation.Infrastructure.Repositories;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CoworkingReservation.Infrastructure.UnitOfWork
 {
@@ -14,16 +15,21 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
     {
         private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository,
-                  ICoworkingAreaRepository coworkingAreaRepository,
-                  ICoworkingAvailabilityRepository coworkingAvailabilityRepository)
+        public UnitOfWork(
+            ApplicationDbContext context, 
+            IUserRepository userRepository, 
+            ICoworkingSpaceRepository coworkingSpaceRepository, 
+            IAuditLogRepository auditLogRepository, 
+            IAddressRepository addressRepository, 
+            ICoworkingAreaRepository coworkingAreaRepository, 
+            ICoworkingAvailabilityRepository coworkingAvailabilityRepository)
         {
             _context = context;
             Users = userRepository;
             CoworkingSpaces = coworkingSpaceRepository;
             Reservations = new Repository<Reservation>(_context);
             Reviews = new Repository<Review>(_context);
-            Addresses = new Repository<Address>(_context);
+            Addresses = addressRepository;
             CoworkingSpacePhotos = new Repository<CoworkingSpacePhoto>(_context);
             UserPhotos = new Repository<UserPhoto>(_context);
             AuditLogs = auditLogRepository;
@@ -31,21 +37,29 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             Benefits = new BenefitRepository(context);
             CoworkingAreas = coworkingAreaRepository;
             CoworkingAvailabilities = coworkingAvailabilityRepository;
-
         }
-        public IRepository<UserPhoto> UserPhotos { get; private set; }
 
         public IUserRepository Users { get; private set; }
         public ICoworkingSpaceRepository CoworkingSpaces { get; private set; }
         public IRepository<Reservation> Reservations { get; private set; }
         public IRepository<Review> Reviews { get; private set; }
-        public IRepository<Address> Addresses { get; private set; }
+        public IAddressRepository Addresses { get; private set; }
         public IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; private set; }
         public IAuditLogRepository AuditLogs { get; private set; }
         public IRepository<ServiceOffered> Services { get; private set; }
         public IRepository<Benefit> Benefits { get; private set; }
         public ICoworkingAreaRepository CoworkingAreas { get; private set; }
         public ICoworkingAvailabilityRepository CoworkingAvailabilities { get; private set; }
+        public IRepository<UserPhoto> UserPhotos { get; private set; }
+
+        /// <summary>
+        /// Inicia una transacción en la base de datos.
+        /// </summary>
+        public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)
+        {
+            return await _context.Database.BeginTransactionAsync(isolationLevel);
+        }
+
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.
         /// </summary>

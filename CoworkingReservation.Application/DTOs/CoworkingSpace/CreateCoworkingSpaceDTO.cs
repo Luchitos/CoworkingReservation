@@ -30,6 +30,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public List<int> ServiceIds { get; set; } = new List<int>();
         public List<int> BenefitIds { get; set; } = new List<int>();
         public List<CoworkingAreaDTO> Areas { get; set; } = new List<CoworkingAreaDTO>();
+        public CoworkingStatus Status { get; set; }
     }
 
     public class AddressDTO

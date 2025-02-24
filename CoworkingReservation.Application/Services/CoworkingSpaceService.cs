@@ -1,4 +1,5 @@
 ﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
@@ -12,123 +13,112 @@ namespace CoworkingReservation.Application.Services
     public class CoworkingSpaceService : ICoworkingSpaceService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly CoworkingApprovalJob _approvalJob;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob)
         {
             _unitOfWork = unitOfWork;
+            _approvalJob = approvalJob;
         }
 
-        //public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int hosterId)
-        //{
-        //    var hoster = await _unitOfWork.Users.GetByIdAsync(hosterId);
-        //    if (hoster == null || hoster.Role != "Hoster")
-        //        throw new UnauthorizedAccessException("Only hosters can create coworking spaces");
+public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
+{
+    await using var transaction = await _unitOfWork.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted);
 
-        //    var coworkingSpace = new CoworkingSpace
-        //    {
-        //        Name = spaceDto.Name,
-        //        Description = spaceDto.Description,
-        //        Capacity = spaceDto.Capacity,
-        //        PricePerDay = spaceDto.PricePerDay,
-        //        HosterId = hosterId,
-        //        Address = new Address
-        //        {
-        //            City = spaceDto.Address.City,
-        //            Country = spaceDto.Address.Country,
-        //            Apartment = spaceDto.Address.Apartment,
-        //            Floor = spaceDto.Address.Floor,
-        //            Number = spaceDto.Address.Number,
-        //            Province = spaceDto.Address.Province,
-        //            Street = spaceDto.Address.Street,
-        //            ZipCode = spaceDto.Address.ZipCode
-        //        }
-        //    };
+    try
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedAccessException("User not found.");
 
-        //    // Asociar Servicios
-        //    if (spaceDto.ServiceIds?.Any() == true)
-        //    {
-        //        coworkingSpace.Services = (await _unitOfWork.Services
-        //            .GetAllAsync(s => spaceDto.ServiceIds.Contains(s.Id))).ToList();
-        //    }
+        bool hasPendingCoworking = await _unitOfWork.CoworkingSpaces.ExistsAsync(
+            c => c.HosterId == userId && c.Status == CoworkingStatus.Pending
+        );
 
-        //    // Asociar Beneficios
-        //    if (spaceDto.BenefitIds?.Any() == true)
-        //    {
-        //        coworkingSpace.Benefits = (await _unitOfWork.Benefits
-        //            .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
-        //    }
+        if (hasPendingCoworking)
+            throw new InvalidOperationException("You already have a pending coworking space approval.");
 
-        //    await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
-        //    await _unitOfWork.SaveChangesAsync();
-
-        //    // Agregar fotos si hay
-        //    await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
-
-        //    return coworkingSpace;
-        //}
-
-        public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int hosterId)
+        bool userWasClient = user.Role != "Hoster";
+        if (userWasClient)
         {
-            var coworkingSpace = new CoworkingSpace
-            {
-                Name = spaceDto.Name,
-                Description = spaceDto.Description,
-                Capacity = spaceDto.Capacity,
-                PricePerDay = spaceDto.PricePerDay,
-                HosterId = hosterId,
-                Address = new Address
-                {
-                    City = spaceDto.Address?.City ?? throw new ArgumentException("City is required"),
-                    Country = spaceDto.Address?.Country ?? "Default Country",
-                    Apartment = spaceDto.Address?.Apartment,
-                    Floor = spaceDto.Address?.Floor,
-                    Number = spaceDto.Address?.Number,
-                    Province = spaceDto.Address?.Province ?? "Default Province",
-                    Street = spaceDto.Address?.Street ?? "Default Street",
-                    ZipCode = spaceDto.Address?.ZipCode ?? "0000"
-                }
-            };
-            //    // Asociar Servicios
-            if (spaceDto.ServiceIds?.Any() == true)
-            {
-                coworkingSpace.Services = (await _unitOfWork.Services
-                    .GetAllAsync(s => spaceDto.ServiceIds.Contains(s.Id))).ToList();
-            }
-
-            //    // Asociar Beneficios
-            if (spaceDto.BenefitIds?.Any() == true)
-            {
-                coworkingSpace.Benefits = (await _unitOfWork.Benefits
-                    .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
-            }
-
-            await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
-            await _unitOfWork.SaveChangesAsync();
-
-            // Validar y agregar áreas de coworking
-            foreach (var areaDto in spaceDto.Areas)
-            {
-                if (!Enum.IsDefined(typeof(CoworkingAreaType), areaDto.Type))
-                {
-                    throw new ArgumentException($"Invalid CoworkingAreaType: {areaDto.Type}");
-                }
-
-                var area = new CoworkingArea
-                {
-                    Type = areaDto.Type,
-                    Description = areaDto.Description,
-                    Capacity = areaDto.Capacity,
-                    PricePerDay = areaDto.PricePerDay,
-                    CoworkingSpaceId = coworkingSpace.Id
-                };
-
-                await _unitOfWork.CoworkingAreas.AddAsync(area);
-            }
-            await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
-
-            await _unitOfWork.SaveChangesAsync();
-            return coworkingSpace;
+            user.Role = "Hoster";
+            await _unitOfWork.Users.UpdateAsync(user);
         }
+
+        var coworkingSpace = new CoworkingSpace
+        {
+            Name = spaceDto.Name,
+            Description = spaceDto.Description,
+            Capacity = spaceDto.Capacity,
+            PricePerDay = spaceDto.PricePerDay,
+            HosterId = userId,
+            Status = CoworkingStatus.Pending,
+            Address = new Address
+            {
+                City = spaceDto.Address.City,
+                Country = spaceDto.Address.Country,
+                Apartment = spaceDto.Address.Apartment,
+                Floor = spaceDto.Address.Floor,
+                Number = spaceDto.Address.Number,
+                Province = spaceDto.Address.Province,
+                Street = spaceDto.Address.Street,
+                ZipCode = spaceDto.Address.ZipCode
+            }
+        };
+
+        bool addressExists = await _unitOfWork.Addresses.ExistsAsync(
+            a => a.Street == spaceDto.Address.Street &&
+                 a.Number == spaceDto.Address.Number &&
+                 a.City == spaceDto.Address.City &&
+                 a.Province == spaceDto.Address.Province
+        );
+
+        if (addressExists)
+            throw new InvalidOperationException("A coworking space with this address already exists.");
+
+        if (spaceDto.ServiceIds?.Any() == true)
+        {
+            coworkingSpace.Services = (await _unitOfWork.Services
+                .GetAllAsync(s => spaceDto.ServiceIds.Contains(s.Id))).ToList();
+        }
+
+        if (spaceDto.BenefitIds?.Any() == true)
+        {
+            coworkingSpace.Benefits = (await _unitOfWork.Benefits
+                .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
+        }
+
+        // 🔹 Asociar Áreas de Coworking (de `feature/coworking-areas-reservations`)
+        if (spaceDto.Areas?.Any() == true)
+        {
+            coworkingSpace.Areas = spaceDto.Areas.Select(areaDto => new CoworkingArea
+            {
+                Type = areaDto.Type,
+                Description = areaDto.Description,
+                Capacity = areaDto.Capacity,
+                PricePerDay = areaDto.PricePerDay
+            }).ToList();
+        }
+
+        await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
+        await _unitOfWork.SaveChangesAsync();
+
+        await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
+
+        await transaction.CommitAsync();
+
+        // 🔥 Ejecutar el job de aprobación en segundo plano
+        _ = Task.Run(async () => await _approvalJob.Run());
+
+        return coworkingSpace;
+    }
+    catch (Exception)
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
+
         public async Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces

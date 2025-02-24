@@ -45,7 +45,7 @@ namespace CoworkingReservation.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Hoster")]
+        [Authorize]
         public async Task<IActionResult> Create([FromForm] CreateCoworkingSpaceDTO dto)
         {
             var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);

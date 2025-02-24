@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -89,6 +90,11 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Include(cs => cs.Address)
                 .Include(cs => cs.Photos)
                 .Where(cs => cs.Status == CoworkingStatus.Approved && cs.IsActive);
+        }
+
+        public async Task<bool> ExistsAsync(Expression<Func<CoworkingSpace, bool>> predicate)
+        {
+            return await _context.CoworkingSpaces.AnyAsync(predicate);
         }
 
 
