@@ -25,13 +25,12 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public decimal PricePerDay { get; set; }
 
         [Required]
-        public AddressDTO Address { get; set; }
+        public AddressDTO Address { get; set; } = new AddressDTO();
         public List<IFormFile>? Photos { get; set; } // Recibe archivos
         public List<int> ServiceIds { get; set; } = new List<int>();
         public List<int> BenefitIds { get; set; } = new List<int>();
+        public List<CoworkingAreaDTO> Areas { get; set; } = new List<CoworkingAreaDTO>();
         public CoworkingStatus Status { get; set; }
-        
-
     }
 
     public class AddressDTO
@@ -59,5 +58,13 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 
         [Required]
         public string ZipCode { get; set; }
+    }
+
+    public class CoworkingAreaDTO
+    {
+        public int Capacity { get; set; }
+        public decimal PricePerDay { get; set; }
+        public string Description { get; set; }
+        public CoworkingAreaType Type { get; set; }
     }
 }

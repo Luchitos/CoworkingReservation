@@ -20,7 +20,8 @@ namespace CoworkingReservation.Domain.IRepository
         IAddressRepository Addresses { get; }
         IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
         IAuditLogRepository AuditLogs { get; }
-
+        ICoworkingAreaRepository CoworkingAreas { get; }
+        ICoworkingAvailabilityRepository CoworkingAvailabilities { get; }
         IRepository<UserPhoto> UserPhotos { get; }
 
         IRepository<ServiceOffered> Services { get; }

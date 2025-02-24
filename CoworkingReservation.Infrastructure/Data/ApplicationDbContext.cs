@@ -18,7 +18,9 @@ namespace CoworkingReservation.Infrastructure.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Benefit> Benefits { get; set; }
         public DbSet<ServiceOffered> ServicesOffered { get; set; }
+        public DbSet<CoworkingArea> CoworkingAreas { get; set; }
 
+        public DbSet<CoworkingAvailability> CoworkingAvailabilities { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurar clave primaria compuesta para FavoriteCoworkingSpace
@@ -88,6 +90,31 @@ namespace CoworkingReservation.Infrastructure.Data
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.TotalPrice)
                 .HasColumnType("decimal(18,2)");
+
+
+            // **Relación Hoster - CoworkingSpace**
+            modelBuilder.Entity<CoworkingSpace>()
+                .HasOne(cs => cs.Hoster)
+                .WithMany()
+                .HasForeignKey(cs => cs.HosterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ✅ **Nuevas Configuraciones para CoworkingArea y CoworkingAvailability**
+
+            // **CoworkingArea -> CoworkingSpace**
+            modelBuilder.Entity<CoworkingArea>()
+                .HasOne(ca => ca.CoworkingSpace)
+                .WithMany(cs => cs.Areas)
+                .HasForeignKey(ca => ca.CoworkingSpaceId)
+                .OnDelete(DeleteBehavior.Cascade); // Si se elimina el coworking, se eliminan las áreas
+
+            // **CoworkingAvailability -> CoworkingArea**
+            modelBuilder.Entity<CoworkingAvailability>()
+                .HasOne(ca => ca.CoworkingArea)
+                .WithMany(area => area.Availabilities)
+                .HasForeignKey(ca => ca.CoworkingAreaId)
+                .OnDelete(DeleteBehavior.Cascade); // Si se elimina el área, se eliminan las disponibilidades
+
 
             base.OnModelCreating(modelBuilder);
         }
