@@ -1,8 +1,11 @@
-﻿using System.Security.AccessControl;
+﻿using System.Data;
+using System.Security.AccessControl;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
 using CoworkingReservation.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 
 namespace CoworkingReservation.Infrastructure.UnitOfWork
@@ -40,6 +43,12 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IAuditLogRepository AuditLogs { get; private set; }
         public IRepository<ServiceOffered> Services { get; private set; }
         public IRepository<Benefit> Benefits { get; private set; }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)
+        {
+            return await _context.Database.BeginTransactionAsync(isolationLevel);
+        }
+
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.
         /// </summary>

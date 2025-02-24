@@ -1,5 +1,6 @@
 ﻿using CoworkingReservation.Domain.Entities;
-using System;
+using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace CoworkingReservation.Domain.IRepository
         ICoworkingSpaceRepository CoworkingSpaces { get; }
         IRepository<Reservation> Reservations { get; }
         IRepository<Review> Reviews { get; }
-        IRepository<Address> Addresses { get; }
+        IAddressRepository Addresses { get; }
         IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
         IAuditLogRepository AuditLogs { get; }
 
@@ -24,6 +25,8 @@ namespace CoworkingReservation.Domain.IRepository
 
         IRepository<ServiceOffered> Services { get; }
         IRepository<Benefit> Benefits { get; }
+        Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel);
+
 
         /// <summary>
         /// Guarda los cambios pendientes en la base de datos.

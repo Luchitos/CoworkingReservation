@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CoworkingReservation.Domain.Entities;
+using CoworkingReservation.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
@@ -28,6 +29,9 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public List<IFormFile>? Photos { get; set; } // Recibe archivos
         public List<int> ServiceIds { get; set; } = new List<int>();
         public List<int> BenefitIds { get; set; } = new List<int>();
+        public CoworkingStatus Status { get; set; }
+        
+
     }
 
     public class AddressDTO
