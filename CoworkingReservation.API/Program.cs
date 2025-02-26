@@ -55,8 +55,10 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
 builder.Services.AddScoped<IBenefitService, BenefitService>();
 builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
+builder.Services.AddScoped<ICoworkingAreaService, CoworkingAreaService>();
 
-builder.Services.AddScoped<CoworkingApprovalJob>();
+
+builder.Services.AddSingleton<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
 
 
@@ -85,7 +87,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
 
-        // 🔥 IMPORTANTE: Especificar los nombres correctos de las reclamaciones (claims)
+        // IMPORTANTE: Especificar los nombres correctos de las reclamaciones (claims)
         NameClaimType = ClaimTypes.Name,
         RoleClaimType = ClaimTypes.Role
     };
@@ -144,8 +146,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseCors(policy =>
+    policy.AllowAnyOrigin()
+          .AllowAnyMethod()
+          .AllowAnyHeader());
+
 app.UseAuthorization();
 
 app.MapControllers();
-
+using (var scope = app.Services.CreateScope())
+{
+    var approvalJob = scope.ServiceProvider.GetRequiredService<CoworkingApprovalJob>();
+    _ = Task.Run(async () => await approvalJob.Run());
+}
 app.Run();
