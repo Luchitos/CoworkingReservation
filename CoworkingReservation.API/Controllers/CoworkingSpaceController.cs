@@ -44,6 +44,19 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success(spaces));
         }
 
+        /// <summary>
+        /// 🔹 Obtiene todos los espacios de coworking de un hoster autenticado.
+        /// </summary>
+        [HttpGet("my-spaces")]
+        [Authorize(Roles = "Hoster")]
+        public async Task<IActionResult> GetMySpaces()
+        {
+            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var spaces = await _coworkingSpaceService.GetAllByHosterIdAsync(hosterId);
+            return Ok(Responses.Response.Success(spaces));
+        }
+
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Create([FromForm] CreateCoworkingSpaceDTO dto)
@@ -88,7 +101,6 @@ namespace CoworkingReservation.API.Controllers
                 return StatusCode(500, Responses.Response.Failure(ex.Message));
             }
         }
-
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Hoster")]

@@ -17,7 +17,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
         Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole);
         Task DeleteAsync(int id, int hosterId);
         Task ToggleActiveStatusAsync(int coworkingSpaceId, int userId, string userRole);
-
+        Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllByHosterIdAsync(int hosterId);
 
     }
 }

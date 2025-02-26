@@ -203,6 +203,56 @@ namespace CoworkingReservation.Application.Services
             });
         }
 
+        public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllByHosterIdAsync(int hosterId)
+        {
+            var spaces = await _unitOfWork.CoworkingSpaces
+                .GetQueryable(includeProperties: "Address,Photos,Services,Benefits,Areas")
+                .Where(cs => cs.HosterId == hosterId)
+                .ToListAsync();
+
+            return spaces.Select(cs => new CoworkingSpaceResponseDTO
+            {
+                Id = cs.Id,
+                Name = cs.Name,
+                Description = cs.Description,
+                Capacity = cs.Capacity,
+                PricePerDay = cs.PricePerDay,
+                IsActive = cs.IsActive,
+                Address = cs.Address != null ? new AddressDTO
+                {
+                    City = cs.Address.City,
+                    Country = cs.Address.Country,
+                    Number = cs.Address.Number,
+                    Province = cs.Address.Province,
+                    Street = cs.Address.Street,
+                    ZipCode = cs.Address.ZipCode
+                } : null,
+                Photos = cs.Photos?.Select(p => new PhotoResponseDTO
+                {
+                    FileName = p.FileName,
+                    ContentType = p.MimeType
+                }).ToList() ?? new List<PhotoResponseDTO>(),
+                Services = cs.Services?.Select(s => new ServiceOfferedDTO
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                }).ToList() ?? new List<ServiceOfferedDTO>(),
+                Benefits = cs.Benefits?.Select(b => new BenefitDTO
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                }).ToList() ?? new List<BenefitDTO>(),
+                Areas = cs.Areas?.Select(a => new CoworkingAreaResponseDTO
+                {
+                    Id = a.Id,
+                    Type = a.Type,
+                    Description = a.Description,
+                    Capacity = a.Capacity,
+                    PricePerDay = a.PricePerDay
+                }).ToList() ?? new List<CoworkingAreaResponseDTO>()
+            }).ToList();
+        }
+
 
         private async Task AddPhotosToCoworkingSpace(List<IFormFile> photos, int coworkingSpaceId)
         {
