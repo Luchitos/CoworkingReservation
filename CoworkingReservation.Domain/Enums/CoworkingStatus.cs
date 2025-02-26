@@ -13,3 +13,4 @@ namespace CoworkingReservation.Domain.Enums
         Rejected = 2
     }
 }
+    

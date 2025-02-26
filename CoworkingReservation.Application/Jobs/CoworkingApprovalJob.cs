@@ -31,12 +31,26 @@ namespace CoworkingReservation.Application.Jobs
                 if (IsValidForApproval(space))
                 {
                     space.Status = CoworkingStatus.Approved;
-                    _logger.LogInformation($"✅ Coworking '{space.Name}' aprobado automáticamente.");
+                    _logger.LogInformation($" Coworking '{space.Name}' aprobado automáticamente.");
+                    await unitOfWork.AuditLogs.LogAsync(new AuditLog
+                    {
+                        Action = "ApproveCoworkingSpace",
+                        UserId = space.HosterId,
+                        Success = true,
+                        Description = $"Coworking '{space.Name}' approved automatically."
+                    });
                 }
                 else
                 {
                     space.Status = CoworkingStatus.Rejected;
-                    _logger.LogWarning($"❌ Coworking '{space.Name}' rechazado por no cumplir requisitos.");
+                    _logger.LogWarning($" Coworking '{space.Name}' rechazado por no cumplir requisitos.");
+                    await unitOfWork.AuditLogs.LogAsync(new AuditLog
+                    {
+                        Action = "RejectCoworkingSpace",
+                        UserId = space.HosterId,
+                        Success = false,
+                        Description = $"Coworking '{space.Name}' rejected due to failing validation."
+                    });
                 }
 
                 await unitOfWork.CoworkingSpaces.UpdateAsync(space);
