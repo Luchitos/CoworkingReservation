@@ -495,6 +495,5 @@ namespace CoworkingReservation.Application.Services
             });
         }
 
-
     }
 }
