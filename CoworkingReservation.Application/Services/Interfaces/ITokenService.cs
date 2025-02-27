@@ -21,16 +21,5 @@ namespace CoworkingReservation.Application.Services.Interfaces
         string GenerateToken(int userId, string email, string role);
 
         #endregion
-
-        #region Validación de Token
-
-        /// <summary>
-        /// Valida un token JWT y extrae sus claims.
-        /// </summary>
-        /// <param name="token">Token JWT a validar.</param>
-        /// <returns>Lista de claims extraídos del token.</returns>
-        Task<IEnumerable<Claim>> ValidateTokenAsync(string token);
-
-        #endregion
     }
 }
