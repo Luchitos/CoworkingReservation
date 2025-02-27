@@ -1,25 +1,42 @@
-﻿using CoworkingReservation.Application.Services;
-using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.Entities;
+﻿using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Application.DTOs.User;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Threading.Tasks;
 
 namespace CoworkingReservation.API.Controllers
 {
+    /// <summary>
+    /// Controlador para la autenticación de usuarios y gestión de sesiones.
+    /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
+        #region Fields
+
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
 
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Inicializa una nueva instancia del <see cref="AuthController"/>.
+        /// </summary>
+        /// <param name="userService">Servicio de usuarios para autenticación.</param>
+        /// <param name="tokenService">Servicio de generación de tokens JWT.</param>
         public AuthController(IUserService userService, ITokenService tokenService)
         {
-            _userService = userService;
-            _tokenService = tokenService;
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         }
 
+        #endregion
+
+        #region Endpoints
 
         /// <summary>
         /// Autentica a un usuario y devuelve un token JWT.
@@ -31,23 +48,22 @@ namespace CoworkingReservation.API.Controllers
         {
             try
             {
-                // Validar entrada
-                if (string.IsNullOrEmpty(request.Identifier) || string.IsNullOrEmpty(request.Password))
+                if (request == null)
+                    return BadRequest(Responses.Response.Failure("Request cannot be null."));
+
+                if (string.IsNullOrWhiteSpace(request.Identifier) || string.IsNullOrWhiteSpace(request.Password))
                 {
                     return BadRequest(Responses.Response.Failure("Identifier and password are required."));
                 }
 
-                // Autenticar usuario
                 var user = await _userService.AuthenticateAsync(request.Identifier, request.Password);
                 if (user == null)
                 {
                     return Unauthorized(Responses.Response.Failure("Invalid credentials."));
                 }
 
-                // Generar token
                 var token = _tokenService.GenerateToken(user.Id, user.Email, user.Role);
 
-                // Devolver respuesta exitosa con el token
                 return Ok(Responses.Response.Success(new
                 {
                     Token = token,
@@ -62,12 +78,12 @@ namespace CoworkingReservation.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, Responses.Response.Failure(ex.Message));
+                return StatusCode(500, Responses.Response.Failure($"Internal Server Error: {ex.Message}"));
             }
         }
 
         /// <summary>
-        /// Invalida el token en el frontend eliminándolo del almacenamiento local.
+        /// Cierra sesión invalidando el token en el frontend.
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
@@ -75,5 +91,7 @@ namespace CoworkingReservation.API.Controllers
         {
             return Ok(Responses.Response.Success("User logged out successfully."));
         }
+
+        #endregion
     }
 }

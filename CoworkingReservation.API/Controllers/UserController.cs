@@ -5,42 +5,60 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CoworkingReservation.API.Controllers
 {
     /// <summary>
-    /// Controlador para la gestión de usuarios.
+    /// Controlador para la gestión de usuarios y autenticación.
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/users")]
     public class UserController : ControllerBase
     {
+        #region Fields
+
         private readonly IUserService _userService;
 
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Inicializa una nueva instancia de <see cref="UserController"/>.
+        /// </summary>
+        /// <param name="userService">Servicio de usuarios.</param>
         public UserController(IUserService userService)
         {
-            _userService = userService;
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
+        #endregion
 
+        #region Endpoints
+
+        /// <summary>
+        /// Devuelve los claims del token autenticado (para debugging).
+        /// </summary>
         [HttpGet("debug-token")]
         [Authorize]
         public IActionResult DebugToken()
         {
             var claims = new
             {
-                userId = User.FindFirstValue(ClaimTypes.NameIdentifier), // Extrae el UserID
-                email = User.FindFirstValue(ClaimTypes.Email), // Extrae el email
-                role = User.FindFirstValue(ClaimTypes.Role), // Extrae el rol
-                sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub), // Extrae el Subject (User ID)
-                jwtId = User.FindFirstValue(JwtRegisteredClaimNames.Jti), // Extrae el JWT ID
-                issuer = User.FindFirst(ClaimTypes.Name)?.Issuer, // Extrae el emisor
-                audience = User.FindFirst(ClaimTypes.Name)?.Value, // Extrae la audiencia
-                expiration = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value // Extrae la expiración
+                userId = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                email = User.FindFirstValue(ClaimTypes.Email),
+                role = User.FindFirstValue(ClaimTypes.Role),
+                sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                jwtId = User.FindFirstValue(JwtRegisteredClaimNames.Jti),
+                issuer = User.FindFirst(ClaimTypes.Name)?.Issuer,
+                audience = User.FindFirst(ClaimTypes.Name)?.Value,
+                expiration = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value
             };
 
             return Ok(Responses.Response.Success(claims));
         }
+
         /// <summary>
         /// Registra un nuevo usuario.
         /// </summary>
@@ -64,20 +82,18 @@ namespace CoworkingReservation.API.Controllers
         /// Habilita o deshabilita la cuenta del usuario autenticado.
         /// </summary>
         [HttpPatch("toggle-active")]
-        [Authorize] // Solo usuarios autenticados
+        [Authorize]
         public async Task<IActionResult> ToggleActiveStatus()
         {
             try
             {
-                // Obtener el userId del token
-                var userId = GetUserIdFromToken();
-
+                var userId = TokenUtils.GetUserIdFromToken(User);
                 await _userService.ToggleActiveStatusAsync(userId);
-                return Ok(new { Message = "User active status toggled successfully." });
+                return Ok(Responses.Response.Success("User active status toggled successfully."));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                return BadRequest(Responses.Response.Failure(ex.Message));
             }
         }
 
@@ -85,21 +101,24 @@ namespace CoworkingReservation.API.Controllers
         /// Solicita el cambio de rol del usuario autenticado a hoster.
         /// </summary>
         [HttpPost("become-hoster")]
-        [Authorize(Roles = "Client")] // El rol "Client" debe existir en el token
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> BecomeHoster()
         {
             try
             {
-                var userId = GetUserIdFromToken();
+                var userId = TokenUtils.GetUserIdFromToken(User);
                 await _userService.BecomeHosterAsync(userId);
                 return Ok(Responses.Response.Success("Role changed to Hoster successfully."));
             }
             catch (Exception ex)
             {
-                return BadRequest(Responses.Response.Failure($"{ex.Message}"));
+                return BadRequest(Responses.Response.Failure(ex.Message));
             }
         }
 
+        /// <summary>
+        /// Obtiene los detalles del usuario autenticado.
+        /// </summary>
         [HttpGet("me")]
         [Authorize]
         public async Task<IActionResult> GetMyDetails()
@@ -109,22 +128,6 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success(user));
         }
 
-        /// <summary>
-        /// Extrae el UserId del token JWT.
-        /// </summary>
-        /// <returns>El UserId del usuario autenticado.</returns>
-        private int GetUserIdFromToken()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim))
-                throw new UnauthorizedAccessException("Invalid token: UserId not found.");
-
-            if (!int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("Invalid UserId format in token.");
-
-            return userId;
-        }
-
+        #endregion
     }
 }
