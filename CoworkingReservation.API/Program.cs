@@ -19,32 +19,39 @@ using CoworkingReservation.Application.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configurar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
+// Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
         options.JsonSerializerOptions.WriteIndented = true;
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddEndpointsApiExplorer();
 
 // Registrar el contexto de la base de datos
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Registrar el repositorio genérico
-
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
-
-
 
 // Registrar los servicios
 builder.Services.AddScoped<IUserService, UserService>();
@@ -56,7 +63,6 @@ builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
-
 
 // Agregar configuración de JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -83,11 +89,11 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
 
-        // 🔥 IMPORTANTE: Especificar los nombres correctos de las reclamaciones (claims)
         NameClaimType = ClaimTypes.Name,
         RoleClaimType = ClaimTypes.Role
     };
 });
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -129,8 +135,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await context.Database.MigrateAsync(); // Aplicar migraciones
-    await DatabaseSeeder.SeedAsync(context); // Ejecutar la seed
+    await context.Database.MigrateAsync();
+    await DatabaseSeeder.SeedAsync(context);
 }
 
 // Configure the HTTP request pipeline.
@@ -141,6 +147,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Usar la política de CORS
+app.UseCors("AllowAngularApp");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

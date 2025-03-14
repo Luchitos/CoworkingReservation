@@ -55,6 +55,7 @@ namespace CoworkingReservation.API.Controllers
                     {
                         user.Id,
                         user.Name,
+                        user.Lastname,
                         user.Email,
                         user.Role
                     }
