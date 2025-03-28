@@ -105,7 +105,6 @@ namespace CoworkingReservation.Application.Services
             }
         }
 
-
         public async Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces
@@ -230,7 +229,7 @@ namespace CoworkingReservation.Application.Services
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync()
         {
             var spaces = await _unitOfWork.CoworkingSpaces
-                .GetAllAsync(includeProperties: "Address,Photos,Services,Benefits");
+                .GetAllAsync(includeProperties: "Address,Photos");
 
             return spaces
                 .Where(cs => cs.IsActive && cs.Status == Domain.Enums.CoworkingStatus.Approved)
@@ -258,16 +257,6 @@ namespace CoworkingReservation.Application.Services
                         FilePath = p.FilePath,
                         ContentType = p.MimeType
                     }).ToList() ?? new List<PhotoResponseDTO>(),
-                    Services = cs.Services?.Select(s => new ServiceOfferedDTO
-                    {
-                        Id = s.Id,
-                        Name = s.Name,
-                    }).ToList() ?? new List<ServiceOfferedDTO>(),
-                    Benefits = cs.Benefits?.Select(b => new BenefitDTO
-                    {
-                        Id = b.Id,
-                        Name = b.Name,
-                    }).ToList() ?? new List<BenefitDTO>()
                 })
                 .ToList();
         }
@@ -275,7 +264,8 @@ namespace CoworkingReservation.Application.Services
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location)
         {
             var query = _unitOfWork.CoworkingSpaces
-                .GetQueryable(includeProperties: "Address,Photos,Services,Benefits")
+                .GetQueryable(includeProperties: "Address")
+                .AsNoTracking()
                 .Where(cs => cs.Status == CoworkingStatus.Approved && cs.IsActive);
 
             if (capacity.HasValue)
@@ -315,16 +305,7 @@ namespace CoworkingReservation.Application.Services
                     FileName = p.FileName,
                     ContentType = p.MimeType
                 }).ToList() ?? new List<PhotoResponseDTO>(),
-                Services = cs.Services?.Select(s => new ServiceOfferedDTO
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                }).ToList() ?? new List<ServiceOfferedDTO>(),
-                Benefits = cs.Benefits?.Select(b => new BenefitDTO
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                }).ToList() ?? new List<BenefitDTO>()
+                
             }).ToList();
         }
 
@@ -407,6 +388,80 @@ namespace CoworkingReservation.Application.Services
             });
         }
 
+        public async Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetAllSummariesAsync()
+        {
+            var query = _unitOfWork.CoworkingSpaces
+                .GetQueryable(includeProperties: "Address,Photos")
+                .AsNoTracking()
+                .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
+
+            return await query.Select(cs => new CoworkingSpaceSummaryDTO
+            {
+                Id = cs.Id,
+                Name = cs.Name,
+                Address = new AddressDTO
+                {
+                    City = cs.Address.City,
+                    Country = cs.Address.Country,
+                    Number = cs.Address.Number,
+                    Province = cs.Address.Province,
+                    Street = cs.Address.Street,
+                    ZipCode = cs.Address.ZipCode
+                },
+                CoverPhoto = cs.Photos
+                    .Where(p => p.IsCoverPhoto)
+                    .Select(p => new PhotoResponseDTO
+                    {
+                        FileName = p.FileName,
+                        IsCoverPhoto = p.IsCoverPhoto,
+                        ContentType = p.MimeType,
+                        FilePath = p.FilePath
+                    })
+                    .FirstOrDefault()
+            }).ToListAsync();
+        }
+
+        public async Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetFilteredSummariesAsync(int? capacity, string? location)
+        {
+            var query = _unitOfWork.CoworkingSpaces
+                .GetQueryable(includeProperties: "Address,Photos")
+                .AsNoTracking()
+                .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
+
+            if (capacity.HasValue)
+                query = query.Where(cs => cs.Capacity >= capacity.Value);
+
+            if (!string.IsNullOrEmpty(location))
+                query = query.Where(cs =>
+                    cs.Address.City.Contains(location) ||
+                    cs.Address.Province.Contains(location) ||
+                    cs.Address.Street.Contains(location));
+
+            return await query.Select(cs => new CoworkingSpaceSummaryDTO
+            {
+                Id = cs.Id,
+                Name = cs.Name,
+                Address = new AddressDTO
+                {
+                    City = cs.Address.City,
+                    Country = cs.Address.Country,
+                    Number = cs.Address.Number,
+                    Province = cs.Address.Province,
+                    Street = cs.Address.Street,
+                    ZipCode = cs.Address.ZipCode
+                },
+                CoverPhoto = cs.Photos
+                    .Where(p => p.IsCoverPhoto)
+                    .Select(p => new PhotoResponseDTO
+                    {
+                        FileName = p.FileName,
+                        IsCoverPhoto = p.IsCoverPhoto,
+                        ContentType = p.MimeType,
+                        FilePath = p.FilePath
+                    })
+                    .FirstOrDefault()
+            }).ToListAsync();
+        }
 
     }
 }

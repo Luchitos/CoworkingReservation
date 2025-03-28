@@ -25,7 +25,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
 
         public IQueryable<CoworkingSpace> GetQueryable(string includeProperties = "")
         {
-            IQueryable<CoworkingSpace> query = _dbSet;
+            IQueryable<CoworkingSpace> query = _dbSet.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(includeProperties))
             {

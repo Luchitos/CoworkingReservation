@@ -27,7 +27,7 @@ namespace CoworkingReservation.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var spaces = await _coworkingSpaceService.GetAllActiveSpacesAsync();
+            var spaces = await _coworkingSpaceService.GetAllSummariesAsync();
             return Ok(Responses.Response.Success(spaces));
         }
 
@@ -40,9 +40,10 @@ namespace CoworkingReservation.API.Controllers
         [HttpGet("filter")]
         public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
         {
-            var spaces = await _coworkingSpaceService.GetAllFilteredAsync(capacity, location);
+            var spaces = await _coworkingSpaceService.GetFilteredSummariesAsync(capacity, location);
             return Ok(Responses.Response.Success(spaces));
         }
+
 
         [HttpPost]
         [Authorize]
