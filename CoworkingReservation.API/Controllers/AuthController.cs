@@ -57,7 +57,8 @@ namespace CoworkingReservation.API.Controllers
                         user.Name,
                         user.Lastname,
                         user.Email,
-                        user.Role
+                        user.Role,
+                        user.Photo.FilePath
                     }
                 }));
             }
@@ -72,9 +73,9 @@ namespace CoworkingReservation.API.Controllers
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
-        public IActionResult Logout()
+        public bool Logout()
         {
-            return Ok(Responses.Response.Success("User logged out successfully."));
+            return true;
         }
     }
 }

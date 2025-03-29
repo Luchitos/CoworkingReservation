@@ -89,10 +89,10 @@ namespace CoworkingReservation.Application.Services
             return newUser;
         }
 
-        public async Task<User> AuthenticateAsync(string email, string password)
+        public async Task<User> AuthenticateAsync(string identifier, string password)
         {
             var user = (await _unitOfWork.Users.GetAllAsync())
-                .FirstOrDefault(u => u.Email == email);
+                .FirstOrDefault(u => u.Email == identifier || u.UserName == identifier);
 
             if (user == null)
             {
