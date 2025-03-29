@@ -58,7 +58,7 @@ namespace CoworkingReservation.API.Controllers
                         user.Lastname,
                         user.Email,
                         user.Role,
-                        user.Photo.FilePath
+                        user.Photo
                     }
                 }));
             }

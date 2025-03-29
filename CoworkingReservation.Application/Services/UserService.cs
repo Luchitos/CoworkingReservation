@@ -89,25 +89,20 @@ namespace CoworkingReservation.Application.Services
             return newUser;
         }
 
-        public async Task<User> AuthenticateAsync(string identifier, string password)
+        public async Task<User?> AuthenticateAsync(string identifier, string password)
         {
-            var user = (await _unitOfWork.Users.GetAllAsync())
-                .FirstOrDefault(u => u.Email == identifier || u.UserName == identifier);
+            var user = await _unitOfWork.Users.GetByIdentifierWithPhotoAsync(identifier);
 
             if (user == null)
             {
                 return null; // El usuario no existe
             }
 
-            // Verificar la contraseña correctamente usando _passwordHasher
+            // Verificar la contraseña
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            if (result != PasswordVerificationResult.Success)
-            {
-                return null; // La contraseña es incorrecta
-            }
-
-            return user;
+            return result == PasswordVerificationResult.Success ? user : null;
         }
+
 
 
         private string HashPassword(string password)

@@ -22,5 +22,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
         {
             return await _context.Users.AnyAsync(u => u.Email == email || u.Cuit == cuit);
         }
+
+        public async Task<User?> GetByIdentifierWithPhotoAsync(string identifier)
+        {
+            return await _context.Users
+                .Include(u => u.Photo)
+                .FirstOrDefaultAsync(u => u.Email == identifier || u.UserName == identifier);
+        }
     }
 }
