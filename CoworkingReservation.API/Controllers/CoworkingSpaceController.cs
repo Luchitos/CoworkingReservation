@@ -24,12 +24,12 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success(space));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var spaces = await _coworkingSpaceService.GetAllSummariesAsync();
-            return Ok(Responses.Response.Success(spaces));
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var spaces = await _coworkingSpaceService.GetAllSummariesAsync();
+        //    return Ok(Responses.Response.Success(spaces));
+        //}
 
         /// <summary>
         /// Obtiene los coworkings filtrados por capacidad y/o ubicación.
@@ -37,13 +37,19 @@ namespace CoworkingReservation.API.Controllers
         /// <param name="capacity">Capacidad exacta (opcional).</param>
         /// <param name="location">Ubicación (ciudad, provincia o calle) (opcional).</param>
         /// <returns>Lista de espacios aprobados y activos.</returns>
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
-        {
-            var spaces = await _coworkingSpaceService.GetFilteredSummariesAsync(capacity, location);
-            return Ok(Responses.Response.Success(spaces));
-        }
+        //[HttpGet("filter")]
+        //public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
+        //{
+        //    var spaces = await _coworkingSpaceService.GetFilteredSummariesAsync(capacity, location);
+        //    return Ok(Responses.Response.Success(spaces));
+        //}
 
+        //[HttpGet("filter-light")]
+        //public async Task<IActionResult> GetLightFiltered([FromQuery] int? capacity, [FromQuery] string? location)
+        //{
+        //    var spaces = await _coworkingSpaceService.GetAllFilteredAsync(capacity, location);
+        //    return Ok(Responses.Response.Success(spaces));
+        //}
 
         [HttpPost]
         [Authorize]
@@ -90,6 +96,15 @@ namespace CoworkingReservation.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get optimizado solo con datos mínimos (id, nombre, dirección, foto de portada)
+        /// </summary>
+        [HttpGet("light")]
+        public async Task<IActionResult> GetAllLightweight()
+        {
+            var result = await _coworkingSpaceService.GetAllLightweightAsync();
+            return Ok(Responses.Response.Success(result));
+        }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Hoster")]
@@ -98,6 +113,26 @@ namespace CoworkingReservation.API.Controllers
             var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             await _coworkingSpaceService.DeleteAsync(id, hosterId);
             return Ok(Responses.Response.Success("Coworking space deleted successfully."));
+        }
+
+        /// <summary>
+        /// Obtiene todos los coworkings con datos mínimos (nombre, dirección y foto de portada).
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var spaces = await _coworkingSpaceService.GetAllLightweightAsync();
+            return Ok(Responses.Response.Success(spaces));
+        }
+
+        /// <summary>
+        /// 🔹 Obtiene coworkings filtrados por capacidad y/o ubicación (optimizado).
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
+        {
+            var spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location);
+            return Ok(Responses.Response.Success(spaces));
         }
     }
 }

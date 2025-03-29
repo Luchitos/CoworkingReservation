@@ -1,4 +1,5 @@
 ﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,11 @@ namespace CoworkingReservation.Application.Services.Interfaces
 
         Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetAllSummariesAsync();
         Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetFilteredSummariesAsync(int? capacity, string? location);
+        //Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllLightFilteredAsync(int? capacity, string? location);
+        //public Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightweightAsync();
+
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync();
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location);
 
 
     }

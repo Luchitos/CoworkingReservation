@@ -97,6 +97,89 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return await _context.CoworkingSpaces.AnyAsync(predicate);
         }
 
+        public async Task<List<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
+        {
+            var data = await _context.CoworkingSpaces
+                .AsNoTracking()
+                .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved)
+                .Select(cs => new
+                {
+                    cs.Id,
+                    cs.Name,
+                    Address = cs.Address,
+                    CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto)
+                })
+                .ToListAsync();
 
+            return data.Select(cs => new CoworkingSpaceListItemDTO
+            {
+                Id = cs.Id,
+                Name = cs.Name,
+                Address = new AddressDTO
+                {
+                    City = cs.Address.City,
+                    Province = cs.Address.Province,
+                    Street = cs.Address.Street,
+                    Number = cs.Address.Number,
+                    Country = cs.Address.Country,
+                    ZipCode = cs.Address.ZipCode
+                },
+                CoverPhoto = cs.CoverPhoto != null ? new PhotoResponseDTO
+                {
+                    IsCoverPhoto = cs.CoverPhoto.IsCoverPhoto,
+                    FilePath = cs.CoverPhoto.FilePath
+                } : null
+            }).ToList();
+        }
+
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location)
+        {
+            var query = _context.CoworkingSpaces
+                .AsNoTracking()
+                .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
+
+            if (capacity.HasValue)
+            {
+                query = query.Where(cs => cs.Capacity >= capacity.Value);
+            }
+
+            if (!string.IsNullOrEmpty(location))
+            {
+                query = query.Where(cs =>
+                    cs.Address.City.Contains(location) ||
+                    cs.Address.Province.Contains(location) ||
+                    cs.Address.Street.Contains(location));
+            }
+
+            var data = await query
+                .Select(cs => new
+                {
+                    cs.Id,
+                    cs.Name,
+                    Address = cs.Address,
+                    CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto)
+                })
+                .ToListAsync();
+
+            return data.Select(cs => new CoworkingSpaceListItemDTO
+            {
+                Id = cs.Id,
+                Name = cs.Name,
+                Address = new AddressDTO
+                {
+                    City = cs.Address.City,
+                    Province = cs.Address.Province,
+                    Street = cs.Address.Street,
+                    Number = cs.Address.Number,
+                    Country = cs.Address.Country,
+                    ZipCode = cs.Address.ZipCode
+                },
+                CoverPhoto = cs.CoverPhoto != null ? new PhotoResponseDTO
+                {
+                    IsCoverPhoto = cs.CoverPhoto.IsCoverPhoto,
+                    FilePath = cs.CoverPhoto.FilePath
+                } : null
+            });
+        }
     }
 }

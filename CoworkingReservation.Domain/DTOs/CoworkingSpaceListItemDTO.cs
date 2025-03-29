@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CoworkingReservation.Domain.DTOs;
 
-namespace CoworkingReservation.Application.DTOs.CoworkingSpace
+namespace CoworkingReservation.Domain.DTOs
 {
-    public class CoworkingSpaceSummaryDTO
+    public class CoworkingSpaceListItemDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public AddressDTO Address { get; set; }
         public PhotoResponseDTO? CoverPhoto { get; set; }
     }
-
 }

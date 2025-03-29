@@ -1,12 +1,14 @@
 ﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
+using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using CoworkingSpaceResponseDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceResponseDTO;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -461,6 +463,26 @@ namespace CoworkingReservation.Application.Services
                     })
                     .FirstOrDefault()
             }).ToListAsync();
+        }
+
+
+        //public async Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightFilteredAsync(int? capacity, string? location)
+        //{
+        //    if (!string.IsNullOrEmpty(location))
+        //        return await _unitOfWork.CoworkingSpaces.GetAllFilteredOptimizedAsync(location);
+
+        //    fallback si no hay location(se puede extender)
+        //    return await GetAllActiveSpacesAsync();
+        //}
+
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
+        {
+            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null);
+        }
+
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location)
+        {
+            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
         }
 
     }
