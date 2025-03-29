@@ -10,5 +10,7 @@ namespace CoworkingReservation.Domain.IRepository
     public interface IUserRepository : IRepository<User>
     {
         Task<bool> ExistsByEmailOrCuit(string email, string cuit);
+        Task<User?> GetByIdentifierWithPhotoAsync(string identifier);
     }
+
 }
