@@ -64,7 +64,9 @@ namespace CoworkingReservation.Application.Services
                         Number = spaceDto.Address.Number,
                         Province = spaceDto.Address.Province,
                         Street = spaceDto.Address.Street,
-                        ZipCode = spaceDto.Address.ZipCode
+                        ZipCode = spaceDto.Address.ZipCode,
+                        Latitude = spaceDto.Address.Latitude,
+                        Longitude = spaceDto.Address.Longitude,
                     }
                 };
 

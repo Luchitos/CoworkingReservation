@@ -32,5 +32,8 @@ namespace CoworkingReservation.Domain.DTOs
 
         [Required]
         public string ZipCode { get; set; }
+
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
     }
 }
