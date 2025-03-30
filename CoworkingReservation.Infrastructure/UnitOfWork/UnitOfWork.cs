@@ -30,6 +30,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             CoworkingSpaces = coworkingSpaceRepository;
             Services = new ServiceOfferedRepository(context);
             Benefits = new BenefitRepository(context);
+            SafetyElements = new SafetyElementRepository(context);
+            SpecialFeatures = new SpecialFeatureRepository(context);
 
         }
         public IRepository<UserPhoto> UserPhotos { get; private set; }
@@ -43,6 +45,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IAuditLogRepository AuditLogs { get; private set; }
         public IRepository<ServiceOffered> Services { get; private set; }
         public IRepository<Benefit> Benefits { get; private set; }
+        public IRepository<SpecialFeature> SpecialFeatures { get; private set; }
+        public IRepository<SafetyElement> SafetyElements { get; private set; }
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)
         {

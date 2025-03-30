@@ -103,8 +103,8 @@ namespace CoworkingReservation.Infrastructure.Data
                         Capacity = 20,
                         PricePerDay = 1500,
                         IsActive = true,
-                        Address = addresses[0], 
-                        HosterId = users.First(u => u.UserName == "carlosl").Id 
+                        Address = addresses[0],
+                        HosterId = users.First(u => u.UserName == "carlosl").Id
                     },
                     new CoworkingSpace
                     {
@@ -113,8 +113,8 @@ namespace CoworkingReservation.Infrastructure.Data
                         Capacity = 15,
                         PricePerDay = 1200,
                         IsActive = true,
-                        Address = addresses[1], 
-                        HosterId = users.First(u => u.UserName == "carlosl").Id 
+                        Address = addresses[1],
+                        HosterId = users.First(u => u.UserName == "carlosl").Id
                     }
                 };
 
@@ -204,6 +204,68 @@ namespace CoworkingReservation.Infrastructure.Data
 
                 await context.FavoriteCoworkingSpaces.AddRangeAsync(favorites);
                 await context.SaveChangesAsync();
+
+                if (!await context.SafetyElements.AnyAsync())
+                {
+                    var safetyElements = new List<SafetyElement>
+                    {
+                        new() { Name = "Fire Extinguisher", Description = "Fire extinguishing device available in case of emergency." },
+                        new() { Name = "First Aid Kit", Description = "Supplies available for minor injuries and emergencies." },
+                        new() { Name = "Security Cameras", Description = "24/7 surveillance in common areas." },
+                        new() { Name = "Smoke Detectors", Description = "Detects smoke and alerts in case of fire." },
+                        new() { Name = "Emergency Exit Signs", Description = "Clearly marked emergency exit routes." },
+                        new() { Name = "Sprinkler System", Description = "Automatic water sprinkler for fire control." },
+                        new() { Name = "Security Guards", Description = "Personnel for on-site protection." },
+                        new() { Name = "Access Control", Description = "Restricted access using badges or PINs." },
+                        new() { Name = "Earthquake Resistant Structure", Description = "Building designed to withstand earthquakes." },
+                        new() { Name = "Evacuation Plan", Description = "Posted instructions for safe exit." },
+                        new() { Name = "CCTV Monitoring", Description = "Monitored cameras in hallways and entrances." },
+                        new() { Name = "Fire Blankets", Description = "Used to smother small fires." },
+                        new() { Name = "Automatic Doors", Description = "Opens automatically during fire alarms." },
+                        new() { Name = "Fire Alarm System", Description = "Audible alert in case of smoke or fire." },
+                        new() { Name = "Sanitizer Stations", Description = "Hand sanitizer at multiple entry points." },
+                        new() { Name = "Non-slip Flooring", Description = "Reduces risk of slipping in wet areas." },
+                        new() { Name = "Panic Buttons", Description = "Emergency alert system in each room." },
+                        new() { Name = "Gas Leak Detectors", Description = "Alerts when gas leaks are detected." },
+                        new() { Name = "Carbon Monoxide Detector", Description = "Senses and warns of CO presence." },
+                        new() { Name = "Child Safety Locks", Description = "Increased safety in common areas." }
+                    };
+
+                    await context.SafetyElements.AddRangeAsync(safetyElements);
+                    await context.SaveChangesAsync();
+                }
+
+                if (!await context.SpecialFeatures.AnyAsync())
+                {
+                    var specialFeatures = new List<SpecialFeature>
+                        {
+                            new() { Name = "24/7 Access", Description = "Access the coworking space anytime." },
+                            new() { Name = "Private Office", Description = "Dedicated, enclosed space for privacy." },
+                            new() { Name = "Virtual Office", Description = "Receive mail and calls remotely." },
+                            new() { Name = "Free Parking", Description = "Parking spots available for members." },
+                            new() { Name = "Event Hosting", Description = "Spaces available for events and workshops." },
+                            new() { Name = "Pet-Friendly", Description = "Pets are welcome in the facility." },
+                            new() { Name = "Gym Access", Description = "Fitness center available for members." },
+                            new() { Name = "On-Site Café", Description = "Enjoy snacks and drinks without leaving." },
+                            new() { Name = "Rooftop Lounge", Description = "Outdoor space to relax or work." },
+                            new() { Name = "Nap Rooms", Description = "Quiet rooms available for short naps." },
+                            new() { Name = "Library Room", Description = "Silent reading and research area." },
+                            new() { Name = "Gaming Zone", Description = "Break space with recreational games." },
+                            new() { Name = "Green Terrace", Description = "Garden space for breaks and meetings." },
+                            new() { Name = "Massage Chairs", Description = "Relaxation spots with massage seating." },
+                            new() { Name = "Bike Storage", Description = "Indoor bicycle parking." },
+                            new() { Name = "Free Snacks", Description = "Complimentary snacks for users." },
+                            new() { Name = "Meditation Room", Description = "Dedicated space for mindfulness." },
+                            new() { Name = "Phone Booths", Description = "Private calling pods available." },
+                            new() { Name = "Podcast Studio", Description = "Soundproof space for recordings." },
+                            new() { Name = "Mail Handling", Description = "Staff will manage incoming mail." }
+                        };
+
+                    await context.SpecialFeatures.AddRangeAsync(specialFeatures);
+                    await context.SaveChangesAsync();
+                }
+
+
             }
         }
     }

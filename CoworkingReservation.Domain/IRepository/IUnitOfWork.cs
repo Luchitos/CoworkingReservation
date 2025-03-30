@@ -25,6 +25,8 @@ namespace CoworkingReservation.Domain.IRepository
 
         IRepository<ServiceOffered> Services { get; }
         IRepository<Benefit> Benefits { get; }
+        IRepository<SafetyElement> SafetyElements { get; }
+        IRepository<SpecialFeature> SpecialFeatures { get; }
         Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel);
 
 

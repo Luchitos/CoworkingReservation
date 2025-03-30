@@ -90,6 +90,17 @@ namespace CoworkingReservation.Application.Services
                         .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
                 }
 
+                if (spaceDto.SafetyElementsIds?.Any() == true)
+                {
+                    coworkingSpace.SafetyElements = (await _unitOfWork.SafetyElements
+                        .GetAllAsync(b => spaceDto.SafetyElementsIds.Contains(b.Id))).ToList();
+                }
+                if (spaceDto.SpeacialFeatureIds?.Any() == true)
+                {
+                    coworkingSpace.SpecialFeatures = (await _unitOfWork.SpecialFeatures
+                        .GetAllAsync(b => spaceDto.SafetyElementsIds.Contains(b.Id))).ToList();
+                }
+
                 await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
                 await _unitOfWork.SaveChangesAsync();
 

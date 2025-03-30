@@ -52,6 +52,9 @@ builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>(
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<ISpecialFeatureRepository, SpecialFeatureRepository>();
+builder.Services.AddScoped<ISafetyElementRepository, SafetyElementRepository>();
+
 
 // Registrar los servicios
 builder.Services.AddScoped<IUserService, UserService>();
@@ -60,6 +63,9 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
 builder.Services.AddScoped<IBenefitService, BenefitService>();
 builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
+builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
+builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
+
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());

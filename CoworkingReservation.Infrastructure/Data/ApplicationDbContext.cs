@@ -19,6 +19,9 @@ namespace CoworkingReservation.Infrastructure.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Benefit> Benefits { get; set; }
         public DbSet<ServiceOffered> ServicesOffered { get; set; }
+        public DbSet<SpecialFeature> SpecialFeatures { get; set; }
+        public DbSet<SafetyElement> SafetyElements { get; set; }    
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurar clave primaria compuesta para FavoriteCoworkingSpace
@@ -88,6 +91,16 @@ namespace CoworkingReservation.Infrastructure.Data
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.TotalPrice)
                 .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<SpecialFeature>()
+                .Property(sf => sf.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<SafetyElement>()
+                .Property(se => se.Name)
+                .IsRequired()
+                .HasMaxLength(100);
             base.OnModelCreating(modelBuilder);
         }
     }
