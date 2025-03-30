@@ -98,7 +98,7 @@ namespace CoworkingReservation.Infrastructure.Data
                 {
                     new CoworkingSpace
                     {
-                        Name = "Coworking Space 1",
+                        Title = "Coworking Space 1",
                         Description = "A modern coworking space in Buenos Aires.",
                         Capacity = 20,
                         PricePerDay = 1500,
@@ -108,7 +108,7 @@ namespace CoworkingReservation.Infrastructure.Data
                     },
                     new CoworkingSpace
                     {
-                        Name = "Coworking Space 2",
+                        Title = "Coworking Space 2",
                         Description = "A cozy coworking space in Córdoba.",
                         Capacity = 15,
                         PricePerDay = 1200,

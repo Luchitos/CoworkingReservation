@@ -62,7 +62,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return spaces.Select(cs => new CoworkingSpaceResponseDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Description = cs.Description,
                 Capacity = cs.Capacity,
                 PricePerDay = cs.PricePerDay,
@@ -105,7 +105,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Select(cs => new
                 {
                     cs.Id,
-                    cs.Name,
+                    cs.Title,
                     Address = cs.Address,
                     CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto)
                 })
@@ -114,7 +114,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return data.Select(cs => new CoworkingSpaceListItemDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Address = new AddressDTO
                 {
                     City = cs.Address.City,
@@ -155,7 +155,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Select(cs => new
                 {
                     cs.Id,
-                    cs.Name,
+                    cs.Title,
                     Address = cs.Address,
                     CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto),
                     PricePerDay = cs.PricePerDay,
@@ -166,7 +166,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return data.Select(cs => new CoworkingSpaceListItemDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Address = new AddressDTO
                 {
                     City = cs.Address.City,

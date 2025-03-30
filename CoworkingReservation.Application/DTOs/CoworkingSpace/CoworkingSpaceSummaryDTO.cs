@@ -10,7 +10,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
     public class CoworkingSpaceSummaryDTO
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Title { get; set; }
         public AddressDTO Address { get; set; }
         public PhotoResponseDTO? CoverPhoto { get; set; }
     }

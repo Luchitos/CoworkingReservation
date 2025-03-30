@@ -49,7 +49,7 @@ namespace CoworkingReservation.Application.Services
 
                 var coworkingSpace = new CoworkingSpace
                 {
-                    Name = spaceDto.Name,
+                    Title = spaceDto.Title,
                     Description = spaceDto.Description,
                     Capacity = spaceDto.Capacity,
                     PricePerDay = spaceDto.PricePerDay,
@@ -157,7 +157,7 @@ namespace CoworkingReservation.Application.Services
             }
 
             // **Actualizar propiedades principales**
-            coworkingSpace.Name = dto.Name;
+            coworkingSpace.Title = dto.Title;
             coworkingSpace.Description = dto.Description;
             coworkingSpace.PricePerDay = dto.PricePerDay;
             coworkingSpace.Capacity = dto.Capacity;
@@ -197,7 +197,7 @@ namespace CoworkingReservation.Application.Services
                 UserId = hosterId,
                 UserRole = userRole,
                 Success = true,
-                Description = $"Coworking space {coworkingSpace.Name} (ID: {id}) updated successfully."
+                Description = $"Coworking space {coworkingSpace.Title} (ID: {id}) updated successfully."
             });
         }
 
@@ -252,7 +252,7 @@ namespace CoworkingReservation.Application.Services
                 .Select(cs => new CoworkingSpaceResponseDTO
                 {
                     Id = cs.Id,
-                    Name = cs.Name,
+                    Title = cs.Title,
                     Description = cs.Description,
                     Capacity = cs.Capacity,
                     PricePerDay = cs.PricePerDay,
@@ -303,7 +303,7 @@ namespace CoworkingReservation.Application.Services
             return spaces.Select(cs => new CoworkingSpaceResponseDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Description = cs.Description,
                 Capacity = cs.Capacity,
                 PricePerDay = cs.PricePerDay,
@@ -337,7 +337,7 @@ namespace CoworkingReservation.Application.Services
             return new CoworkingSpaceResponseDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Description = cs.Description,
                 Capacity = cs.Capacity,
                 PricePerDay = cs.PricePerDay,
@@ -403,7 +403,7 @@ namespace CoworkingReservation.Application.Services
                 UserId = userId,
                 UserRole = userRole,
                 Success = true,
-                Description = $"Coworking space {coworkingSpace.Name} status changed to {(coworkingSpace.IsActive ? "Active" : "Inactive")}."
+                Description = $"Coworking space {coworkingSpace.Title} status changed to {(coworkingSpace.IsActive ? "Active" : "Inactive")}."
             });
         }
 
@@ -417,7 +417,7 @@ namespace CoworkingReservation.Application.Services
             return await query.Select(cs => new CoworkingSpaceSummaryDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Address = new AddressDTO
                 {
                     City = cs.Address.City,
@@ -459,7 +459,7 @@ namespace CoworkingReservation.Application.Services
             return await query.Select(cs => new CoworkingSpaceSummaryDTO
             {
                 Id = cs.Id,
-                Name = cs.Name,
+                Title = cs.Title,
                 Address = new AddressDTO
                 {
                     City = cs.Address.City,
