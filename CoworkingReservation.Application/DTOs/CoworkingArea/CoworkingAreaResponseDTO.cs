@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CoworkingReservation.Domain.Enums;
 
-namespace CoworkingReservation.Application.DTOs.CoworkingAreaDTO
+namespace CoworkingReservation.Application.DTOs.CoworkingArea
 {
     /// <summary>
     /// DTO para representar una área dentro de un coworking.

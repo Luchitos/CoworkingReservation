@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CoworkingReservation.Application.DTOs.CoworkingAreaDTO;
-using CoworkingReservation.Domain.DTOs;
-using CoworkingReservation.Domain.Enums;
+﻿using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.CoworkingArea;
+using CoworkingReservation.Application.DTOs.Photo;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {
@@ -20,6 +15,8 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// Identificador único del espacio de coworking.
         /// </summary>
         public int Id { get; set; }
+
+        public float Rate { get; set; }
 
         /// <summary>
         /// Nombre del espacio de coworking.

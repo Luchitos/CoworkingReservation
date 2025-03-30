@@ -1,4 +1,6 @@
-﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
+﻿using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.DTOs.Photo;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.DTOs;
@@ -7,7 +9,6 @@ using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace CoworkingReservation.Application.Services
 {

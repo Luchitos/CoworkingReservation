@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CoworkingReservation.Application.DTOs.CoworkingSpace
+namespace CoworkingReservation.Application.DTOs.Photo
 {
     /// <summary>
     /// DTO para la respuesta de una foto del espacio de coworking.

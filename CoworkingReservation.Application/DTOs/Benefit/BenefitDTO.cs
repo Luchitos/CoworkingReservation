@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CoworkingReservation.Domain.DTOs
+namespace CoworkingReservation.Application.DTOs.Benefit
 {
     public class BenefitDTO
     {
