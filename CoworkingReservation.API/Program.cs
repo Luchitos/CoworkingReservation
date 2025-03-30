@@ -38,7 +38,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
         options.JsonSerializerOptions.WriteIndented = true;
     });
-
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
 // Registrar el contexto de la base de datos
@@ -50,6 +50,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICoworkingSpaceRepository, CoworkingSpaceRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<ICoworkingAvailabilityRepository, CoworkingAvailabilityRepository>();
+builder.Services.AddScoped<ICoworkingAreaRepository, CoworkingAreaRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<ISpecialFeatureRepository, SpecialFeatureRepository>();
@@ -63,6 +65,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICoworkingSpaceService, CoworkingSpaceService>();
 builder.Services.AddScoped<IBenefitService, BenefitService>();
 builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
+builder.Services.AddScoped<ICoworkingAreaService, CoworkingAreaService>();
 builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
 builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
 
@@ -161,5 +164,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var approvalJob = scope.ServiceProvider.GetRequiredService<CoworkingApprovalJob>();
+    _ = Task.Run(async () => await approvalJob.Run());
+}
 
 app.Run();
