@@ -158,7 +158,8 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     cs.Name,
                     Address = cs.Address,
                     CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto),
-                    PricePerDay = cs.PricePerDay
+                    PricePerDay = cs.PricePerDay,
+                    Rate = cs.Rate,
                 })
                 .ToListAsync();
 
@@ -180,7 +181,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     IsCoverPhoto = cs.CoverPhoto.IsCoverPhoto,
                     FilePath = cs.CoverPhoto.FilePath
                 } : null,
-                Rate = 0,
+                Rate = cs.Rate,
                 PricePerDay = cs.PricePerDay
             });
         }

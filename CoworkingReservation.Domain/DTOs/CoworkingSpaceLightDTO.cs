@@ -16,6 +16,7 @@ namespace CoworkingReservation.Domain.DTOs
         public string Number { get; set; }
         public string ContentType { get; set; }
         public PhotoResponseDTO? CoverPhoto { get; set; }
+        public float Rate { get; set; }
         public AddressDTO Address { get; set; }
     }
 }

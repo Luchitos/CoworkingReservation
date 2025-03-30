@@ -55,6 +55,7 @@ namespace CoworkingReservation.Application.Services
                     PricePerDay = spaceDto.PricePerDay,
                     HosterId = userId,
                     Status = CoworkingStatus.Pending,
+                    Rate = spaceDto.Rate,
                     Address = new Address
                     {
                         City = spaceDto.Address.City,
@@ -256,6 +257,7 @@ namespace CoworkingReservation.Application.Services
                     Capacity = cs.Capacity,
                     PricePerDay = cs.PricePerDay,
                     IsActive = cs.IsActive,
+                    Rate = cs.Rate,
                     Address = cs.Address != null ? new AddressDTO
                     {
                         City = cs.Address.City,
@@ -306,6 +308,7 @@ namespace CoworkingReservation.Application.Services
                 Capacity = cs.Capacity,
                 PricePerDay = cs.PricePerDay,
                 IsActive = cs.IsActive,
+                Rate = cs.Rate,
                 Address = cs.Address != null ? new AddressDTO
                 {
                     City = cs.Address.City,
@@ -339,6 +342,7 @@ namespace CoworkingReservation.Application.Services
                 Capacity = cs.Capacity,
                 PricePerDay = cs.PricePerDay,
                 IsActive = cs.IsActive,
+                Rate = cs.Rate,
                 Address = cs.Address != null ? new AddressDTO
                 {
                     City = cs.Address.City,

@@ -17,6 +17,7 @@ namespace CoworkingReservation.Domain.DTOs
         public bool IsActive { get; set; }
         public AddressDTO Address { get; set; }
         public List<PhotoResponseDTO> Photos { get; set; }
+        public float Rate { get; set; }
     }
 
 

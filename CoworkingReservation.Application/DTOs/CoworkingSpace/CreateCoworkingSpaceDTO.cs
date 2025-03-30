@@ -24,7 +24,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero.")]
         public decimal PricePerDay { get; set; }
-
+        public float Rate { get; set; }
         [Required]
         public AddressDTO Address { get; set; }
         public List<IFormFile>? Photos { get; set; } // Recibe archivos

@@ -13,7 +13,7 @@ namespace CoworkingReservation.Domain.Entities
         public int Capacity { get; set; } // Capacidad máxima
         public decimal PricePerDay { get; set; } // Precio por día
         public bool IsActive { get; set; } = true; // Indica si está activo
-
+        public float Rate { get; set; }
         public CoworkingStatus Status { get; set; } = CoworkingStatus.Pending;
         [ForeignKey("Hoster")]
         public int HosterId { get; set; }
