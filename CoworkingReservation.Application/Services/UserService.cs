@@ -103,8 +103,6 @@ namespace CoworkingReservation.Application.Services
             return result == PasswordVerificationResult.Success ? user : null;
         }
 
-
-
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
