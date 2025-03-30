@@ -8,7 +8,6 @@ using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using CoworkingSpaceResponseDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceResponseDTO;
 
 namespace CoworkingReservation.Application.Services
 {

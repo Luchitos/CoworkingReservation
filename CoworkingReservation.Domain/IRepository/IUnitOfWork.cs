@@ -20,13 +20,13 @@ namespace CoworkingReservation.Domain.IRepository
         IAddressRepository Addresses { get; }
         IRepository<CoworkingSpacePhoto> CoworkingSpacePhotos { get; }
         IAuditLogRepository AuditLogs { get; }
-
         IRepository<UserPhoto> UserPhotos { get; }
-
         IRepository<ServiceOffered> Services { get; }
         IRepository<Benefit> Benefits { get; }
         IRepository<SafetyElement> SafetyElements { get; }
         IRepository<SpecialFeature> SpecialFeatures { get; }
+        ICoworkingAreaRepository CoworkingAreas { get; }
+        ICoworkingAvailabilityRepository CoworkingAvailabilities { get; }
         Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel);
 
 

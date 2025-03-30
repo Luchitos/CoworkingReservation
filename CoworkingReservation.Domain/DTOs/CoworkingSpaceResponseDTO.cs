@@ -20,7 +20,4 @@ namespace CoworkingReservation.Domain.DTOs
         public float Rate { get; set; }
     }
 
-
-
-
 }

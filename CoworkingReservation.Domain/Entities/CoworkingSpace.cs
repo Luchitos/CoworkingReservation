@@ -34,6 +34,8 @@ namespace CoworkingReservation.Domain.Entities
         public virtual ICollection<Benefit> Benefits { get; set; } = new List<Benefit>();
         public ICollection<SpecialFeature> SpecialFeatures { get; set; } = new List<SpecialFeature>();
         public ICollection<SafetyElement> SafetyElements { get; set; } = new List<SafetyElement>();
+        public virtual ICollection<CoworkingArea> Areas { get; set; } = new List<CoworkingArea>();
+
         public CoworkingSpace()
         {
             Photos = new List<CoworkingSpacePhoto>();
