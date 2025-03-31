@@ -96,6 +96,17 @@ namespace CoworkingReservation.Infrastructure.Data
                 .HasForeignKey(cs => cs.HosterId)
                 .OnDelete(DeleteBehavior.Restrict); // Evita ON DELETE CASCADE
 
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.TotalPrice)
+                .HasColumnType("decimal(18,2)");
+            // **Relación Hoster - CoworkingSpace**
+            modelBuilder.Entity<CoworkingSpace>()
+                .HasOne(cs => cs.Hoster)
+                .WithMany()
+                .HasForeignKey(cs => cs.HosterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
             // ✅ **Nuevas Configuraciones para CoworkingArea y CoworkingAvailability**
 
             // **CoworkingArea -> CoworkingSpace**
@@ -103,7 +114,7 @@ namespace CoworkingReservation.Infrastructure.Data
                 .HasOne(ca => ca.CoworkingSpace)
                 .WithMany(cs => cs.Areas)
                 .HasForeignKey(ca => ca.CoworkingSpaceId)
-                .OnDelete(DeleteBehavior.Cascade); // Si se elimina el coworking, se eliminan las áreas
+                .OnDelete(DeleteBehavior.Restrict);
 
             // **CoworkingAvailability -> CoworkingArea**
             modelBuilder.Entity<CoworkingAvailability>()

@@ -9,9 +9,10 @@ using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using AddressDTO = CoworkingReservation.Application.DTOs.Address.AddressDTO;
-using CoworkingSpaceResponseDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceResponseDTO;
-using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoResponseDTO;
+using AddressDTO = CoworkingReservation.Domain.DTOs.AddressDTO;
+using CoworkingSpaceResponseDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceResponseDTO;
+using CoworkingSpaceSummaryDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceSummaryDTO;
+using PhotoResponseDTO = CoworkingReservation.Domain.DTOs.PhotoResponseDTO;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -505,5 +506,19 @@ namespace CoworkingReservation.Application.Services
             return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
         }
 
+        Task<IEnumerable<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO> ICoworkingSpaceService.GetByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<IEnumerable<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllFilteredAsync(int? capacity, string? location)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
