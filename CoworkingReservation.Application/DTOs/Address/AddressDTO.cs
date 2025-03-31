@@ -1,6 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace CoworkingReservation.Domain.DTOs
+namespace CoworkingReservation.Application.DTOs.Address
 {
     public class AddressDTO
     {

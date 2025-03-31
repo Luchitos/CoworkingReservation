@@ -1,6 +1,6 @@
 ﻿namespace CoworkingReservation.Domain.DTOs
 {
-    public class BenefitDTO
+    public class CoworkingAreaResponseDTO
     {
     }
 }
