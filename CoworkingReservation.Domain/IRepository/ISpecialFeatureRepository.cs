@@ -9,6 +9,5 @@ namespace CoworkingReservation.Domain.IRepository
 {
     public interface ISpecialFeatureRepository : IRepository<SpecialFeature>
     {
-        Task<IEnumerable<SpecialFeature>> GetAllAsync();
     }
 }

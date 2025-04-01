@@ -9,6 +9,5 @@ namespace CoworkingReservation.Domain.IRepository
 {
     public interface ISafetyElementRepository : IRepository<SafetyElement>
     {
-        Task<IEnumerable<SafetyElement>> GetAllAsync();
     }
 }
