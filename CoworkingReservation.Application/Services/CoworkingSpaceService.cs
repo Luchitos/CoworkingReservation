@@ -9,22 +9,24 @@ using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using AddressDTO = CoworkingReservation.Domain.DTOs.AddressDTO;
-using CoworkingSpaceResponseDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceResponseDTO;
-using CoworkingSpaceSummaryDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceSummaryDTO;
-using PhotoResponseDTO = CoworkingReservation.Domain.DTOs.PhotoResponseDTO;
+using AddressDTO = CoworkingReservation.Application.DTOs.Address.AddressDTO;
+using CoworkingSpaceResponseDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceResponseDTO;
+using CoworkingSpaceSummaryDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceSummaryDTO;
+using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoResponseDTO;
 
 namespace CoworkingReservation.Application.Services
 {
     public class CoworkingSpaceService : ICoworkingSpaceService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICoworkingAreaService _coworkingAreaService;
         private readonly CoworkingApprovalJob _approvalJob;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService)
         {
             _unitOfWork = unitOfWork;
             _approvalJob = approvalJob;
+            _coworkingAreaService = coworkingAreaService;
         }
 
         public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
@@ -53,7 +55,7 @@ namespace CoworkingReservation.Application.Services
 
                 var coworkingSpace = new CoworkingSpace
                 {
-                    Name = spaceDto.Name,
+                    Name = spaceDto.Title,
                     Description = spaceDto.Description,
                     Capacity = spaceDto.Capacity,
                     PricePerDay = spaceDto.PricePerDay,
@@ -112,7 +114,11 @@ namespace CoworkingReservation.Application.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
-
+                // Nueva línea: agregar áreas con servicio externo
+                if (spaceDto.Areas?.Any() == true)
+                {
+                    await _coworkingAreaService.AddAreasToCoworkingAsync(spaceDto.Areas, coworkingSpace.Id, userId);
+                }
                 await transaction.CommitAsync();
 
                 _ = Task.Run(async () => await _approvalJob.Run());
@@ -486,16 +492,6 @@ namespace CoworkingReservation.Application.Services
             }).ToListAsync();
         }
 
-
-        //public async Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightFilteredAsync(int? capacity, string? location)
-        //{
-        //    if (!string.IsNullOrEmpty(location))
-        //        return await _unitOfWork.CoworkingSpaces.GetAllFilteredOptimizedAsync(location);
-
-        //    fallback si no hay location(se puede extender)
-        //    return await GetAllActiveSpacesAsync();
-        //}
-
         public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
         {
             return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null);
@@ -506,19 +502,28 @@ namespace CoworkingReservation.Application.Services
             return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
         }
 
-        Task<IEnumerable<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()
-        {
-            throw new NotImplementedException();
-        }
+        //Task<IEnumerable<CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        Task<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO> ICoworkingSpaceService.GetByIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
+        //Task<CoworkingSpaceResponseDTO> ICoworkingSpaceService.GetByIdAsync(int id)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        Task<IEnumerable<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllFilteredAsync(int? capacity, string? location)
-        {
-            throw new NotImplementedException();
-        }
+        //public async Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightFilteredAsync(int? capacity, string? location)
+        //{
+        //    if (!string.IsNullOrEmpty(location))
+        //        return await _unitOfWork.CoworkingSpaces.GetAllFilteredOptimizedAsync(location);
+
+        //    fallback si no hay location(se puede extender)
+        //    return await GetAllActiveSpacesAsync();
+        //}
+
+        //Task<IEnumerable<DTOs.CoworkingSpace.CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllFilteredAsync(int? capacity, string? location)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {
@@ -19,7 +22,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// Nombre del espacio de coworking.
         /// </summary>
         [Required(ErrorMessage = "El nombre es obligatorio.")]
-        public string Name { get; set; }
+        public string Title { get; set; }
 
         /// <summary>
         /// Descripción del espacio de coworking.
@@ -37,7 +40,6 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// <summary>
         /// Precio por día del coworking space.
         /// </summary>
-        [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal PricePerDay { get; set; }
         public float Rate { get; set; }
         /// <summary>
@@ -64,7 +66,23 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// <summary>
         /// Lista de áreas dentro del coworking space.
         /// </summary>
-        public List<CoworkingAreaDTO> Areas { get; set; } = new List<CoworkingAreaDTO>();
+        /// <summary>
+        /// String JSON de las áreas enviado desde el formulario
+        /// </summary>
+        [FromForm(Name = "AreasJson")]
+        public string AreasJson { get; set; }
+
+        /// <summary>
+        /// Lista de áreas deserializada automáticamente
+        /// </summary>
+        [NotMapped]
+        public List<CoworkingAreaDTO> Areas =>
+            string.IsNullOrWhiteSpace(AreasJson)
+                ? new List<CoworkingAreaDTO>()
+                : JsonSerializer.Deserialize<List<CoworkingAreaDTO>>(AreasJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<CoworkingAreaDTO>();
 
         /// <summary>
         /// Estado del coworking space (Pendiente, Aprobado, Rechazado).

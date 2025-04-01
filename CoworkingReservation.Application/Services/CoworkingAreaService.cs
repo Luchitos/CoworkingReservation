@@ -60,6 +60,36 @@ namespace CoworkingReservation.Application.Services
 
             return area;
         }
+        public async Task AddAreasToCoworkingAsync(IEnumerable<CoworkingAreaDTO> areaDtos, int coworkingSpaceId, int hosterId)
+        {
+            if (areaDtos == null || !areaDtos.Any())
+                return;
+
+            int currentTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
+            int totalNewCapacity = areaDtos.Sum(a => a.Capacity);
+
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
+            if (coworkingSpace == null)
+                throw new KeyNotFoundException("Coworking space not found.");
+
+            if (coworkingSpace.HosterId != hosterId)
+                throw new UnauthorizedAccessException("You do not have permission to add areas to this space.");
+
+            if (currentTotalCapacity + totalNewCapacity > coworkingSpace.Capacity)
+                throw new InvalidOperationException("Total capacity of areas exceeds coworking space capacity.");
+
+            var areas = areaDtos.Select(dto => new CoworkingArea
+            {
+                Capacity = dto.Capacity,
+                Description = dto.Description,
+                PricePerDay = dto.PricePerDay,
+                Type = dto.Type,
+                CoworkingSpaceId = coworkingSpaceId
+            });
+
+            await _unitOfWork.CoworkingAreas.AddRangeAsync(areas);
+            await _unitOfWork.SaveChangesAsync();
+        }
 
         #endregion
 

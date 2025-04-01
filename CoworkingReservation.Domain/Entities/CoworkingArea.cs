@@ -13,8 +13,7 @@ namespace CoworkingReservation.Domain.Entities
         public int Id { get; set; }
 
         public CoworkingAreaType Type { get; set; } // Ahora es un enum en lugar de un string
-
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public int Capacity { get; set; }
         public decimal PricePerDay { get; set; }
 

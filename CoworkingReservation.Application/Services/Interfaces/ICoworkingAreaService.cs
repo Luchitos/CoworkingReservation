@@ -23,7 +23,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <param name="hosterId">ID del hoster que crea el área.</param>
         /// <returns>El área de coworking creada.</returns>
         Task<CoworkingArea> CreateAsync(CreateCoworkingAreaDTO areaDto, int coworkingSpaceId, int hosterId);
-
+        Task AddAreasToCoworkingAsync(IEnumerable<CoworkingAreaDTO> areaDtos, int coworkingSpaceId, int hosterId);
         /// <summary>
         /// Actualiza un área de coworking existente.
         /// </summary>

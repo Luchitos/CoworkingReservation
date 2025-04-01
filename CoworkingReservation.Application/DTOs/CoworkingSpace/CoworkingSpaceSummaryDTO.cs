@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CoworkingReservation.Domain.DTOs;
+using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.Photo;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {

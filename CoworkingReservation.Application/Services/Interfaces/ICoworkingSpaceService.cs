@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CoworkingSpaceResponseDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceResponseDTO;
-using CoworkingSpaceSummaryDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceSummaryDTO;
+using CoworkingSpaceSummaryDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceSummaryDTO;
 
 namespace CoworkingReservation.Application.Services.Interfaces
 {

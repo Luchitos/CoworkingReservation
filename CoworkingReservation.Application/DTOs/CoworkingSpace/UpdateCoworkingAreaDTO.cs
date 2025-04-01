@@ -26,7 +26,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// </summary>
         [Required(ErrorMessage = "La descripción es obligatoria.")]
         [MaxLength(500, ErrorMessage = "La descripción no puede superar los 500 caracteres.")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Capacidad máxima del área.
