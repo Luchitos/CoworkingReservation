@@ -78,13 +78,6 @@ namespace CoworkingReservation.Infrastructure.Data
                 .HasForeignKey(r => r.CoworkingSpaceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Address>()
-                .Property(a => a.Latitude)
-                .HasColumnType("decimal(9,6)");
-
-            modelBuilder.Entity<Address>()
-                .Property(a => a.Longitude)
-                .HasColumnType("decimal(9,6)");
             // Configuración para evitar truncamientos en decimales
             modelBuilder.Entity<CoworkingSpace>()
                 .Property(cs => cs.PricePerDay)

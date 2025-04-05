@@ -13,13 +13,13 @@ namespace CoworkingReservation.Infrastructure.Migrations
             migrationBuilder.AddColumn<decimal>(
                 name: "Latitude",
                 table: "Addresses",
-                type: "decimal(9,6)",
+                type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "Longitude",
                 table: "Addresses",
-                type: "decimal(9,6)",
+                type: "nvarchar(max)",
                 nullable: true);
         }
 

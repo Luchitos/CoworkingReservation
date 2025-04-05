@@ -13,8 +13,8 @@ namespace CoworkingReservation.Domain.Entities
         public string Province { get; set; }
         public string Street { get; set; }
         public string ZipCode { get; set; }
-        public decimal? Latitude { get; set; }    
-        public decimal? Longitude { get; set; }
+        public string Latitude { get; set; }    
+        public string Longitude { get; set; }
         // Relación
         public List<CoworkingSpace> CoworkingSpaces { get; set; } = new List<CoworkingSpace>();
     }
