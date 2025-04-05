@@ -21,13 +21,11 @@ namespace CoworkingReservation.Domain.DTOs
 
         [Required]
         public string Street { get; set; }
-
         public string? StreetOne { get; set; }
         public string? StreetTwo { get; set; }
 
         [Required]
         public string ZipCode { get; set; }
-
         public string Latitude { get; set; }
         public string Longitude { get; set; }
     }

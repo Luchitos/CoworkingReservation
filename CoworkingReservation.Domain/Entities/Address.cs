@@ -12,6 +12,9 @@ namespace CoworkingReservation.Domain.Entities
         public string Number { get; set; }
         public string Province { get; set; }
         public string Street { get; set; }
+        public string StreetOne { get; set; }
+        public string StreetTwo { get; set; }
+
         public string ZipCode { get; set; }
         public string Latitude { get; set; }    
         public string Longitude { get; set; }

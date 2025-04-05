@@ -70,6 +70,8 @@ namespace CoworkingReservation.Application.Services
                         Number = spaceDto.Address.Number,
                         Province = spaceDto.Address.Province,
                         Street = spaceDto.Address.Street,
+                        StreetOne = spaceDto.Address.StreetOne,
+                        StreetTwo = spaceDto.Address.StreetTwo,
                         ZipCode = spaceDto.Address.ZipCode,
                         Latitude = spaceDto.Address.Latitude,
                         Longitude = spaceDto.Address.Longitude,
@@ -178,6 +180,8 @@ namespace CoworkingReservation.Application.Services
             coworkingSpace.Address.Number = dto.Address.Number;
             coworkingSpace.Address.Province = dto.Address.Province;
             coworkingSpace.Address.Street = dto.Address.Street;
+            coworkingSpace.Address.StreetOne = dto.Address.StreetOne;
+            coworkingSpace.Address.StreetTwo = dto.Address.StreetTwo;
             coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
 
             // **Actualizar Servicios**
