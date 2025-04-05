@@ -33,12 +33,8 @@ namespace CoworkingReservation.Domain.DTOs
         /// <summary>
         /// Capacidad total del espacio.
         /// </summary>
-        public int Capacity { get; set; }
+        public int CapacityTotal { get; set; }
 
-        /// <summary>
-        /// Precio por día del espacio de coworking.
-        /// </summary>
-        public decimal PricePerDay { get; set; }
 
         /// <summary>
         /// Indica si el espacio está activo o no.

@@ -79,9 +79,6 @@ namespace CoworkingReservation.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configuración para evitar truncamientos en decimales
-            modelBuilder.Entity<CoworkingSpace>()
-                .Property(cs => cs.PricePerDay)
-                .HasColumnType("decimal(18,2)");
 
             modelBuilder.Entity<CoworkingSpace>()
                 .HasOne(cs => cs.Hoster)

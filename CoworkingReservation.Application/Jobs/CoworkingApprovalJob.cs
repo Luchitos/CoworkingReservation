@@ -49,8 +49,6 @@ namespace CoworkingReservation.Application.Jobs
         private bool IsValidForApproval(CoworkingSpace space)
         {
             return !string.IsNullOrWhiteSpace(space.Name)
-                && space.PricePerDay > 0
-                && space.Capacity > 0
                 && space.Address != null
                 && !string.IsNullOrWhiteSpace(space.Address.Street)
                 && space.Photos.Count >= 2;

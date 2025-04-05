@@ -34,13 +34,8 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// <summary>
         /// Capacidad total del espacio.
         /// </summary>
-        [Range(1, int.MaxValue, ErrorMessage = "La capacidad debe ser al menos 1.")]
-        public int Capacity { get; set; }
+        public int CapacityTotal { get; set; }
 
-        /// <summary>
-        /// Precio por día del coworking space.
-        /// </summary>
-        public decimal PricePerDay { get; set; }
         public float Rate { get; set; }
         /// <summary>
         /// Dirección del coworking space.

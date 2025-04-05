@@ -41,7 +41,7 @@ namespace CoworkingReservation.Application.Services
                 throw new UnauthorizedAccessException("You do not have permission to add an area.");
 
             var currentTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
-            if (currentTotalCapacity + areaDto.Capacity > coworkingSpace.Capacity)
+            if (currentTotalCapacity + areaDto.Capacity > coworkingSpace.CapacityTotal)
                 throw new InvalidOperationException("Total area capacity exceeds the coworking space's maximum capacity.");
 
             var area = new CoworkingArea
@@ -75,7 +75,7 @@ namespace CoworkingReservation.Application.Services
             if (coworkingSpace.HosterId != hosterId)
                 throw new UnauthorizedAccessException("You do not have permission to add areas to this space.");
 
-            if (currentTotalCapacity + totalNewCapacity > coworkingSpace.Capacity)
+            if (currentTotalCapacity + totalNewCapacity > coworkingSpace.CapacityTotal)
                 throw new InvalidOperationException("Total capacity of areas exceeds coworking space capacity.");
 
             var areas = areaDtos.Select(dto => new CoworkingArea

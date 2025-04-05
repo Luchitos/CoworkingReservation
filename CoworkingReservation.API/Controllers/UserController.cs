@@ -16,10 +16,14 @@ namespace CoworkingReservation.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ITokenService _tokenService;
 
-        public UserController(IUserService userService)
+
+        public UserController(IUserService userService, ITokenService tokenService)
         {
             _userService = userService;
+            _tokenService = tokenService;
+
         }
 
 
@@ -52,7 +56,21 @@ namespace CoworkingReservation.API.Controllers
             try
             {
                 var user = await _userService.RegisterAsync(userDto);
-                return Ok(Responses.Response.Success(user));
+                var token = _tokenService.GenerateToken(user.Id, user.Email, user.Role);
+
+                return Ok(Responses.Response.Success(new
+                {
+                    token = token,
+                    User = new
+                    {
+                        user.Id,
+                        user.Name,
+                        user.Lastname,
+                        user.Email,
+                        user.Role,
+                        user.Photo
+                    }
+                }));
             }
             catch (Exception ex)
             {

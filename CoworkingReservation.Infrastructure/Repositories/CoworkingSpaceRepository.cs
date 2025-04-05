@@ -46,7 +46,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
 
             if (capacity.HasValue)
             {
-                query = query.Where(cs => cs.Capacity >= capacity.Value);
+                query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
             }
 
             if (!string.IsNullOrEmpty(location))
@@ -64,8 +64,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 Id = cs.Id,
                 Name = cs.Name,
                 Description = cs.Description,
-                Capacity = cs.Capacity,
-                PricePerDay = cs.PricePerDay,
+                CapacityTotal = cs.CapacityTotal,
                 IsActive = cs.IsActive,
                 Address = cs.Address != null ? new AddressDTO
                 {
@@ -140,7 +139,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
 
             if (capacity.HasValue)
             {
-                query = query.Where(cs => cs.Capacity >= capacity.Value);
+                query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
             }
 
             if (!string.IsNullOrEmpty(location))
@@ -158,7 +157,6 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     cs.Name,
                     Address = cs.Address,
                     CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto),
-                    PricePerDay = cs.PricePerDay,
                     Rate = cs.Rate,
                 })
                 .ToListAsync();
@@ -182,7 +180,6 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     FilePath = cs.CoverPhoto.FilePath
                 } : null,
                 Rate = cs.Rate,
-                PricePerDay = cs.PricePerDay
             });
         }
     }

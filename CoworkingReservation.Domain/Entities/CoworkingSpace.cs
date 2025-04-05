@@ -11,8 +11,7 @@ namespace CoworkingReservation.Domain.Entities
         public int Id { get; set; } // Identificador único
         public string Name { get; set; } // Nombre del espacio
         public string Description { get; set; } // Descripción del espacio
-        public int Capacity { get; set; } // Capacidad máxima
-        public decimal PricePerDay { get; set; } // Precio por día
+        public int CapacityTotal { get; set; } // Capacidad máxima
         public bool IsActive { get; set; } = true; // Indica si está activo
 
         [Range(0, 5)] 

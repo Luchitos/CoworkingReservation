@@ -34,14 +34,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// </summary>
         [Required(ErrorMessage = "La capacidad es obligatoria.")]
         [Range(1, int.MaxValue, ErrorMessage = "La capacidad debe ser mayor a 0.")]
-        public int Capacity { get; set; }
-
-        /// <summary>
-        /// Precio por día del coworking.
-        /// </summary>
-        [Required(ErrorMessage = "El precio por día es obligatorio.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
-        public decimal PricePerDay { get; set; }
+        public int CapacityTotal { get; set; }
 
         /// <summary>
         /// Dirección del espacio de coworking.

@@ -100,8 +100,7 @@ namespace CoworkingReservation.Infrastructure.Data
                     {
                         Name = "Coworking Space 1",
                         Description = "A modern coworking space in Buenos Aires.",
-                        Capacity = 20,
-                        PricePerDay = 1500,
+                        CapacityTotal = 20,
                         IsActive = true,
                         Address = addresses[0],
                         HosterId = users.First(u => u.UserName == "carlosl").Id
@@ -110,8 +109,7 @@ namespace CoworkingReservation.Infrastructure.Data
                     {
                         Name = "Coworking Space 2",
                         Description = "A cozy coworking space in Córdoba.",
-                        Capacity = 15,
-                        PricePerDay = 1200,
+                        CapacityTotal = 15,
                         IsActive = true,
                         Address = addresses[1],
                         HosterId = users.First(u => u.UserName == "carlosl").Id

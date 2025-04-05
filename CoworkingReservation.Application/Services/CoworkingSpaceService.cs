@@ -57,8 +57,7 @@ namespace CoworkingReservation.Application.Services
                 {
                     Name = spaceDto.Title,
                     Description = spaceDto.Description,
-                    Capacity = spaceDto.Capacity,
-                    PricePerDay = spaceDto.PricePerDay,
+                    CapacityTotal = spaceDto.CapacityTotal,
                     HosterId = userId,
                     Status = CoworkingStatus.Pending,
                     Rate = spaceDto.Rate,
@@ -169,8 +168,7 @@ namespace CoworkingReservation.Application.Services
             // **Actualizar propiedades principales**
             coworkingSpace.Name = dto.Name;
             coworkingSpace.Description = dto.Description;
-            coworkingSpace.PricePerDay = dto.PricePerDay;
-            coworkingSpace.Capacity = dto.Capacity;
+            coworkingSpace.CapacityTotal = dto.CapacityTotal;
 
             // **Actualizar Dirección**
             coworkingSpace.Address.City = dto.Address.City;
@@ -264,8 +262,7 @@ namespace CoworkingReservation.Application.Services
                     Id = cs.Id,
                     Name = cs.Name,
                     Description = cs.Description,
-                    Capacity = cs.Capacity,
-                    PricePerDay = cs.PricePerDay,
+                    CapacityTotal = cs.CapacityTotal,
                     IsActive = cs.IsActive,
                     Rate = cs.Rate,
                     Address = cs.Address != null ? new AddressDTO
@@ -297,7 +294,7 @@ namespace CoworkingReservation.Application.Services
 
             if (capacity.HasValue)
             {
-                query = query.Where(cs => cs.Capacity >= capacity.Value);
+                query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
             }
 
             if (!string.IsNullOrEmpty(location))
@@ -315,8 +312,7 @@ namespace CoworkingReservation.Application.Services
                 Id = cs.Id,
                 Name = cs.Name,
                 Description = cs.Description,
-                Capacity = cs.Capacity,
-                PricePerDay = cs.PricePerDay,
+                CapacityTotal = cs.CapacityTotal,
                 IsActive = cs.IsActive,
                 Rate = cs.Rate,
                 Address = cs.Address != null ? new AddressDTO
@@ -349,8 +345,7 @@ namespace CoworkingReservation.Application.Services
                 Id = cs.Id,
                 Name = cs.Name,
                 Description = cs.Description,
-                Capacity = cs.Capacity,
-                PricePerDay = cs.PricePerDay,
+                CapacityTotal = cs.CapacityTotal,
                 IsActive = cs.IsActive,
                 Rate = cs.Rate,
                 Address = cs.Address != null ? new AddressDTO
@@ -458,7 +453,7 @@ namespace CoworkingReservation.Application.Services
                 .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
 
             if (capacity.HasValue)
-                query = query.Where(cs => cs.Capacity >= capacity.Value);
+                query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
 
             if (!string.IsNullOrEmpty(location))
                 query = query.Where(cs =>
