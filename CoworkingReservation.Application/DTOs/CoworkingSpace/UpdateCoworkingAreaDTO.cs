@@ -41,7 +41,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         [Required(ErrorMessage = "El precio por día es obligatorio.")]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal PricePerDay { get; set; }
-
+        public bool available { get; set; } = true;
         #endregion
     }
 }

@@ -39,6 +39,8 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         [Required(ErrorMessage = "El tipo de área es obligatorio.")]
         public CoworkingAreaType Type { get; set; }
 
+        public bool Available { get; set; }
+
         #endregion
     }
 }

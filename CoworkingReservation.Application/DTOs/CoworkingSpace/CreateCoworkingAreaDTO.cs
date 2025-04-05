@@ -40,6 +40,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal PricePerDay { get; set; }
 
+        public bool Available { get; set; }
         #endregion
     }
 }

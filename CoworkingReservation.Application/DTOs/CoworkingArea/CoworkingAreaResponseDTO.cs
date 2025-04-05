@@ -38,6 +38,9 @@ namespace CoworkingReservation.Application.DTOs.CoworkingArea
         /// Precio por día de uso del área.
         /// </summary>
         public decimal PricePerDay { get; set; }
+        public bool Available { get; set; } = true;
+
+
 
         #endregion
     }

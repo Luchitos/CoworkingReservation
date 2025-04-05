@@ -48,6 +48,7 @@ namespace CoworkingReservation.Application.Services
             {
                 Type = areaDto.Type,
                 Description = areaDto.Description,
+                Available = areaDto.Available,
                 Capacity = areaDto.Capacity,
                 PricePerDay = areaDto.PricePerDay,
                 CoworkingSpaceId = coworkingSpaceId
@@ -83,6 +84,7 @@ namespace CoworkingReservation.Application.Services
                 Capacity = dto.Capacity,
                 Description = dto.Description,
                 PricePerDay = dto.PricePerDay,
+                Available = dto.Available,
                 Type = dto.Type,
                 CoworkingSpaceId = coworkingSpaceId
             });
@@ -111,6 +113,7 @@ namespace CoworkingReservation.Application.Services
             area.Description = dto.Description;
             area.Capacity = dto.Capacity;
             area.PricePerDay = dto.PricePerDay;
+            area.Available = dto.available;
             area.Type = dto.Type;
 
             await _unitOfWork.CoworkingAreas.UpdateAsync(area);

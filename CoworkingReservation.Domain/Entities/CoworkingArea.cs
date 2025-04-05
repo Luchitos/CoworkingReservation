@@ -16,6 +16,7 @@ namespace CoworkingReservation.Domain.Entities
         public string? Description { get; set; }
         public int Capacity { get; set; }
         public decimal PricePerDay { get; set; }
+        public bool Available { get; set; } = true;
 
         [ForeignKey("CoworkingSpace")]
         public int CoworkingSpaceId { get; set; }
