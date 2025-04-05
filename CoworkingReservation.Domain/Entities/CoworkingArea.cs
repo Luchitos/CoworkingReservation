@@ -11,7 +11,6 @@ namespace CoworkingReservation.Domain.Entities
     public class CoworkingArea
     {
         public int Id { get; set; }
-
         public CoworkingAreaType Type { get; set; } // Ahora es un enum en lugar de un string
         public string? Description { get; set; }
         public int Capacity { get; set; }

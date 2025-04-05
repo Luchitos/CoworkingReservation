@@ -1,18 +1,24 @@
-﻿using CoworkingReservation.Application.DTOs.Address;
+﻿using CoworkingReservation.Application.DTOs;
+using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.CoworkingArea;
 using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Application.DTOs.SafetyElementDTO;
+using CoworkingReservation.Application.DTOs.SpecialFeature;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using AddressDTO = CoworkingReservation.Application.DTOs.Address.AddressDTO;
+using BenefitDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.BenefitDTO;
 using CoworkingSpaceResponseDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceResponseDTO;
 using CoworkingSpaceSummaryDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceSummaryDTO;
 using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoResponseDTO;
+using SafetyElementDTO = CoworkingReservation.Application.DTOs.SafetyElementDTO.SafetyElementDTO;
+using ServiceOfferedDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.ServiceOfferedDTO;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -340,7 +346,7 @@ namespace CoworkingReservation.Application.Services
         public async Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id)
         {
             var cs = await _unitOfWork.CoworkingSpaces
-                .GetByIdAsync(id, includeProperties: "Address,Photos");
+                .GetByIdAsync(id, includeProperties: "Address,Photos,Benefits,Services,SafetyElements,SpecialFeatures,Areas");
 
             if (cs == null) throw new KeyNotFoundException("Coworking space not found");
 
@@ -360,7 +366,9 @@ namespace CoworkingReservation.Application.Services
                     Number = cs.Address.Number,
                     Province = cs.Address.Province,
                     Street = cs.Address.Street,
-                    ZipCode = cs.Address.ZipCode
+                    ZipCode = cs.Address.ZipCode,
+                    Latitude = cs.Address.Latitude,
+                    Longitude = cs.Address.Longitude
                 } : null,
                 Photos = cs.Photos?.Select(p => new PhotoResponseDTO
                 {
@@ -368,7 +376,39 @@ namespace CoworkingReservation.Application.Services
                     IsCoverPhoto = p.IsCoverPhoto,
                     FilePath = p.FilePath,
                     ContentType = p.MimeType
-                }).ToList() ?? new List<PhotoResponseDTO>()
+                }).ToList() ?? new List<PhotoResponseDTO>(),
+            Benefits = cs.Benefits?.Select(b => new BenefitDTO
+            {
+                Id = b.Id,
+                Name = b.Name,
+            }).ToList() ?? new List<BenefitDTO>(),
+
+                Services = cs.Services?.Select(s => new ServiceOfferedDTO
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                }).ToList() ?? new List<ServiceOfferedDTO>(),
+
+                SafetyElements = cs.SafetyElements?.Select(se => new SafetyElementDTO
+                {
+                    Id = se.Id,
+                    Name = se.Name
+                }).ToList() ?? new List<SafetyElementDTO>(),
+
+                //SpecialFeatures = cs.SpecialFeatures?.Select(sf => new SpecialFeatureDTO
+                //{
+                //    Id = sf.Id,
+                //    Name = sf.Name
+                //}).ToList() ?? new List<SpecialFeatureDTO>(),
+
+                Areas = cs.Areas?.Select(a => new CoworkingAreaResponseDTO
+                {
+                    Id = a.Id,
+                    Type = a.Type,
+                    Description = a.Description,
+                    Capacity = a.Capacity,
+                    PricePerDay = a.PricePerDay
+                }).ToList() ?? new List<CoworkingAreaResponseDTO>()
             };
         }
 
@@ -494,12 +534,12 @@ namespace CoworkingReservation.Application.Services
 
         public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
         {
-            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null);
+            return (IEnumerable<CoworkingSpaceListItemDTO>)await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null);
         }
 
         public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location)
         {
-            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
+            return (IEnumerable<CoworkingSpaceListItemDTO>)await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
         }
 
         //Task<IEnumerable<CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()

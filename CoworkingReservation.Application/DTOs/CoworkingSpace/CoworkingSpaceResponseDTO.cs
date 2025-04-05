@@ -1,6 +1,10 @@
 ﻿using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.CoworkingArea;
 using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Domain.DTOs;
+using AddressDTO = CoworkingReservation.Application.DTOs.Address.AddressDTO;
+using CoworkingAreaResponseDTO = CoworkingReservation.Application.DTOs.CoworkingArea.CoworkingAreaResponseDTO;
+using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoResponseDTO;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {
@@ -67,6 +71,8 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// Lista de áreas dentro del coworking.
         /// </summary>
         public List<CoworkingAreaResponseDTO> Areas { get; set; } = new List<CoworkingAreaResponseDTO>();
+        public List<SpecialFeatureDTO> SpecialFeatures { get; set; } = new List<SpecialFeatureDTO>();
+        public List<SafetyElementDTO.SafetyElementDTO> SafetyElements { get; internal set; }
 
         #endregion
     }

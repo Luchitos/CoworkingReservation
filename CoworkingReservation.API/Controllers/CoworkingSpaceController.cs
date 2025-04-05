@@ -3,6 +3,9 @@ using System.Security.Claims;
 using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using static CoworkingReservation.Application.Queries.CoworkingSpaceQuery;
+
 
 namespace CoworkingReservation.API.Controllers
 {
@@ -11,17 +14,26 @@ namespace CoworkingReservation.API.Controllers
     public class CoworkingSpaceController : ControllerBase
     {
         private readonly ICoworkingSpaceService _coworkingSpaceService;
+        private readonly IMediator _mediator;
 
-        public CoworkingSpaceController(ICoworkingSpaceService coworkingSpaceService)
+        public CoworkingSpaceController(ICoworkingSpaceService coworkingSpaceService, IMediator mediator)
         {
             _coworkingSpaceService = coworkingSpaceService;
+            _mediator = mediator;
         }
 
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> GetById(int id)
+        //{
+        //    var space = await _coworkingSpaceService.GetByIdAsync(id);
+        //    return Ok(Responses.Response.Success(space));
+        //}
+
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            var space = await _coworkingSpaceService.GetByIdAsync(id);
-            return Ok(Responses.Response.Success(space));
+            var result = await _mediator.Send(new GetCoworkingSpaceByIdQuery(id, cancellationToken));
+            return Ok(Responses.Response.Success(result));
         }
 
         //[HttpGet]

@@ -185,5 +185,10 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 PricePerDay = cs.PricePerDay
             });
         }
+        public IQueryable<CoworkingSpace> GetAll()
+        {
+            return _context.CoworkingSpaces.AsQueryable();
+        }
+
     }
 }

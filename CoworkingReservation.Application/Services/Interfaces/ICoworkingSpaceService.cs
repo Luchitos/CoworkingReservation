@@ -1,5 +1,4 @@
-﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
-using CoworkingReservation.Domain.DTOs;
+﻿using CoworkingReservation.Application.DTOs;
 using CoworkingReservation.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,8 +15,8 @@ namespace CoworkingReservation.Application.Services.Interfaces
         Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync();
         Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id);
         Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location);
-        Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int hosterId);
-        Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole);
+        Task<CoworkingSpace> CreateAsync(DTOs.CoworkingSpace.CreateCoworkingSpaceDTO spaceDto, int hosterId);
+        Task UpdateAsync(int id, DTOs.CoworkingSpace.UpdateCoworkingSpaceDTO dto, int hosterId, string userRole);
         Task DeleteAsync(int id, int hosterId);
         Task ToggleActiveStatusAsync(int coworkingSpaceId, int userId, string userRole);
 

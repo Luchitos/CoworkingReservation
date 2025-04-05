@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Http.Features;
 using CoworkingReservation.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using CoworkingReservation.Application.Jobs;
+using CoworkingReservation.Application.Queries;
+using CoworkingReservation.Application.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +58,11 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<ISpecialFeatureRepository, SpecialFeatureRepository>();
 builder.Services.AddScoped<ISafetyElementRepository, SafetyElementRepository>();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(GetCoworkingSpaceByIdHandler).Assembly);
+});
+
 
 
 // Registrar los servicios
@@ -69,6 +76,7 @@ builder.Services.AddScoped<ICoworkingAreaService, CoworkingAreaService>();
 builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
 builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
 
+builder.Services.AddAutoMapper(typeof(CoworkingSpaceProfile).Assembly);
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
