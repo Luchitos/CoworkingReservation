@@ -68,13 +68,18 @@ builder.Services.AddScoped<IServiceOfferedService, ServiceOfferedService>();
 builder.Services.AddScoped<ICoworkingAreaService, CoworkingAreaService>();
 builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
 builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
-
+builder.Services.AddScoped<IImageUploadService, ImgBBImageUploadService>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
 
-// Agregar configuración de JWT
+// Agregar configuración de JWT y ImgBB
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<ImgBBSettings>(builder.Configuration.GetSection("ImgBBSettings"));
+
+// Registrar HttpClient para ImgBB
+builder.Services.AddHttpClient<IImageUploadService, ImgBBImageUploadService>();
+
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 104857600; // 100MB

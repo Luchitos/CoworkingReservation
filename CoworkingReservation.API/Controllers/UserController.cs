@@ -68,7 +68,7 @@ namespace CoworkingReservation.API.Controllers
                         user.Lastname,
                         user.Email,
                         user.Role,
-                        user.Photo
+                        ProfilePhotoUrl = user.Photo?.FilePath // URL directa a ImgBB
                     }
                 }));
             }

@@ -106,7 +106,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     cs.Id,
                     cs.Name,
                     Address = cs.Address,
-                    CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto)
+                    CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault()
                 })
                 .ToListAsync();
 
@@ -123,11 +123,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     Country = cs.Address.Country,
                     ZipCode = cs.Address.ZipCode
                 },
-                CoverPhoto = cs.CoverPhoto != null ? new PhotoResponseDTO
-                {
-                    IsCoverPhoto = cs.CoverPhoto.IsCoverPhoto,
-                    FilePath = cs.CoverPhoto.FilePath
-                } : null
+                CoverPhotoUrl = cs.CoverPhotoUrl
             }).ToList();
         }
 
@@ -156,7 +152,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     cs.Id,
                     cs.Name,
                     Address = cs.Address,
-                    CoverPhoto = cs.Photos.FirstOrDefault(p => p.IsCoverPhoto),
+                    CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault(),
                     Rate = cs.Rate,
                 })
                 .ToListAsync();
@@ -172,13 +168,11 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     Street = cs.Address.Street,
                     Number = cs.Address.Number,
                     Country = cs.Address.Country,
-                    ZipCode = cs.Address.ZipCode
+                    ZipCode = cs.Address.ZipCode,
+                    Latitude = cs.Address.Latitude,
+                    Longitude = cs.Address.Longitude
                 },
-                CoverPhoto = cs.CoverPhoto != null ? new PhotoResponseDTO
-                {
-                    IsCoverPhoto = cs.CoverPhoto.IsCoverPhoto,
-                    FilePath = cs.CoverPhoto.FilePath
-                } : null,
+                CoverPhotoUrl = cs.CoverPhotoUrl,
                 Rate = cs.Rate,
             });
         }

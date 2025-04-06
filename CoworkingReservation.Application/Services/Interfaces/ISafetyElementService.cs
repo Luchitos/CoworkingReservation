@@ -11,5 +11,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
     {
         Task<IEnumerable<SafetyElement>> GetAllAsync();
         Task<SafetyElement?> GetByIdAsync(int id);
+        Task<SafetyElement> CreateAsync(SafetyElement safetyElement);
+        Task DeleteAsync(int id);
     }
 }

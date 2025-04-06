@@ -11,5 +11,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
     {
         Task<IEnumerable<SpecialFeature>> GetAllAsync();
         Task<SpecialFeature?> GetByIdAsync(int id);
+        Task<SpecialFeature> CreateAsync(SpecialFeature specialFeature);
+        Task DeleteAsync(int id);
     }
 }

@@ -15,12 +15,14 @@ namespace CoworkingReservation.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IImageUploadService _imageUploadService;
 
 
-        public UserService(IUnitOfWork unitOfWork, IPasswordHasher<User> passwordHasher)
+        public UserService(IUnitOfWork unitOfWork, IPasswordHasher<User> passwordHasher, IImageUploadService imageUploadService)
         {
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
+            _imageUploadService = imageUploadService;
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
@@ -30,7 +32,7 @@ namespace CoworkingReservation.Application.Services
 
         public async Task<User> GetByIdAsync(int id)
         {
-            return await _unitOfWork.Users.GetByIdAsync(id);
+            return await _unitOfWork.Users.GetByIdWithPhotoAsync(id);
         }
 
         public async Task<User> RegisterAsync(UserRegisterDTO userDto)
@@ -66,24 +68,34 @@ namespace CoworkingReservation.Application.Services
             // Manejar la foto de perfil solo si está presente
             if (userDto.ProfilePhoto != null)
             {
-                using var memoryStream = new MemoryStream();
-                await userDto.ProfilePhoto.CopyToAsync(memoryStream);
-
-                var photo = new UserPhoto
+                try 
                 {
-                    FileName = userDto.ProfilePhoto.FileName,
-                    MimeType = userDto.ProfilePhoto.ContentType,
-                    FilePath = Convert.ToBase64String(memoryStream.ToArray()),
-                    UserId = newUser.Id // Asignar después de guardar el usuario
-                };
+                    // Subir la imagen a ImgBB usando el nuevo método organizado por carpetas
+                    string imageUrl = await _imageUploadService.UploadUserImageAsync(userDto.ProfilePhoto, newUser.Id);
+                    
+                    // Crear el registro de foto en nuestra base de datos
+                    var photo = new UserPhoto
+                    {
+                        FileName = userDto.ProfilePhoto.FileName,
+                        MimeType = userDto.ProfilePhoto.ContentType,
+                        FilePath = imageUrl, // URL de ImgBB con organización de carpetas
+                        UserId = newUser.Id
+                    };
 
-                await _unitOfWork.UserPhotos.AddAsync(photo);
-                await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.UserPhotos.AddAsync(photo);
+                    await _unitOfWork.SaveChangesAsync();
 
-                // Asociar la foto al usuario y guardar cambios
-                newUser.PhotoId = photo.Id;
-                await _unitOfWork.Users.UpdateAsync(newUser);
-                await _unitOfWork.SaveChangesAsync();
+                    // Asociar la foto al usuario y guardar cambios
+                    newUser.PhotoId = photo.Id;
+                    await _unitOfWork.Users.UpdateAsync(newUser);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    // Si hay un error al subir la foto, lo registramos pero no fallamos el registro del usuario
+                    Console.WriteLine($"Error al subir foto de perfil: {ex.Message}");
+                    // Aquí podríamos usar un ILogger adecuado
+                }
             }
 
             return newUser;

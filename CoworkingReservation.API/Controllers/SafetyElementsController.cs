@@ -1,4 +1,5 @@
 ﻿using CoworkingReservation.Application.Services.Interfaces;
+using CoworkingReservation.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoworkingReservation.API.Controllers
@@ -29,6 +30,24 @@ namespace CoworkingReservation.API.Controllers
                 return NotFound(Responses.Response.Failure("Safety element not found."));
 
             return Ok(Responses.Response.Success(element));
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] SafetyElement safetyElement)
+        {
+            var createdElement = await _safetyElementService.CreateAsync(safetyElement);
+            return CreatedAtAction(nameof(GetAll), new { id = createdElement.Id }, createdElement);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var element = await _safetyElementService.GetByIdAsync(id);
+            if (element == null)
+                return NotFound(Responses.Response.Failure("Safety element not found."));
+                
+            await _safetyElementService.DeleteAsync(id);
+            return Ok(Responses.Response.Success("Safety element deleted successfully"));
         }
     }
 }   

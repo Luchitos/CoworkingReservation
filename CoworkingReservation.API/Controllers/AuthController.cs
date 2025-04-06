@@ -1,4 +1,4 @@
-﻿using CoworkingReservation.Application.Services;
+using CoworkingReservation.Application.Services;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Application.DTOs.User;
@@ -47,7 +47,7 @@ namespace CoworkingReservation.API.Controllers
                 // Generar token
                 var token = _tokenService.GenerateToken(user.Id, user.Email, user.Role);
 
-                // Devolver respuesta exitosa con el token
+                // Devolver respuesta exitosa con el token y la URL directa de la foto
                 return Ok(Responses.Response.Success(new
                 {
                     Token = token,
@@ -58,7 +58,7 @@ namespace CoworkingReservation.API.Controllers
                         user.Lastname,
                         user.Email,
                         user.Role,
-                        user.Photo
+                        ProfilePhotoUrl = user.Photo?.FilePath // URL directa a ImgBB
                     }
                 }));
             }
@@ -78,4 +78,4 @@ namespace CoworkingReservation.API.Controllers
             return true;
         }
     }
-}
+} 

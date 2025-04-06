@@ -13,7 +13,7 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public int Id { get; set; }
         public string Name { get; set; }
         public AddressDTO Address { get; set; }
-        public PhotoResponseDTO? CoverPhoto { get; set; }
+        public string? CoverPhotoUrl { get; set; }
     }
 
 }

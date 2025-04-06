@@ -16,8 +16,5 @@ namespace CoworkingReservation.Domain.Entities
 
         [Required]
         public string Description { get; set; } 
-
-        // Relación con los espacios de coworking
-        public ICollection<CoworkingSpace> CoworkingSpaces { get; set; } = new List<CoworkingSpace>();
     }
 }

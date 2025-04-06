@@ -12,10 +12,12 @@ namespace CoworkingReservation.Application.Services
     public class SpecialFeatureService : ISpecialFeatureService
     {
         private readonly ISpecialFeatureRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public SpecialFeatureService(ISpecialFeatureRepository repository)
+        public SpecialFeatureService(ISpecialFeatureRepository repository, IUnitOfWork unitOfWork)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<SpecialFeature>> GetAllAsync()
@@ -26,6 +28,19 @@ namespace CoworkingReservation.Application.Services
         public async Task<SpecialFeature?> GetByIdAsync(int id)
         {
             return await _repository.GetByIdAsync(id);
+        }
+        
+        public async Task<SpecialFeature> CreateAsync(SpecialFeature specialFeature)
+        {
+            await _unitOfWork.SpecialFeatures.AddAsync(specialFeature);
+            await _unitOfWork.SaveChangesAsync();
+            return specialFeature;
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            await _unitOfWork.SpecialFeatures.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

@@ -29,5 +29,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Include(u => u.Photo)
                 .FirstOrDefaultAsync(u => u.Email == identifier || u.UserName == identifier);
         }
+
+        public async Task<User?> GetByIdWithPhotoAsync(int id)
+        {
+            return await _context.Users
+                .Include(u => u.Photo)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
     }
 }

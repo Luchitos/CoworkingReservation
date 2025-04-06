@@ -21,12 +21,14 @@ namespace CoworkingReservation.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICoworkingAreaService _coworkingAreaService;
         private readonly CoworkingApprovalJob _approvalJob;
+        private readonly IImageUploadService _imageUploadService;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService, IImageUploadService imageUploadService)
         {
             _unitOfWork = unitOfWork;
             _approvalJob = approvalJob;
             _coworkingAreaService = coworkingAreaService;
+            _imageUploadService = imageUploadService;
         }
 
         public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
@@ -224,13 +226,18 @@ namespace CoworkingReservation.Application.Services
 
                 for (int i = 0; i < photos.Count; i++)
                 {
-                    using var memoryStream = new MemoryStream();
-                    await photos[i].CopyToAsync(memoryStream);
+                    // Renombrar el archivo antes de subir para garantizar que el índice sea explícito
+                    var originalFileName = photos[i].FileName;
+                    string extension = Path.GetExtension(originalFileName);
+                    string tempFileName = $"photo{i+1}{extension}"; // Asegura índices secuenciales (1-based)
+                    
+                    // Usar el nuevo servicio para subir a ImgBB con organización por carpetas
+                    string imageUrl = await _imageUploadService.UploadCoworkingSpaceImageAsync(photos[i], coworkingSpaceId);
 
                     var coworkingPhoto = new CoworkingSpacePhoto
                     {
-                        FileName = photos[i].FileName,
-                        FilePath = Convert.ToBase64String(memoryStream.ToArray()),
+                        FileName = tempFileName, // Guardar el nombre con índice
+                        FilePath = imageUrl, // URL de ImgBB con organización por carpetas
                         MimeType = photos[i].ContentType,
                         UploadedAt = DateTime.UtcNow,
                         CoworkingSpaceId = coworkingSpaceId,
@@ -331,7 +338,9 @@ namespace CoworkingReservation.Application.Services
                 Photos = cs.Photos?.Select(p => new PhotoResponseDTO
                 {
                     FileName = p.FileName,
-                    ContentType = p.MimeType
+                    ContentType = p.MimeType,
+                    FilePath = p.FilePath,
+                    IsCoverPhoto = p.IsCoverPhoto
                 }).ToList() ?? new List<PhotoResponseDTO>(),
                 
             }).ToList();
@@ -436,15 +445,9 @@ namespace CoworkingReservation.Application.Services
                     Street = cs.Address.Street,
                     ZipCode = cs.Address.ZipCode
                 },
-                CoverPhoto = cs.Photos
+                CoverPhotoUrl = cs.Photos
                     .Where(p => p.IsCoverPhoto)
-                    .Select(p => new PhotoResponseDTO
-                    {
-                        FileName = p.FileName,
-                        IsCoverPhoto = p.IsCoverPhoto,
-                        ContentType = p.MimeType,
-                        FilePath = p.FilePath
-                    })
+                    .Select(p => p.FilePath)
                     .FirstOrDefault()
             }).ToListAsync();
         }
@@ -478,15 +481,9 @@ namespace CoworkingReservation.Application.Services
                     Street = cs.Address.Street,
                     ZipCode = cs.Address.ZipCode
                 },
-                CoverPhoto = cs.Photos
+                CoverPhotoUrl = cs.Photos
                     .Where(p => p.IsCoverPhoto)
-                    .Select(p => new PhotoResponseDTO
-                    {
-                        FileName = p.FileName,
-                        IsCoverPhoto = p.IsCoverPhoto,
-                        ContentType = p.MimeType,
-                        FilePath = p.FilePath
-                    })
+                    .Select(p => p.FilePath)
                     .FirstOrDefault()
             }).ToListAsync();
         }
