@@ -16,6 +16,10 @@ namespace CoworkingReservation.Domain.Entities
         public bool IsActive { get; set; } = true; // Usuario activo/deshabilitado
         public string Role { get; set; } = "Client"; // Rol inicial ("Client", "Hoster", "Admin")
         public bool IsHosterRequestPending { get; set; } = false; // Indica si el usuario solicitó ser hoster
+        
+        // Nuevos campos para información personal
+        public string? Phone { get; set; } // Teléfono del usuario (opcional)
+        public string? Address { get; set; } // Dirección del usuario (opcional)
 
         // Relación con CoworkingSpaces si es Hoster
         public ICollection<CoworkingSpace> CoworkingSpaces { get; set; } = new List<CoworkingSpace>();

@@ -37,6 +37,41 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// Solicita el cambio de rol a hoster.
         /// </summary>
         Task BecomeHosterAsync(int userId);
-
+        
+        /// <summary>
+        /// Actualiza un campo específico del perfil de usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="field">Nombre del campo a actualizar</param>
+        /// <param name="value">Nuevo valor para el campo</param>
+        Task<User> UpdateProfileFieldAsync(int userId, string field, object value);
+        
+        /// <summary>
+        /// Actualiza la foto de perfil del usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="photoDto">Datos de la foto</param>
+        Task<User> UpdateProfilePhotoAsync(int userId, PhotoDTO photoDto);
+        
+        /// <summary>
+        /// Actualiza el teléfono del usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="phone">Nuevo número de teléfono</param>
+        Task<User> UpdatePhoneAsync(int userId, string phone);
+        
+        /// <summary>
+        /// Actualiza el CUIT del usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="cuit">Nuevo CUIT</param>
+        Task<User> UpdateCuitAsync(int userId, string cuit);
+        
+        /// <summary>
+        /// Actualiza la dirección del usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="address">Nueva dirección</param>
+        Task<User> UpdateAddressAsync(int userId, string address);
     }
 }

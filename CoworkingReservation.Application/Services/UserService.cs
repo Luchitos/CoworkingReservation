@@ -147,5 +147,126 @@ namespace CoworkingReservation.Application.Services
             user.Role = "Hoster";
             await _unitOfWork.SaveChangesAsync();
         }
+        
+        public async Task<User> UpdateProfileFieldAsync(int userId, string field, object value)
+        {
+            var user = await _unitOfWork.Users.GetByIdWithPhotoAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+
+            // Actualizar el campo según el nombre proporcionado
+            switch (field.ToLower())
+            {
+                case "phone":
+                    user.Phone = value?.ToString();
+                    break;
+                case "cuit":
+                    user.Cuit = value?.ToString();
+                    break;
+                case "address":
+                    user.Address = value?.ToString();
+                    break;
+                case "photo":
+                    if (value is PhotoDTO photoDto)
+                    {
+                        await UpdateUserPhoto(user, photoDto);
+                    }
+                    else
+                    {
+                        throw new ArgumentException("El valor para 'photo' debe ser un objeto PhotoDTO válido.");
+                    }
+                    break;
+                default:
+                    throw new ArgumentException($"Campo '{field}' no reconocido o no permitido para actualización.");
+            }
+
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return user;
+        }
+        
+        public async Task<User> UpdateProfilePhotoAsync(int userId, PhotoDTO photoDto)
+        {
+            var user = await _unitOfWork.Users.GetByIdWithPhotoAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+            
+            await UpdateUserPhoto(user, photoDto);
+            
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return user;
+        }
+        
+        public async Task<User> UpdatePhoneAsync(int userId, string phone)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+            
+            user.Phone = phone;
+            
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return user;
+        }
+        
+        public async Task<User> UpdateCuitAsync(int userId, string cuit)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+            
+            user.Cuit = cuit;
+            
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return user;
+        }
+        
+        public async Task<User> UpdateAddressAsync(int userId, string address)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+            
+            user.Address = address;
+            
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return user;
+        }
+        
+        private async Task UpdateUserPhoto(User user, PhotoDTO photoDto)
+        {
+            // Si el usuario ya tiene una foto
+            if (user.PhotoId.HasValue && user.Photo != null)
+            {
+                // Actualizar la foto existente
+                user.Photo.FilePath = photoDto.Url;
+                user.Photo.FileName = photoDto.FileName;
+                user.Photo.MimeType = photoDto.MimeType;
+                
+                await _unitOfWork.UserPhotos.UpdateAsync(user.Photo);
+            }
+            else
+            {
+                // Crear una nueva foto
+                var photo = new UserPhoto
+                {
+                    FilePath = photoDto.Url,
+                    FileName = photoDto.FileName,
+                    MimeType = photoDto.MimeType,
+                    UserId = user.Id
+                };
+                
+                await _unitOfWork.UserPhotos.AddAsync(photo);
+                await _unitOfWork.SaveChangesAsync(); // Guardar para obtener el ID
+                
+                // Actualizar la relación con el usuario
+                user.PhotoId = photo.Id;
+                user.Photo = photo;
+            }
+        }
     }
 }
