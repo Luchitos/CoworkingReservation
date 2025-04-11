@@ -13,12 +13,12 @@
         /// <summary>
         /// Datos devueltos por la operación.
         /// </summary>
-        public object Data { get; set; }
+        public object? Data { get; set; }
 
         /// <summary>
         /// Mensaje de error en caso de fallo.
         /// </summary>
-        public string Error { get; set; }
+        public string? Error { get; set; }
 
         /// <summary>
         /// Constructor para una respuesta exitosa.

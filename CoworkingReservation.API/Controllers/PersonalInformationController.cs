@@ -106,7 +106,7 @@ namespace CoworkingReservation.API.Controllers
                 // Actualizar la foto de perfil del usuario
                 var updatedUser = await _userService.UpdateProfilePhotoAsync(userId, photoDto);
                 
-                return Ok(Responses.Response.Success("Foto de perfil actualizada correctamente"));
+                return Ok(Responses.Response.Success(new { message = "Foto de perfil actualizada correctamente", photoUrl = imageUrl }));
             }
             catch (KeyNotFoundException ex)
             {
