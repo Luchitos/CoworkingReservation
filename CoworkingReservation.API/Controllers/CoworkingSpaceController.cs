@@ -3,6 +3,7 @@ using System.Security.Claims;
 using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CoworkingReservation.API.Responses;
 
 namespace CoworkingReservation.API.Controllers
 {
@@ -17,39 +18,53 @@ namespace CoworkingReservation.API.Controllers
             _coworkingSpaceService = coworkingSpaceService;
         }
 
+        /// <summary>
+        /// Obtiene los detalles completos de un espacio de coworking por su ID
+        /// </summary>
+        /// <param name="id">ID del espacio de coworking</param>
+        /// <returns>Detalles completos del espacio de coworking incluyendo áreas, servicios y beneficios</returns>
+        /// <response code="200">El espacio de coworking se encontró correctamente</response>
+        /// <response code="404">El espacio de coworking no existe</response>
+        /// <response code="500">Error interno del servidor</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(CoworkingReservation.API.Responses.Response), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CoworkingReservation.API.Responses.Response), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CoworkingReservation.API.Responses.Response), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(int id)
         {
-            var space = await _coworkingSpaceService.GetByIdAsync(id);
-            return Ok(Responses.Response.Success(space));
+            try
+            {
+                var space = await _coworkingSpaceService.GetByIdAsync(id);
+                
+                // Enriquecer la respuesta con información adicional
+                return Ok(Responses.Response.Success(new
+                {
+                    Details = space,
+                    Metadata = new
+                    {
+                        RequestedAt = DateTime.UtcNow,
+                        Version = "1.1",
+                        AvailableOperations = new[] 
+                        {
+                            new { Name = "Reservar", Endpoint = $"/api/reservation/create/{id}" },
+                            new { Name = "Ver Disponibilidad", Endpoint = $"/api/availability/{id}" }
+                        }
+                    }
+                }));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(Responses.Response.Failure(ex.Message, 404));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, Responses.Response.Failure($"Error al obtener el espacio de coworking: {ex.Message}", 500));
+            }
         }
-
-        //[HttpGet]
-        //public async Task<IActionResult> GetAll()
-        //{
-        //    var spaces = await _coworkingSpaceService.GetAllSummariesAsync();
-        //    return Ok(Responses.Response.Success(spaces));
-        //}
-
-        /// <summary>
-        /// Obtiene los coworkings filtrados por capacidad y/o ubicación.
-        /// </summary>
-        /// <param name="capacity">Capacidad exacta (opcional).</param>
-        /// <param name="location">Ubicación (ciudad, provincia o calle) (opcional).</param>
-        /// <returns>Lista de espacios aprobados y activos.</returns>
-        //[HttpGet("filter")]
-        //public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
-        //{
-        //    var spaces = await _coworkingSpaceService.GetFilteredSummariesAsync(capacity, location);
-        //    return Ok(Responses.Response.Success(spaces));
-        //}
-
-        //[HttpGet("filter-light")]
-        //public async Task<IActionResult> GetLightFiltered([FromQuery] int? capacity, [FromQuery] string? location)
-        //{
-        //    var spaces = await _coworkingSpaceService.GetAllFilteredAsync(capacity, location);
-        //    return Ok(Responses.Response.Success(spaces));
-        //}
 
         [HttpPost]
         [Authorize]

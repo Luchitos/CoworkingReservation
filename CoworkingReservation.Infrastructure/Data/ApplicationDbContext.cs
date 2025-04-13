@@ -23,6 +23,7 @@ namespace CoworkingReservation.Infrastructure.Data
         public DbSet<SafetyElement> SafetyElements { get; set; }
         public DbSet<CoworkingArea> CoworkingAreas { get; set; }
         public DbSet<CoworkingAvailability> CoworkingAvailabilities { get; set; }
+        public DbSet<CoworkingSpacePhoto> CoworkingSpacePhotos { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurar clave primaria compuesta para FavoriteCoworkingSpace
@@ -105,6 +106,11 @@ namespace CoworkingReservation.Infrastructure.Data
                 .WithMany(cs => cs.Areas)
                 .HasForeignKey(ca => ca.CoworkingSpaceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Especificar el tipo de columna para PricePerDay
+            modelBuilder.Entity<CoworkingArea>()
+                .Property(ca => ca.PricePerDay)
+                .HasColumnType("decimal(18,2)");
 
             // **CoworkingAvailability -> CoworkingArea**
             modelBuilder.Entity<CoworkingAvailability>()

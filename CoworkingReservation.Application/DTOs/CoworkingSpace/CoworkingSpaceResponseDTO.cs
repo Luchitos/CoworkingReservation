@@ -1,6 +1,7 @@
 ﻿using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.CoworkingArea;
 using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Application.DTOs.SafetyElementDTO;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {
@@ -44,19 +45,29 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public AddressDTO Address { get; set; }
 
         /// <summary>
-        /// Lista de fotos asociadas al espacio.
+        /// Lista de URLs de fotos asociadas al espacio.
         /// </summary>
-        public List<PhotoResponseDTO> Photos { get; set; } = new List<PhotoResponseDTO>();
+        public List<string> PhotoUrls { get; set; } = new List<string>();
 
         /// <summary>
-        /// Lista de servicios ofrecidos en el espacio.
+        /// Lista de nombres de servicios ofrecidos en el espacio.
         /// </summary>
-        public List<ServiceOfferedDTO> Services { get; set; } = new List<ServiceOfferedDTO>();
+        public List<string> ServiceNames { get; set; } = new List<string>();
 
         /// <summary>
-        /// Lista de beneficios adicionales disponibles.
+        /// Lista de nombres de beneficios adicionales disponibles.
         /// </summary>
-        public List<BenefitDTO> Benefits { get; set; } = new List<BenefitDTO>();
+        public List<string> BenefitNames { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Lista de nombres de elementos de seguridad disponibles en el espacio.
+        /// </summary>
+        public List<string> SafetyElementNames { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Lista de nombres de características especiales del espacio.
+        /// </summary>
+        public List<string> SpecialFeatureNames { get; set; } = new List<string>();
 
         /// <summary>
         /// Lista de áreas dentro del coworking.

@@ -1,9 +1,10 @@
 ﻿using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Application.DTOs.CoworkingArea;
+using CoworkingReservation.Application.DTOs.Benefit;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
@@ -13,6 +14,9 @@ using AddressDTO = CoworkingReservation.Application.DTOs.Address.AddressDTO;
 using CoworkingSpaceResponseDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceResponseDTO;
 using CoworkingSpaceSummaryDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingSpaceSummaryDTO;
 using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoResponseDTO;
+using ServiceOfferedDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.ServiceOfferedDTO;
+using CoworkingSpaceListItemDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceListItemDTO;
+using CoworkingReservation.Infrastructure.Data;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -22,13 +26,15 @@ namespace CoworkingReservation.Application.Services
         private readonly ICoworkingAreaService _coworkingAreaService;
         private readonly CoworkingApprovalJob _approvalJob;
         private readonly IImageUploadService _imageUploadService;
+        private readonly ApplicationDbContext _context;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService, IImageUploadService imageUploadService)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService, IImageUploadService imageUploadService, ApplicationDbContext context)
         {
             _unitOfWork = unitOfWork;
             _approvalJob = approvalJob;
             _coworkingAreaService = coworkingAreaService;
             _imageUploadService = imageUploadService;
+            _context = context;
         }
 
         public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
@@ -264,7 +270,7 @@ namespace CoworkingReservation.Application.Services
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllActiveSpacesAsync()
         {
             var spaces = await _unitOfWork.CoworkingSpaces
-                .GetAllAsync(includeProperties: "Address,Photos");
+                .GetAllAsync(includeProperties: "Address,Photos,Services,Benefits,SafetyElements,SpecialFeatures");
 
             return spaces
                 .Where(cs => cs.IsActive && cs.Status == Domain.Enums.CoworkingStatus.Approved)
@@ -278,20 +284,33 @@ namespace CoworkingReservation.Application.Services
                     Rate = cs.Rate,
                     Address = cs.Address != null ? new AddressDTO
                     {
-                        City = cs.Address.City,
-                        Country = cs.Address.Country,
-                        Number = cs.Address.Number,
-                        Province = cs.Address.Province,
-                        Street = cs.Address.Street,
-                        ZipCode = cs.Address.ZipCode
-                    } : null,
-                    Photos = cs.Photos?.Select(p => new PhotoResponseDTO
+                        City = cs.Address.City ?? "",
+                        Country = cs.Address.Country ?? "",
+                        Number = cs.Address.Number ?? "",
+                        Province = cs.Address.Province ?? "",
+                        Street = cs.Address.Street ?? "",
+                        ZipCode = cs.Address.ZipCode ?? "",
+                        Apartment = cs.Address.Apartment ?? "",
+                        Floor = cs.Address.Floor ?? "",
+                        StreetOne = cs.Address.StreetOne ?? "",
+                        StreetTwo = cs.Address.StreetTwo ?? "",
+                        Latitude = cs.Address.Latitude ?? "",
+                        Longitude = cs.Address.Longitude ?? ""
+                    } : new AddressDTO(),
+                    PhotoUrls = cs.Photos?.Select(p => p.FilePath).ToList() ?? new List<string>(),
+                    ServiceNames = cs.Services?.Select(s => s.Name).ToList() ?? new List<string>(),
+                    BenefitNames = cs.Benefits?.Select(b => b.Name).ToList() ?? new List<string>(),
+                    SafetyElementNames = cs.SafetyElements?.Select(se => se.Name).ToList() ?? new List<string>(),
+                    SpecialFeatureNames = cs.SpecialFeatures?.Select(sf => sf.Name).ToList() ?? new List<string>(),
+                    Areas = cs.Areas?.Select(a => new CoworkingAreaResponseDTO
                     {
-                        FileName = p.FileName,
-                        IsCoverPhoto = p.IsCoverPhoto,
-                        FilePath = p.FilePath,
-                        ContentType = p.MimeType
-                    }).ToList() ?? new List<PhotoResponseDTO>(),
+                        Id = a.Id,
+                        Type = a.Type,
+                        Description = a.Description ?? "",
+                        Capacity = a.Capacity,
+                        PricePerDay = a.PricePerDay,
+                        Available = a.Available
+                    }).ToList() ?? new List<CoworkingAreaResponseDTO>()
                 })
                 .ToList();
         }
@@ -299,7 +318,7 @@ namespace CoworkingReservation.Application.Services
         public async Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllFilteredAsync(int? capacity, string? location)
         {
             var query = _unitOfWork.CoworkingSpaces
-                .GetQueryable(includeProperties: "Address")
+                .GetQueryable(includeProperties: "Address,Photos,Services,Benefits,SafetyElements,SpecialFeatures")
                 .AsNoTracking()
                 .Where(cs => cs.Status == CoworkingStatus.Approved && cs.IsActive);
 
@@ -318,66 +337,160 @@ namespace CoworkingReservation.Application.Services
 
             var spaces = await query.ToListAsync();
 
-            return spaces.Select(cs => new CoworkingSpaceResponseDTO
+            return spaces.Select(cs => 
             {
-                Id = cs.Id,
-                Name = cs.Name,
-                Description = cs.Description,
-                CapacityTotal = cs.CapacityTotal,
-                IsActive = cs.IsActive,
-                Rate = cs.Rate,
-                Address = cs.Address != null ? new AddressDTO
-                {
-                    City = cs.Address.City,
-                    Country = cs.Address.Country,
-                    Number = cs.Address.Number,
-                    Province = cs.Address.Province,
-                    Street = cs.Address.Street,
-                    ZipCode = cs.Address.ZipCode
-                } : null,
-                Photos = cs.Photos?.Select(p => new PhotoResponseDTO
-                {
-                    FileName = p.FileName,
-                    ContentType = p.MimeType,
-                    FilePath = p.FilePath,
-                    IsCoverPhoto = p.IsCoverPhoto
-                }).ToList() ?? new List<PhotoResponseDTO>(),
+                // Asegurarse de que la dirección tenga todos los campos necesarios
+                var address = cs.Address ?? new Domain.Entities.Address();
                 
+                return new CoworkingSpaceResponseDTO
+                {
+                    Id = cs.Id,
+                    Name = cs.Name,
+                    Description = cs.Description,
+                    CapacityTotal = cs.CapacityTotal,
+                    IsActive = cs.IsActive,
+                    Rate = cs.Rate,
+                    Address = new AddressDTO
+                    {
+                        City = address.City ?? "",
+                        Country = address.Country ?? "",
+                        Number = address.Number ?? "",
+                        Province = address.Province ?? "",
+                        Street = address.Street ?? "",
+                        ZipCode = address.ZipCode ?? "",
+                        Apartment = address.Apartment ?? "",
+                        Floor = address.Floor ?? "",
+                        StreetOne = address.StreetOne ?? "",
+                        StreetTwo = address.StreetTwo ?? "",
+                        Latitude = address.Latitude ?? "",
+                        Longitude = address.Longitude ?? ""
+                    },
+                    PhotoUrls = cs.Photos?.Select(p => p.FilePath).ToList() ?? new List<string>(),
+                    ServiceNames = cs.Services?.Select(s => s.Name).ToList() ?? new List<string>(),
+                    BenefitNames = cs.Benefits?.Select(b => b.Name).ToList() ?? new List<string>(),
+                    SafetyElementNames = cs.SafetyElements?.Select(se => se.Name).ToList() ?? new List<string>(),
+                    SpecialFeatureNames = cs.SpecialFeatures?.Select(sf => sf.Name).ToList() ?? new List<string>(),
+                    Areas = cs.Areas?.Select(a => new CoworkingAreaResponseDTO
+                    {
+                        Id = a.Id,
+                        Type = a.Type,
+                        Description = a.Description ?? "",
+                        Capacity = a.Capacity,
+                        PricePerDay = a.PricePerDay,
+                        Available = a.Available
+                    }).ToList() ?? new List<CoworkingAreaResponseDTO>()
+                };
             }).ToList();
         }
 
         public async Task<CoworkingSpaceResponseDTO> GetByIdAsync(int id)
         {
-            var cs = await _unitOfWork.CoworkingSpaces
-                .GetByIdAsync(id, includeProperties: "Address,Photos");
-
-            if (cs == null) throw new KeyNotFoundException("Coworking space not found");
-
-            return new CoworkingSpaceResponseDTO
+            try
             {
-                Id = cs.Id,
-                Name = cs.Name,
-                Description = cs.Description,
-                CapacityTotal = cs.CapacityTotal,
-                IsActive = cs.IsActive,
-                Rate = cs.Rate,
-                Address = cs.Address != null ? new AddressDTO
+                // Cargar el espacio de coworking básico
+                var cs = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id);
+                if (cs == null) throw new KeyNotFoundException("Espacio de coworking no encontrado");
+
+                // Cargar áreas usando el método seguro del repositorio
+                var areas = await _unitOfWork.CoworkingAreas.GetByCoworkingSpaceIdAsync(id);
+
+                // Cargar fotos directamente desde la base de datos - ahora solo obtenemos los filePath
+                var photoUrls = await _context.CoworkingSpacePhotos
+                    .Where(p => p.CoworkingSpaceId == id)
+                    .OrderBy(p => !p.IsCoverPhoto) // Poner las fotos de portada primero
+                    .Select(p => p.FilePath)
+                    .ToListAsync();
+
+                // Cargar nombres de servicios directamente
+                var serviceNames = await _context.ServicesOffered
+                    .FromSqlRaw(@"
+                        SELECT so.* FROM ServicesOffered so
+                        INNER JOIN CoworkingSpaceServiceOffered csso ON so.Id = csso.ServicesId
+                        WHERE csso.CoworkingSpacesId = {0}", id)
+                    .Select(s => s.Name ?? "")
+                    .ToListAsync();
+
+                // Cargar nombres de beneficios directamente
+                var benefitNames = await _context.Benefits
+                    .FromSqlRaw(@"
+                        SELECT b.* FROM Benefits b
+                        INNER JOIN BenefitCoworkingSpace bcs ON b.Id = bcs.BenefitsId
+                        WHERE bcs.CoworkingSpacesId = {0}", id)
+                    .Select(b => b.Name ?? "")
+                    .ToListAsync();
+
+                // Cargar nombres de elementos de seguridad directamente
+                var safetyElementNames = await _context.SafetyElements
+                    .FromSqlRaw(@"
+                        SELECT se.* FROM SafetyElements se
+                        INNER JOIN CoworkingSpaceSafetyElement csse ON se.Id = csse.SafetyElementsId
+                        WHERE csse.CoworkingSpacesId = {0}", id)
+                    .Select(se => se.Name ?? "")
+                    .ToListAsync();
+
+                // Cargar nombres de características especiales directamente
+                var specialFeatureNames = await _context.SpecialFeatures
+                    .FromSqlRaw(@"
+                        SELECT sf.* FROM SpecialFeatures sf
+                        INNER JOIN CoworkingSpaceSpecialFeature cssf ON sf.Id = cssf.SpecialFeaturesId
+                        WHERE cssf.CoworkingSpacesId = {0}", id)
+                    .Select(sf => sf.Name ?? "")
+                    .ToListAsync();
+
+                // Asegurarse de que la dirección tenga todos los campos necesarios
+                // incluso si algunos campos son nulos en la base de datos
+                var address = cs.Address ?? new Domain.Entities.Address();
+
+                // Mapear a DTO
+                var result = new CoworkingSpaceResponseDTO
                 {
-                    City = cs.Address.City,
-                    Country = cs.Address.Country,
-                    Number = cs.Address.Number,
-                    Province = cs.Address.Province,
-                    Street = cs.Address.Street,
-                    ZipCode = cs.Address.ZipCode
-                } : null,
-                Photos = cs.Photos?.Select(p => new PhotoResponseDTO
-                {
-                    FileName = p.FileName,
-                    IsCoverPhoto = p.IsCoverPhoto,
-                    FilePath = p.FilePath,
-                    ContentType = p.MimeType
-                }).ToList() ?? new List<PhotoResponseDTO>()
-            };
+                    Id = cs.Id,
+                    Name = cs.Name,
+                    Description = cs.Description,
+                    CapacityTotal = cs.CapacityTotal,
+                    IsActive = cs.IsActive,
+                    Rate = cs.Rate,
+                    // Crear un AddressDTO asegurándonos que todos los campos estén presentes
+                    Address = new AddressDTO
+                    {
+                        City = address.City ?? "",
+                        Country = address.Country ?? "",
+                        Number = address.Number ?? "",
+                        Province = address.Province ?? "",
+                        Street = address.Street ?? "",
+                        ZipCode = address.ZipCode ?? "",
+                        Apartment = address.Apartment ?? "",
+                        Floor = address.Floor ?? "",
+                        StreetOne = address.StreetOne ?? "",
+                        StreetTwo = address.StreetTwo ?? "",
+                        Latitude = address.Latitude ?? "",
+                        Longitude = address.Longitude ?? ""
+                    },
+                    // Asignar las colecciones como listas de strings
+                    PhotoUrls = photoUrls,
+                    ServiceNames = serviceNames,
+                    BenefitNames = benefitNames,
+                    SafetyElementNames = safetyElementNames,
+                    SpecialFeatureNames = specialFeatureNames,
+                    Areas = areas.Select(a => new CoworkingAreaResponseDTO
+                    {
+                        Id = a.Id,
+                        Type = a.Type,
+                        Description = a.Description ?? "",
+                        Capacity = a.Capacity,
+                        PricePerDay = a.PricePerDay,
+                        Available = a.Available
+                    }).ToList()
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Registrar el error y relanzarlo
+                Console.WriteLine($"Error al cargar el espacio de coworking: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task ToggleActiveStatusAsync(int coworkingSpaceId, int userId, string userRole)

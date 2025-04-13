@@ -4,6 +4,7 @@ using CoworkingReservation.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoworkingReservation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250411205511_FixCoworkingAreaPriceDecimal")]
+    partial class FixCoworkingAreaPriceDecimal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -289,7 +292,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
 
                     b.HasIndex("CoworkingSpaceId");
 
-                    b.ToTable("CoworkingSpacePhotos");
+                    b.ToTable("CoworkingSpacePhoto");
                 });
 
             modelBuilder.Entity("CoworkingReservation.Domain.Entities.FavoriteCoworkingSpace", b =>
