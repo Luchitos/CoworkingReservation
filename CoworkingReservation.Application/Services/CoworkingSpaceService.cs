@@ -388,7 +388,7 @@ namespace CoworkingReservation.Application.Services
             try
             {
                 // Cargar el espacio de coworking básico
-                var cs = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id);
+                var cs = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id, "Address");
                 if (cs == null) throw new KeyNotFoundException("Espacio de coworking no encontrado");
 
                 // Cargar áreas usando el método seguro del repositorio
