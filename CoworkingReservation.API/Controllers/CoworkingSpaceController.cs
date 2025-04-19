@@ -4,6 +4,7 @@ using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CoworkingReservation.API.Responses;
+using CoworkingReservation.Domain.DTOs;
 
 namespace CoworkingReservation.API.Controllers
 {
@@ -136,8 +137,43 @@ namespace CoworkingReservation.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var spaces = await _coworkingSpaceService.GetAllLightweightAsync();
-            return Ok(Responses.Response.Success(spaces));
+            try
+            {
+                var spaces = await _coworkingSpaceService.GetAllLightweightAsync();
+                
+                // Log para depuración
+                Console.WriteLine("---------- CONTROLLER DEBUG - GetAll ----------");
+                foreach (var space in spaces)
+                {
+                    Console.WriteLine($"Controller GetAll: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
+                    Console.WriteLine($"Controller GetAll: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
+                    Console.WriteLine($"Controller GetAll: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
+                    
+                    if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
+                        space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
+                    {
+                        Console.WriteLine($"WARNING: Space {space.Id} has HasConfiguredAreas=true but all counts are 0!");
+                    }
+                }
+                Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
+                
+                var response = new CoworkingSpaceListResponseDTO
+                {
+                    Spaces = spaces.ToList(),
+                    Metadata = new Metadata
+                    {
+                        RequestedAt = DateTime.UtcNow,
+                        Version = "1.1"
+                    }
+                };
+                
+                return Ok(Responses.Response.Success(response));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetAll: {ex.Message}");
+                return StatusCode(500, Responses.Response.Failure($"Error al obtener todos los espacios: {ex.Message}", 500));
+            }
         }
 
         /// <summary>
@@ -146,8 +182,43 @@ namespace CoworkingReservation.API.Controllers
         [HttpGet("filter")]
         public async Task<IActionResult> GetFiltered([FromQuery] int? capacity, [FromQuery] string? location)
         {
-            var spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location);
-            return Ok(Responses.Response.Success(spaces));
+            try
+            {
+                var spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location);
+                
+                // Log para depuración
+                Console.WriteLine("---------- CONTROLLER DEBUG - GetFiltered ----------");
+                foreach (var space in spaces)
+                {
+                    Console.WriteLine($"Controller: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
+                    Console.WriteLine($"Controller: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
+                    Console.WriteLine($"Controller: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
+                    
+                    if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
+                        space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
+                    {
+                        Console.WriteLine($"WARNING: Space {space.Id} has HasConfiguredAreas=true but all counts are 0!");
+                    }
+                }
+                Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
+                
+                var response = new CoworkingSpaceListResponseDTO
+                {
+                    Spaces = spaces.ToList(),
+                    Metadata = new Metadata
+                    {
+                        RequestedAt = DateTime.UtcNow,
+                        Version = "1.1"
+                    }
+                };
+                
+                return Ok(Responses.Response.Success(response));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetFiltered: {ex.Message}");
+                return StatusCode(500, Responses.Response.Failure($"Error al obtener espacios filtrados: {ex.Message}", 500));
+            }
         }
     }
 }

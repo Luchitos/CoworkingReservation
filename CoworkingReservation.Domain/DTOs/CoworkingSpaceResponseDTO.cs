@@ -69,5 +69,16 @@ namespace CoworkingReservation.Domain.DTOs
         #endregion
     }
 
+    public class CoworkingSpaceListResponseDTO
+    {
+        public List<CoworkingSpaceListItemDTO> Spaces { get; set; } = new List<CoworkingSpaceListItemDTO>();
+        public Metadata Metadata { get; set; } = new Metadata();
+    }
+
+    public class Metadata
+    {
+        public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+        public string Version { get; set; } = "1.1";
+    }
 }
 
