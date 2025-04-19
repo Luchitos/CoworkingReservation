@@ -1,4 +1,4 @@
-﻿using CoworkingReservation.Application.Services.Interfaces;
+using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Application.Services;
 using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http.Features;
 using CoworkingReservation.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using CoworkingReservation.Application.Jobs;
+using CoworkingReservation.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -176,4 +177,4 @@ using (var scope = app.Services.CreateScope())
     _ = Task.Run(async () => await approvalJob.Run());
 }
 
-app.Run();
+app.Run(); 

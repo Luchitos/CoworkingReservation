@@ -49,18 +49,29 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public List<IFormFile>? Photos { get; set; }
 
         /// <summary>
-        /// Lista de IDs de los servicios ofrecidos.
+        /// String JSON de los servicios enviado desde el formulario
         /// </summary>
-        public List<int> ServiceIds { get; set; } = new List<int>();
+        [FromForm(Name = "Services")]
+        public string Services { get; set; }
 
         /// <summary>
-        /// Lista de IDs de los beneficios adicionales.
+        /// String JSON de los beneficios enviado desde el formulario
         /// </summary>
-        public List<int> BenefitIds { get; set; } = new List<int>();
+        [FromForm(Name = "Benefits")]
+        public string Benefits { get; set; }
 
         /// <summary>
-        /// Lista de áreas dentro del coworking space.
+        /// String JSON de los elementos de seguridad enviado desde el formulario
         /// </summary>
+        [FromForm(Name = "SafetyElements")]
+        public string SafetyElements { get; set; }
+
+        /// <summary>
+        /// String JSON de las características especiales enviado desde el formulario
+        /// </summary>
+        [FromForm(Name = "SpeacialFeatures")]
+        public string SpeacialFeatures { get; set; }
+
         /// <summary>
         /// String JSON de las áreas enviado desde el formulario
         /// </summary>
@@ -68,27 +79,10 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         public string AreasJson { get; set; }
 
         /// <summary>
-        /// Lista de áreas deserializada automáticamente
-        /// </summary>
-        [NotMapped]
-        public List<CoworkingAreaDTO> Areas =>
-            string.IsNullOrWhiteSpace(AreasJson)
-                ? new List<CoworkingAreaDTO>()
-                : JsonSerializer.Deserialize<List<CoworkingAreaDTO>>(AreasJson, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                }) ?? new List<CoworkingAreaDTO>();
-
-        /// <summary>
         /// Estado del coworking space (Pendiente, Aprobado, Rechazado).
         /// </summary>
         public CoworkingStatus Status { get; set; } = CoworkingStatus.Pending;
 
         #endregion
-        public List<int> SafetyElementsIds { get; set; } = new List<int>();
-        public List<int> SpeacialFeatureIds { get; set; } = new List<int>();
-
-
     }
-
 }

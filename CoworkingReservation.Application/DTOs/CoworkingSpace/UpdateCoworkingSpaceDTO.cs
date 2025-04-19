@@ -50,7 +50,17 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// <summary>
         /// Lista de IDs de los beneficios incluidos.
         /// </summary>
-        public HashSet<int> BenefitIds { get; set; } = new HashSet<int>();
+        public HashSet<int> Benefits { get; set; } = new HashSet<int>();
+
+        /// <summary>
+        /// Lista de IDs de los SafetyElements
+        /// </summary>
+        public HashSet<int> SafetyElements { get; set; } = new HashSet<int>();
+
+        /// <summary>
+        /// Lista de IDs de las características especiales.
+        /// </summary>
+        public HashSet<int> SpecialFeatures { get; set; } = new HashSet<int>();
 
         #endregion
     }

@@ -17,6 +17,7 @@ using PhotoResponseDTO = CoworkingReservation.Application.DTOs.Photo.PhotoRespon
 using ServiceOfferedDTO = CoworkingReservation.Application.DTOs.CoworkingSpace.ServiceOfferedDTO;
 using CoworkingSpaceListItemDTO = CoworkingReservation.Domain.DTOs.CoworkingSpaceListItemDTO;
 using CoworkingReservation.Infrastructure.Data;
+using System.Text.Json;
 
 namespace CoworkingReservation.Application.Services
 {
@@ -46,7 +47,7 @@ namespace CoworkingReservation.Application.Services
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                     throw new UnauthorizedAccessException("User not found.");
-                
+
                 bool hasPendingCoworking = await _unitOfWork.CoworkingSpaces.ExistsAsync(
                     c => c.HosterId == userId && c.Status == CoworkingStatus.Pending
                 );
@@ -96,37 +97,101 @@ namespace CoworkingReservation.Application.Services
                 if (addressExists)
                     throw new InvalidOperationException("A coworking space with this address already exists.");
 
-                if (spaceDto.ServiceIds?.Any() == true)
-                {
-                    coworkingSpace.Services = (await _unitOfWork.Services
-                        .GetAllAsync(s => spaceDto.ServiceIds.Contains(s.Id))).ToList();
-                }
+                // Deserialize the JSON strings into lists of integers
+                List<int> serviceIds = string.IsNullOrWhiteSpace(spaceDto.Services)
+                    ? new List<int>()
+                    : JsonSerializer.Deserialize<List<int>>(spaceDto.Services, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<int>();
 
-                if (spaceDto.BenefitIds?.Any() == true)
-                {
-                    coworkingSpace.Benefits = (await _unitOfWork.Benefits
-                        .GetAllAsync(b => spaceDto.BenefitIds.Contains(b.Id))).ToList();
-                }
+                List<int> benefitIds = string.IsNullOrWhiteSpace(spaceDto.Benefits)
+                    ? new List<int>()
+                    : JsonSerializer.Deserialize<List<int>>(spaceDto.Benefits, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<int>();
 
-                if (spaceDto.SafetyElementsIds?.Any() == true)
-                {
-                    coworkingSpace.SafetyElements = (await _unitOfWork.SafetyElements
-                        .GetAllAsync(b => spaceDto.SafetyElementsIds.Contains(b.Id))).ToList();
-                }
-                if (spaceDto.SpeacialFeatureIds?.Any() == true)
-                {
-                    coworkingSpace.SpecialFeatures = (await _unitOfWork.SpecialFeatures
-                        .GetAllAsync(b => spaceDto.SafetyElementsIds.Contains(b.Id))).ToList();
-                }
+                List<int> safetyElementIds = string.IsNullOrWhiteSpace(spaceDto.SafetyElements)
+                    ? new List<int>()
+                    : JsonSerializer.Deserialize<List<int>>(spaceDto.SafetyElements, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<int>();
 
+                List<int> specialFeatureIds = string.IsNullOrWhiteSpace(spaceDto.SpeacialFeatures)
+                    ? new List<int>()
+                    : JsonSerializer.Deserialize<List<int>>(spaceDto.SpeacialFeatures, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<int>();
+
+                List<CoworkingAreaDTO> areas = string.IsNullOrWhiteSpace(spaceDto.AreasJson)
+                    ? new List<CoworkingAreaDTO>()
+                    : JsonSerializer.Deserialize<List<CoworkingAreaDTO>>(spaceDto.AreasJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<CoworkingAreaDTO>();
+
+                // Create the coworking space first, without related entities
                 await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Now that we have an ID, we can add the related entities in separate steps
+                
+                // Add services using the context directly to avoid EF Core navigation property issues
+                if (serviceIds.Any())
+                {
+                    var services = await _unitOfWork.Services.GetAllAsync(s => serviceIds.Contains(s.Id));
+                    foreach (var service in services)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "INSERT INTO CoworkingSpaceServiceOffered (CoworkingSpacesId, ServicesId) VALUES ({0}, {1})",
+                            coworkingSpace.Id, service.Id);
+                    }
+                }
+
+                // Add benefits using the context directly
+                if (benefitIds.Any())
+                {
+                    var benefits = await _unitOfWork.Benefits.GetAllAsync(b => benefitIds.Contains(b.Id));
+                    foreach (var benefit in benefits)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "INSERT INTO BenefitCoworkingSpace (CoworkingSpacesId, BenefitsId) VALUES ({0}, {1})",
+                            coworkingSpace.Id, benefit.Id);
+                    }
+                }
+
+                // Add safety elements using the context directly
+                if (safetyElementIds.Any())
+                {
+                    var safetyElements = await _unitOfWork.SafetyElements.GetAllAsync(se => safetyElementIds.Contains(se.Id));
+                    foreach (var safetyElement in safetyElements)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "INSERT INTO CoworkingSpaceSafetyElement (CoworkingSpacesId, SafetyElementsId) VALUES ({0}, {1})",
+                            coworkingSpace.Id, safetyElement.Id);
+                    }
+                }
+
+                // Add special features using the context directly
+                if (specialFeatureIds.Any())
+                {
+                    var specialFeatures = await _unitOfWork.SpecialFeatures.GetAllAsync(sf => specialFeatureIds.Contains(sf.Id));
+                    foreach (var specialFeature in specialFeatures)
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "INSERT INTO CoworkingSpaceSpecialFeature (CoworkingSpacesId, SpecialFeaturesId) VALUES ({0}, {1})",
+                            coworkingSpace.Id, specialFeature.Id);
+                    }
+                }
+
                 await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
                 // Nueva línea: agregar áreas con servicio externo
-                if (spaceDto.Areas?.Any() == true)
+                if (areas.Any())
                 {
-                    await _coworkingAreaService.AddAreasToCoworkingAsync(spaceDto.Areas, coworkingSpace.Id, userId);
+                    await _coworkingAreaService.AddAreasToCoworkingAsync(areas, coworkingSpace.Id, userId);
                 }
                 await transaction.CommitAsync();
 
@@ -202,10 +267,10 @@ namespace CoworkingReservation.Application.Services
 
             // **Actualizar Beneficios**
             coworkingSpace.Benefits.Clear();
-            if (dto.BenefitIds?.Any() == true)
+            if (dto.Benefits?.Any() == true)
             {
                 coworkingSpace.Benefits = (await _unitOfWork.Benefits
-                    .GetAllAsync(b => dto.BenefitIds.Contains(b.Id))).ToList();
+                    .GetAllAsync(b => dto.Benefits.Contains(b.Id))).ToList();
             }
 
             await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
@@ -235,8 +300,8 @@ namespace CoworkingReservation.Application.Services
                     // Renombrar el archivo antes de subir para garantizar que el índice sea explícito
                     var originalFileName = photos[i].FileName;
                     string extension = Path.GetExtension(originalFileName);
-                    string tempFileName = $"photo{i+1}{extension}"; // Asegura índices secuenciales (1-based)
-                    
+                    string tempFileName = $"photo{i + 1}{extension}"; // Asegura índices secuenciales (1-based)
+
                     // Usar el nuevo servicio para subir a ImgBB con organización por carpetas
                     string imageUrl = await _imageUploadService.UploadCoworkingSpaceImageAsync(photos[i], coworkingSpaceId);
 
@@ -337,11 +402,11 @@ namespace CoworkingReservation.Application.Services
 
             var spaces = await query.ToListAsync();
 
-            return spaces.Select(cs => 
+            return spaces.Select(cs =>
             {
                 // Asegurarse de que la dirección tenga todos los campos necesarios
                 var address = cs.Address ?? new Domain.Entities.Address();
-                
+
                 return new CoworkingSpaceResponseDTO
                 {
                     Id = cs.Id,
