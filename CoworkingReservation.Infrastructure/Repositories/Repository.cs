@@ -34,6 +34,18 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
+        public async Task RemoveAsync(T entity)
+        {
+            _dbSet.Remove(entity);
+            await Task.CompletedTask;
+        }
+
+
+        public async Task RemoveRangeAsync(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
+            await Task.CompletedTask;
+        }
         public async Task<T> GetByIdAsync(int id, string includeProperties = "")
         {
             IQueryable<T> query = _dbSet;

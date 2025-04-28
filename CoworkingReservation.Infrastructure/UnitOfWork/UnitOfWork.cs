@@ -34,6 +34,7 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             Benefits = new BenefitRepository(context);
             SafetyElements = new SafetyElementRepository(context);
             SpecialFeatures = new SpecialFeatureRepository(context);
+            FavoriteCoworkingSpaces = new FavoriteCoworkingSpaceRepository(_context);
             CoworkingAreas = coworkingAreaRepository;
             CoworkingAvailabilities = coworkingAvailabilityRepository;
 
@@ -53,6 +54,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public IRepository<SafetyElement> SafetyElements { get; private set; }
         public ICoworkingAreaRepository CoworkingAreas { get; private set; }
         public ICoworkingAvailabilityRepository CoworkingAvailabilities { get; private set; }
+        public IFavoriteCoworkingSpaceRepository FavoriteCoworkingSpaces { get; private set; }
+
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)
         {

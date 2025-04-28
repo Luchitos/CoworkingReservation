@@ -1,5 +1,6 @@
 ﻿using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
+using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Identity;
@@ -268,5 +269,56 @@ namespace CoworkingReservation.Application.Services
                 user.Photo = photo;
             }
         }
+
+        public async Task ToggleFavoriteAsync(int userId, int coworkingSpaceId, bool isFavorite)
+        {
+            var user = await _unitOfWork.Users.GetByIdWithFavoritesAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+
+            var existingFavorite = user.FavoriteCoworkingSpaces
+                                        .FirstOrDefault(f => f.CoworkingSpaceId == coworkingSpaceId);
+
+            if (isFavorite)
+            {
+                // Si queremos agregar a favoritos
+                if (existingFavorite == null)
+                {
+                    var favorite = new FavoriteCoworkingSpace
+                    {
+                        UserId = userId,
+                        CoworkingSpaceId = coworkingSpaceId
+                    };
+                    await _unitOfWork.FavoriteCoworkingSpaces.AddAsync(favorite);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                // Si ya existe, no hacemos nada (idempotente)
+            }
+            else
+            {
+                // Si queremos remover de favoritos
+                if (existingFavorite != null)
+                {
+                    await _unitOfWork.FavoriteCoworkingSpaces.RemoveAsync(existingFavorite);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                // Si no existe, no hacemos nada (idempotente)
+            }
+        }
+
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFavoriteSpacesAsync(int userId)
+        {
+            var user = await _unitOfWork.Users.GetByIdWithFavoritesAsync(userId);
+            if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+
+            var favoriteSpaceIds = user.FavoriteCoworkingSpaces.Select(f => f.CoworkingSpaceId).ToList();
+
+            if (!favoriteSpaceIds.Any())
+                return Enumerable.Empty<CoworkingSpaceListItemDTO>();
+
+            var spaces = await _unitOfWork.CoworkingSpaces.GetAllLightweightByIdsAsync(favoriteSpaceIds);
+
+            return spaces;
+        }
+
     }
 }

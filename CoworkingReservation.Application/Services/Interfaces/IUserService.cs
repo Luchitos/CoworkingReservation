@@ -1,4 +1,5 @@
 ﻿using CoworkingReservation.Application.DTOs.User;
+using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 
 namespace CoworkingReservation.Application.Services.Interfaces
@@ -73,5 +74,10 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <param name="userId">ID del usuario</param>
         /// <param name="address">Nueva dirección</param>
         Task<User> UpdateAddressAsync(int userId, string address);
+
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFavoriteSpacesAsync(int userId);
+
+        Task ToggleFavoriteAsync(int userId, int coworkingSpaceId, bool isFavorite);
+
     }
 }

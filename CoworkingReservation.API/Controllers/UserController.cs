@@ -1,6 +1,7 @@
 ﻿using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services;
 using CoworkingReservation.Application.Services.Interfaces;
+using CoworkingReservation.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -117,6 +118,52 @@ namespace CoworkingReservation.API.Controllers
                 return BadRequest(Responses.Response.Failure($"{ex.Message}"));
             }
         }
+        [HttpPost("toggle-favorite")]
+        [Authorize]
+        public async Task<IActionResult> ToggleFavorite([FromQuery] int coworkingSpaceId, [FromQuery] bool isFavorite)
+        {
+            try
+            {
+                var userId = GetUserIdFromToken();
+
+                await _userService.ToggleFavoriteAsync(userId, coworkingSpaceId, isFavorite);
+
+                return Ok(Responses.Response.Success("Favorite updated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Responses.Response.Failure(ex.Message));
+            }
+        }
+
+        [HttpGet("favorites")]
+        [Authorize]
+        public async Task<IActionResult> GetFavorites()
+        {
+            try
+            {
+                var userId = GetUserIdFromToken();
+                var favorites = await _userService.GetFavoriteSpacesAsync(userId);
+
+                var response = new CoworkingSpaceListResponseDTO
+                {
+                    Spaces = favorites.ToList(),
+                    Metadata = new Metadata
+                    {
+                        RequestedAt = DateTime.UtcNow,
+                        Version = "1.1"
+                    }
+                };
+
+                return Ok(Responses.Response.Success(response));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Responses.Response.Failure(ex.Message));
+            }
+        }
+
+
 
         [HttpGet("me")]
         [Authorize]

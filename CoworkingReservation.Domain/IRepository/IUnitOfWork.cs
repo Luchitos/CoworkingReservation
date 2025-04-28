@@ -27,6 +27,8 @@ namespace CoworkingReservation.Domain.IRepository
         IRepository<SpecialFeature> SpecialFeatures { get; }
         ICoworkingAreaRepository CoworkingAreas { get; }
         ICoworkingAvailabilityRepository CoworkingAvailabilities { get; }
+        IFavoriteCoworkingSpaceRepository FavoriteCoworkingSpaces { get; }
+
         Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel);
 
 
