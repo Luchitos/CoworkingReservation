@@ -26,9 +26,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
         //Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllLightFilteredAsync(int? capacity, string? location);
         //public Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightweightAsync();
 
-        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync();
-        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location);
-
-
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null);
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
     }
 }

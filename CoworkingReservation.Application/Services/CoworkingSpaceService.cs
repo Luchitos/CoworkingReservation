@@ -666,14 +666,14 @@ namespace CoworkingReservation.Application.Services
             }).ToListAsync();
         }
 
-        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null)
         {
-            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null);
+            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(null, null, userId);
         }
 
-        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location)
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null)
         {
-            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location);
+            return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location, userId);
         }
 
         //Task<IEnumerable<CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()

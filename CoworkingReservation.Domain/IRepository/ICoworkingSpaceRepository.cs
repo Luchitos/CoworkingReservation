@@ -16,9 +16,7 @@ namespace CoworkingReservation.Domain.IRepository
         IQueryable<CoworkingSpace> GetFilteredQuery();
         IQueryable<CoworkingSpace> GetQueryable(string includeProperties = "");
         Task<bool> ExistsAsync(Expression<Func<CoworkingSpace, bool>> predicate);
-        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location);
-        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightByIdsAsync(IEnumerable<int> ids);
-
-
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightByIdsAsync(IEnumerable<int> ids, int? userId = null);
     }
 }

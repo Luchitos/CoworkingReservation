@@ -29,5 +29,8 @@ namespace CoworkingReservation.Domain.DTOs
         public decimal? MinIndividualDeskPrice { get; set; }
         public decimal? MaxIndividualDeskPrice { get; set; }
         public decimal? SharedDeskPrice { get; set; }
+        
+        // Indica si el espacio está marcado como favorito por el usuario actual
+        public bool IsFavorite { get; set; }
     }
 }

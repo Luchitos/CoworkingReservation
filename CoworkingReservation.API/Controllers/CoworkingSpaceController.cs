@@ -118,17 +118,19 @@ namespace CoworkingReservation.API.Controllers
         [HttpGet("light")]
         public async Task<IActionResult> GetAllLightweight()
         {
-            var result = await _coworkingSpaceService.GetAllLightweightAsync();
+            // Obtener el ID del usuario actual si está autenticado
+            int? userId = null;
+            if (User.Identity.IsAuthenticated)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var parsedUserId))
+                {
+                    userId = parsedUserId;
+                }
+            }
+            
+            var result = await _coworkingSpaceService.GetAllLightweightAsync(userId);
             return Ok(Responses.Response.Success(result));
-        }
-
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Hoster")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _coworkingSpaceService.DeleteAsync(id, hosterId);
-            return Ok(Responses.Response.Success("Coworking space deleted successfully."));
         }
 
         /// <summary>
@@ -139,7 +141,18 @@ namespace CoworkingReservation.API.Controllers
         {
             try
             {
-                var spaces = await _coworkingSpaceService.GetAllLightweightAsync();
+                // Obtener el ID del usuario actual si está autenticado
+                int? userId = null;
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var parsedUserId))
+                    {
+                        userId = parsedUserId;
+                    }
+                }
+                
+                var spaces = await _coworkingSpaceService.GetAllLightweightAsync(userId);
                 
                 // Log para depuración
                 Console.WriteLine("---------- CONTROLLER DEBUG - GetAll ----------");
@@ -184,7 +197,18 @@ namespace CoworkingReservation.API.Controllers
         {
             try
             {
-                var spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location);
+                // Obtener el ID del usuario actual si está autenticado
+                int? userId = null;
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var parsedUserId))
+                    {
+                        userId = parsedUserId;
+                    }
+                }
+
+                var spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location, userId);
                 
                 // Log para depuración
                 Console.WriteLine("---------- CONTROLLER DEBUG - GetFiltered ----------");
@@ -219,6 +243,15 @@ namespace CoworkingReservation.API.Controllers
                 Console.WriteLine($"Error en GetFiltered: {ex.Message}");
                 return StatusCode(500, Responses.Response.Failure($"Error al obtener espacios filtrados: {ex.Message}", 500));
             }
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Hoster")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _coworkingSpaceService.DeleteAsync(id, hosterId);
+            return Ok(Responses.Response.Success("Coworking space deleted successfully."));
         }
     }
 }
