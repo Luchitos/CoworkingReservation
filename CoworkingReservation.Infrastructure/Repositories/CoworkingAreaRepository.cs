@@ -39,5 +39,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
         {
             return await _dbSet.AnyAsync(predicate);
         }
+        
+        public async Task<List<CoworkingArea>> GetAreasAsync(List<int> areaIds)
+        {
+            return await _dbSet
+                .Where(a => areaIds.Contains(a.Id))
+                .ToListAsync();
+        }
     }
 }

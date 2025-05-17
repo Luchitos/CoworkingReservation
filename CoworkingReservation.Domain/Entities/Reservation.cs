@@ -1,4 +1,6 @@
-﻿using CoworkingReservation.Domain.Enums;
+﻿using System;
+using System.Collections.Generic;
+using CoworkingReservation.Domain.Enums;
 
 namespace CoworkingReservation.Domain.Entities
 {
@@ -6,13 +8,18 @@ namespace CoworkingReservation.Domain.Entities
     {
         public int Id { get; set; } // Identificador único
         public int UserId { get; set; } // Relación con usuario
-        public User User { get; set; }
         public int CoworkingSpaceId { get; set; } // Relación con espacio
-        public CoworkingSpace CoworkingSpace { get; set; }
         public DateTime StartDate { get; set; } // Fecha de inicio
         public DateTime EndDate { get; set; } // Fecha de fin
-        public decimal TotalPrice { get; set; } // Precio total
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending; // Estado de la reserva
+        public decimal TotalPrice { get; set; } // Precio total
+        public PaymentMethod PaymentMethod { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        
+        // Relaciones
+        public User User { get; set; }
+        public CoworkingSpace CoworkingSpace { get; set; }
+        public ICollection<ReservationDetail> ReservationDetails { get; set; }
     }
-
 }

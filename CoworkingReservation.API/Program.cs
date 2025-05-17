@@ -17,6 +17,7 @@ using CoworkingReservation.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.API.Filters;
+using CoworkingReservation.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +72,7 @@ builder.Services.AddScoped<ICoworkingAreaService, CoworkingAreaService>();
 builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
 builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
 builder.Services.AddScoped<IImageUploadService, ImgBBImageUploadService>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
@@ -144,6 +146,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("HosterPolicy", policy =>
         policy.RequireRole("Hoster"));
 });
+
+// Registrar el servicio de reservas de la API
+builder.Services.AddScoped<CoworkingReservation.API.Services.IReservationService, CoworkingReservation.API.Services.ReservationService>();
 
 var app = builder.Build();
 

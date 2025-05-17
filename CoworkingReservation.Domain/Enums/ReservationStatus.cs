@@ -8,8 +8,9 @@ namespace CoworkingReservation.Domain.Enums
 {
     public enum ReservationStatus
     {
-        Pending,
-        Confirmed,
-        Cancelled
+        Pending = 1,
+        Confirmed = 2,
+        Cancelled = 3,
+        Completed = 4
     }
 }
