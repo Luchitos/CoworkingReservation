@@ -79,6 +79,7 @@ namespace CoworkingReservation.Domain.DTOs
     {
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public string Version { get; set; } = "1.1";
+        public Dictionary<string, object> AppliedFilters { get; set; } = new Dictionary<string, object>();
     }
 }
 

@@ -676,6 +676,286 @@ namespace CoworkingReservation.Application.Services
             return await _unitOfWork.CoworkingSpaces.GetFilteredLightweightAsync(capacity, location, userId);
         }
 
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAdvancedFilteredAsync(
+            int? capacity, 
+            string? location,
+            DateTime? date,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? individualDesk,
+            bool? privateOffice,
+            bool? hybridSpace,
+            List<string> services,
+            List<string> benefits,
+            int? userId = null)
+        {
+            try 
+            {
+                // Log para propósitos de depuración
+                Console.WriteLine("GetAdvancedFilteredAsync: Implementando filtrado avanzado");
+                Console.WriteLine($"Parámetros recibidos: capacity={capacity}, location={location}, date={date}");
+                Console.WriteLine($"minPrice={minPrice}, maxPrice={maxPrice}");
+                Console.WriteLine($"individualDesk={individualDesk}, privateOffice={privateOffice}, hybridSpace={hybridSpace}");
+                Console.WriteLine($"services={string.Join(", ", services ?? new List<string>())}");
+                Console.WriteLine($"benefits={string.Join(", ", benefits ?? new List<string>())}");
+                
+                // Asegurarnos de que las listas no sean null
+                services = services ?? new List<string>();
+                benefits = benefits ?? new List<string>();
+                
+                // Mapeo de tipos de área según el enum
+                var areaTypes = new List<int>();
+                if (individualDesk == true) areaTypes.Add((int)CoworkingAreaType.IndividualDesk); // 3
+                if (privateOffice == true) areaTypes.Add((int)CoworkingAreaType.PrivateOffice);   // 2
+                if (hybridSpace == true) areaTypes.Add((int)CoworkingAreaType.SharedDesks);       // 1
+                
+                // Construir la consulta base para espacios activos y aprobados
+                var baseQuery = $@"
+                    SELECT DISTINCT cs.Id 
+                    FROM CoworkingSpaces cs
+                    WHERE cs.IsActive = 1 AND cs.Status = 1";
+                
+                // Agregar filtro de capacidad si existe
+                if (capacity.HasValue)
+                {
+                    baseQuery += $" AND cs.CapacityTotal >= {capacity.Value}";
+                }
+                
+                // Agregar filtro de ubicación si existe
+                if (!string.IsNullOrEmpty(location))
+                {
+                    baseQuery += $@" AND EXISTS (
+                        SELECT 1 FROM Addresses a 
+                        WHERE a.Id = cs.Id AND (
+                            a.City LIKE '%{location.Replace("'", "''")}%' OR 
+                            a.Province LIKE '%{location.Replace("'", "''")}%' OR 
+                            a.Street LIKE '%{location.Replace("'", "''")}%'
+                        )
+                    )";
+                }
+                
+                // Agregar filtro por tipo de área si se especificó
+                if (areaTypes.Any())
+                {
+                    baseQuery += $@" AND EXISTS (
+                        SELECT 1 FROM CoworkingAreas ca 
+                        WHERE ca.CoworkingSpaceId = cs.Id 
+                        AND ca.Available = 1 
+                        AND ca.Type IN ({string.Join(",", areaTypes)})
+                    )";
+                }
+                
+                // Agregar filtro por precio si se especificó
+                if (minPrice.HasValue || maxPrice.HasValue)
+                {
+                    baseQuery += $@" AND EXISTS (
+                        SELECT 1 FROM CoworkingAreas ca 
+                        WHERE ca.CoworkingSpaceId = cs.Id 
+                        AND ca.Available = 1";
+                    
+                    // Condiciones de precio
+                    if (minPrice.HasValue)
+                    {
+                        baseQuery += $" AND ca.PricePerDay >= {minPrice.Value}";
+                    }
+                    
+                    if (maxPrice.HasValue)
+                    {
+                        baseQuery += $" AND ca.PricePerDay <= {maxPrice.Value}";
+                    }
+                    
+                    // Si hay filtro por tipo, relacionarlo con precio
+                    if (areaTypes.Any())
+                    {
+                        baseQuery += $" AND ca.Type IN ({string.Join(",", areaTypes)})";
+                    }
+                    
+                    baseQuery += ")";
+                }
+                
+                // Agregar filtro por servicios si se especificaron
+                if (services.Any())
+                {
+                    foreach (var service in services.Where(s => !string.IsNullOrWhiteSpace(s)))
+                    {
+                        var serviceNameSanitized = service.ToLower().Replace("'", "''");
+                        baseQuery += $@" AND EXISTS (
+                            SELECT 1 FROM CoworkingSpaceServiceOffered csso
+                            JOIN ServicesOffered so ON so.Id = csso.ServicesId
+                            WHERE csso.CoworkingSpacesId = cs.Id
+                            AND LOWER(so.Name) LIKE '%{serviceNameSanitized}%'
+                        )";
+                    }
+                }
+                
+                                // Agregar filtro por beneficios si se especificaron
+                if (benefits.Any())
+                {
+                    foreach (var benefit in benefits.Where(b => !string.IsNullOrWhiteSpace(b)))
+                    {
+                        var benefitNameSanitized = benefit.ToLower().Replace("'", "''");
+                        baseQuery += $@" AND EXISTS (
+                            SELECT 1 FROM BenefitCoworkingSpace bcs
+                            JOIN Benefits b ON b.Id = bcs.BenefitsId
+                            WHERE bcs.CoworkingSpacesId = cs.Id
+                            AND LOWER(b.Name) LIKE '%{benefitNameSanitized}%'
+                        )";
+                    }
+                }
+                
+                // Filtro para áreas no reservadas si hay fecha
+                if (date.HasValue)
+                {
+                    var dateStr = date.Value.ToString("yyyy-MM-dd");
+                    baseQuery += $@" AND NOT EXISTS (
+                        SELECT 1 FROM Reservations r
+                        JOIN ReservationDetails rd ON r.Id = rd.ReservationId
+                        JOIN CoworkingAreas ca ON ca.Id = rd.CoworkingAreaId
+                        WHERE r.CoworkingSpaceId = cs.Id
+                        AND r.Status != 2 /* No canceladas */
+                        AND '{dateStr}' BETWEEN CONVERT(DATE, r.StartDate) AND CONVERT(DATE, r.EndDate)
+                    )";
+                }
+                
+                // Ejecutar la consulta y obtener los IDs
+                Console.WriteLine($"Query SQL: {baseQuery}");
+                
+                // Agregar log para verificar las tablas y columnas disponibles
+                Console.WriteLine("Verificando esquema de tablas...");
+                try {
+                    var tableInfo = await _context.Database.SqlQueryRaw<string>(
+                        "SELECT name FROM sys.tables WHERE name LIKE '%Benefit%' OR name LIKE '%Service%'"
+                    ).ToListAsync();
+                    
+                    Console.WriteLine("Tablas encontradas: " + string.Join(", ", tableInfo));
+                    
+                    // Verificar columnas en BenefitCoworkingSpace
+                    var columnInfo = await _context.Database.SqlQueryRaw<string>(
+                        "SELECT c.name FROM sys.columns c INNER JOIN sys.tables t ON c.object_id = t.object_id WHERE t.name = 'BenefitCoworkingSpace'"
+                    ).ToListAsync();
+                    
+                    Console.WriteLine("Columnas en BenefitCoworkingSpace: " + string.Join(", ", columnInfo));
+                }
+                catch (Exception ex) {
+                    Console.WriteLine("Error al verificar esquema: " + ex.Message);
+                }
+                
+                var spaceIds = await _context.Database.SqlQueryRaw<int>(baseQuery).ToListAsync();
+                
+                if (!spaceIds.Any())
+                {
+                    Console.WriteLine("No se encontraron espacios que cumplan con los criterios");
+                    return new List<CoworkingSpaceListItemDTO>();
+                }
+                
+                Console.WriteLine($"Encontrados {spaceIds.Count} espacios después de aplicar todos los filtros");
+                
+                // Obtener los datos completos de los espacios filtrados
+                var query = _context.CoworkingSpaces
+                    .AsNoTracking()
+                    .Include(cs => cs.Address)
+                    .Include(cs => cs.Areas)
+                    .Include(cs => cs.Photos)
+                    .Where(cs => spaceIds.Contains(cs.Id));
+                
+                var rawSpaces = await query.ToListAsync();
+                
+                // Depuración de los resultados
+                foreach (var space in rawSpaces)
+                {
+                    Console.WriteLine($"Space {space.Id}: {space.Name}");
+                    
+                    var areas = space.Areas.Where(a => a.Available).ToList();
+                    Console.WriteLine($"  Areas: {areas.Count} disponibles");
+                    foreach (var area in areas)
+                    {
+                        Console.WriteLine($"    - {area.Type}: ${area.PricePerDay}");
+                    }
+                }
+                
+                // Si hay un usuario autenticado, obtener sus espacios favoritos
+                List<int> userFavorites = new List<int>();
+                if (userId.HasValue)
+                {
+                    userFavorites = await _context.FavoriteCoworkingSpaces
+                        .Where(f => f.UserId == userId.Value)
+                        .Select(f => f.CoworkingSpaceId)
+                        .ToListAsync();
+                }
+                
+                // Mapear a DTOs
+                var data = rawSpaces.Select(cs => new
+                {
+                    cs.Id,
+                    cs.Name,
+                    Address = cs.Address,
+                    CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault(),
+                    Rate = cs.Rate,
+                    Areas = cs.Areas.Select(a => new { a.Type, a.Capacity, a.PricePerDay, a.Available }).ToList(),
+                    TotalCapacity = cs.CapacityTotal,
+                    HasAreas = cs.Areas.Any(),
+                    IsFavorite = userId.HasValue && userFavorites.Contains(cs.Id)
+                }).ToList();
+
+                return data.Select(cs => new CoworkingSpaceListItemDTO
+                {
+                    Id = cs.Id,
+                    Name = cs.Name,
+                    Address = cs.Address != null ? new Domain.DTOs.AddressDTO
+                    {
+                        City = cs.Address.City,
+                        Province = cs.Address.Province,
+                        Street = cs.Address.Street,
+                        Number = cs.Address.Number,
+                        Country = cs.Address.Country,
+                        ZipCode = cs.Address.ZipCode,
+                        Latitude = cs.Address?.Latitude,
+                        Longitude = cs.Address?.Longitude
+                    } : null,
+                    CoverPhotoUrl = cs.CoverPhotoUrl,
+                    Rate = cs.Rate,
+                    TotalCapacity = cs.TotalCapacity,
+                    HasConfiguredAreas = cs.HasAreas,
+                    PrivateOfficesCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available) : 0,
+                    IndividualDesksCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available) : 0,
+                    SharedDesksCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.SharedDesks && a.Available) : 0,
+                    
+                    MinPrivateOfficePrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available) 
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Min(a => a.PricePerDay) 
+                        : null,
+                    MaxPrivateOfficePrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available) 
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Max(a => a.PricePerDay) 
+                        : null,
+                    
+                    MinIndividualDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available) 
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Min(a => a.PricePerDay) 
+                        : null,
+                    MaxIndividualDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available) 
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Max(a => a.PricePerDay) 
+                        : null,
+                    
+                    SharedDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.SharedDesks && a.Available) 
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.SharedDesks && a.Available).Min(a => a.PricePerDay) 
+                        : null,
+                    
+                    IsFavorite = cs.IsFavorite
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log detallado de la excepción para depuración
+                Console.WriteLine($"ERROR en GetAdvancedFilteredAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException: {ex.InnerException.Message}");
+                }
+                
+                throw; // Relanzar la excepción para que se maneje en el controlador
+            }
+        }
+
         //Task<IEnumerable<CoworkingSpaceResponseDTO>> ICoworkingSpaceService.GetAllActiveSpacesAsync()
         //{
         //    throw new NotImplementedException();

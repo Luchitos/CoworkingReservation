@@ -28,5 +28,21 @@ namespace CoworkingReservation.Application.Services.Interfaces
 
         Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null);
         Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
+        
+        /// <summary>
+        /// Versión mejorada de filtrado que permite múltiples criterios
+        /// </summary>
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAdvancedFilteredAsync(
+            int? capacity, 
+            string? location,
+            DateTime? date,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? individualDesk,
+            bool? privateOffice,
+            bool? hybridSpace,
+            List<string> services,
+            List<string> benefits,
+            int? userId = null);
     }
 }
