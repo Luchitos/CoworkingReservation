@@ -803,18 +803,15 @@ namespace CoworkingReservation.Application.Services
                     }
                 }
                 
-                // Filtro para áreas no reservadas si hay fecha
+                // Enfoque completamente nuevo para filtrado por fecha
                 if (date.HasValue)
                 {
                     var dateStr = date.Value.ToString("yyyy-MM-dd");
-                    baseQuery += $@" AND NOT EXISTS (
-                        SELECT 1 FROM Reservations r
-                        JOIN ReservationDetails rd ON r.Id = rd.ReservationId
-                        JOIN CoworkingAreas ca ON ca.Id = rd.CoworkingAreaId
-                        WHERE r.CoworkingSpaceId = cs.Id
-                        AND r.Status != 2 /* No canceladas */
-                        AND '{dateStr}' BETWEEN CONVERT(DATE, r.StartDate) AND CONVERT(DATE, r.EndDate)
-                    )";
+                    Console.WriteLine($"Aplicando nuevo filtro de fecha para: {dateStr}");
+                    
+                    // *** IMPORTANTE: Ignoramos el filtro por fecha en la consulta SQL inicial ***
+                    // En su lugar, obtendremos TODOS los espacios que cumplen otros criterios
+                    // y luego filtraremos por fecha después, en memoria
                 }
                 
                 // Ejecutar la consulta y obtener los IDs
@@ -835,6 +832,48 @@ namespace CoworkingReservation.Application.Services
                     ).ToListAsync();
                     
                     Console.WriteLine("Columnas en BenefitCoworkingSpace: " + string.Join(", ", columnInfo));
+                    
+                    // Si hay una fecha, verifiquemos las reservas para esa fecha
+                    if (date.HasValue)
+                    {
+                        var dateStr = date.Value.ToString("yyyy-MM-dd");
+                        try {
+                            // Consulta simplificada para depuración
+                            var debugQuery = $@"
+                                SELECT cs.Id, cs.Name, COUNT(ca.Id) as AreaCount 
+                                FROM CoworkingSpaces cs
+                                JOIN CoworkingAreas ca ON ca.CoworkingSpaceId = cs.Id 
+                                WHERE ca.Available = 1
+                                GROUP BY cs.Id, cs.Name";
+                                
+                            var spacesWithAreas = await _context.Database.SqlQueryRaw<DebugSpaceInfo>(debugQuery).ToListAsync();
+                            Console.WriteLine($"Espacios con áreas disponibles ({spacesWithAreas.Count}):");
+                            foreach (var space in spacesWithAreas)
+                            {
+                                Console.WriteLine($"  {space.Name} (ID: {space.Id}): {space.AreaCount} áreas");
+                            }
+                            
+                            // Consulta para áreas reservadas en la fecha específica
+                            var reservedQuery = $@"
+                                SELECT ca.Id as AreaId, ca.CoworkingSpaceId, cs.Name as SpaceName
+                                FROM ReservationDetails rd 
+                                JOIN Reservations r ON rd.ReservationId = r.Id
+                                JOIN CoworkingAreas ca ON rd.CoworkingAreaId = ca.Id
+                                JOIN CoworkingSpaces cs ON ca.CoworkingSpaceId = cs.Id
+                                WHERE r.Status != 2 
+                                AND '{dateStr}' BETWEEN CONVERT(DATE, r.StartDate) AND CONVERT(DATE, r.EndDate)";
+                                
+                            var reservedAreas = await _context.Database.SqlQueryRaw<ReservedAreaInfo>(reservedQuery).ToListAsync();
+                            Console.WriteLine($"Áreas reservadas para fecha {dateStr} ({reservedAreas.Count}):");
+                            foreach (var area in reservedAreas)
+                            {
+                                Console.WriteLine($"  Espacio {area.SpaceName} (ID: {area.CoworkingSpaceId}): Área {area.AreaId} reservada");
+                            }
+                        }
+                        catch (Exception ex) {
+                            Console.WriteLine($"Error en consulta de depuración: {ex.Message}");
+                        }
+                    }
                 }
                 catch (Exception ex) {
                     Console.WriteLine("Error al verificar esquema: " + ex.Message);
@@ -891,13 +930,14 @@ namespace CoworkingReservation.Application.Services
                     Address = cs.Address,
                     CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault(),
                     Rate = cs.Rate,
-                    Areas = cs.Areas.Select(a => new { a.Type, a.Capacity, a.PricePerDay, a.Available }).ToList(),
+                    Areas = cs.Areas.Select(a => new { a.Type, a.Capacity, a.PricePerDay, a.Available, a.Id }).ToList(),
                     TotalCapacity = cs.CapacityTotal,
                     HasAreas = cs.Areas.Any(),
                     IsFavorite = userId.HasValue && userFavorites.Contains(cs.Id)
                 }).ToList();
 
-                return data.Select(cs => new CoworkingSpaceListItemDTO
+                // Crear la lista de resultados
+                var result = data.Select(cs => new CoworkingSpaceListItemDTO
                 {
                     Id = cs.Id,
                     Name = cs.Name,
@@ -940,6 +980,57 @@ namespace CoworkingReservation.Application.Services
                     
                     IsFavorite = cs.IsFavorite
                 }).ToList();
+                
+                // Si se filtró por fecha, ahora aplicamos el filtro en memoria
+                if (date.HasValue)
+                {
+                    var dateStr = date.Value.ToString("yyyy-MM-dd");
+                    var dateValue = date.Value.Date;
+                    
+                    Console.WriteLine($"Aplicando filtro de fecha para: {dateStr}");
+                    
+                    // Enfoque simplificado: primero obtener todas las áreas reservadas para la fecha
+                    var reservedAreaIds = await _context.Database.SqlQueryRaw<int>($@"
+                        SELECT rd.CoworkingAreaId 
+                        FROM ReservationDetails rd 
+                        JOIN Reservations r ON rd.ReservationId = r.Id
+                        WHERE r.Status != {(int)ReservationStatus.Cancelled}
+                        AND CONVERT(DATE, '{dateStr}') BETWEEN CONVERT(DATE, r.StartDate) AND CONVERT(DATE, r.EndDate)
+                    ").ToListAsync();
+                    
+                    Console.WriteLine($"Áreas reservadas para {dateStr}: {reservedAreaIds.Count}");
+                    
+                    // Filtrar espacios que tengan al menos un área disponible para la fecha
+                    var filteredResult = new List<CoworkingSpaceListItemDTO>();
+                    
+                    foreach (var space in result)
+                    {
+                        // Obtener todas las áreas disponibles de este espacio
+                        var availableAreas = await _context.Database.SqlQueryRaw<int>($@"
+                            SELECT ca.Id 
+                            FROM CoworkingAreas ca
+                            WHERE ca.CoworkingSpaceId = {space.Id}
+                            AND ca.Available = 1
+                            AND ca.Id NOT IN ({(reservedAreaIds.Any() ? string.Join(",", reservedAreaIds) : "0")})
+                        ").ToListAsync();
+                        
+                        if (availableAreas.Any())
+                        {
+                            Console.WriteLine($"Espacio {space.Id} ({space.Name}) tiene {availableAreas.Count} áreas disponibles en {dateStr}");
+                            filteredResult.Add(space);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Espacio {space.Id} ({space.Name}) NO tiene áreas disponibles en {dateStr}");
+                        }
+                    }
+                    
+                    Console.WriteLine($"Total espacios disponibles en {dateStr}: {filteredResult.Count} de {result.Count}");
+                    return filteredResult;
+                }
+                
+                // Si no había filtro de fecha, devolvemos todos los resultados
+                return result;
             }
             catch (Exception ex)
             {
@@ -979,5 +1070,30 @@ namespace CoworkingReservation.Application.Services
         //{
         //    throw new NotImplementedException();
         //}
+    }
+
+    // Clase para estadísticas de reservas
+    public class ReservationStat
+    {
+        public int CoworkingSpaceId { get; set; }
+        public string SpaceName { get; set; }
+        public int TotalAreas { get; set; }
+        public int AreasDisponibles { get; set; }
+    }
+
+    // Clase para información de debug de espacios
+    public class DebugSpaceInfo
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int AreaCount { get; set; }
+    }
+
+    // Clase para información de áreas reservadas
+    public class ReservedAreaInfo
+    {
+        public int AreaId { get; set; }
+        public int CoworkingSpaceId { get; set; }
+        public string SpaceName { get; set; }
     }
 }
