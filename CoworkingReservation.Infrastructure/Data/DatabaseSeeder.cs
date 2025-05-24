@@ -111,159 +111,36 @@ namespace CoworkingReservation.Infrastructure.Data
                 await context.SpecialFeatures.AddRangeAsync(specialFeatures);
                 await context.SaveChangesAsync();
             }
-            if (!await context.Users.AnyAsync())
-            {
-                // **Usuarios**
-                var users = new List<User>
-                {
-                    new User
-                    {
-                        Name = "Admin",
-                        Lastname = "System",
-                        UserName = "admin",
-                        Cuit = "12345678901",
-                        Email = "admin@coworking.com",
-                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
-                        Role = "Admin",
-                        IsActive = true
-                    },
-                    new User
-                    {
-                        Name = "Juan",
-                        Lastname = "Pérez",
-                        UserName = "juanp",
-                        Cuit = "20345678901",
-                        Email = "juanp@gmail.com",
-                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
-                        Role = "Client",
-                        IsActive = true
-                    },
-                    new User
-                    {
-                        Name = "María",
-                        Lastname = "González",
-                        UserName = "mariag",
-                        Cuit = "27345678901",
-                        Email = "mariag@gmail.com",
-                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
-                        Role = "Client",
-                        IsActive = true
-                    },
-                    new User
-                    {
-                        Name = "Carlos",
-                        Lastname = "López",
-                        UserName = "carlosl",
-                        Cuit = "20345678902",
-                        Email = "carlosl@gmail.com",
-                        PasswordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==",
-                        Role = "Hoster",
-                        IsActive = true
-                    }
-                };
 
-                await context.Users.AddRangeAsync(users);
-                await context.SaveChangesAsync();
+            // Sembrar los 300 CoworkingSpaces básicos después de que todos los datos de catálogo estén listos
+            await CoworkingSpaceSeeder.SeedCoworkingSpacesAsync(context);
 
-                // **Direcciones**
-                var addresses = new List<Address>
-                {
-                    new Address
-                    {
-                        City = "Buenos Aires",
-                        Country = "Argentina",
-                        Street = "Calle Falsa",
-                        Number = "123",
-                        Province = "Buenos Aires",
-                        ZipCode = "1000"
-                    },
-                    new Address
-                    {
-                        City = "Córdoba",
-                        Country = "Argentina",
-                        Street = "Avenida Siempre Viva",
-                        Number = "742",
-                        Province = "Córdoba",
-                        ZipCode = "5000"
-                    }
-                };
+            // Sembrar las relaciones BenefitCoworkingSpace
+            await BenefitCoworkingSpaceSeeder.SeedBenefitCoworkingSpaceAsync(context);
 
-                await context.Addresses.AddRangeAsync(addresses);
-                await context.SaveChangesAsync();
+            // Sembrar las relaciones CoworkingSpaceSafetyElement
+            await CoworkingSpaceSafetyElementSeeder.SeedCoworkingSpaceSafetyElementAsync(context);
 
-                // **Espacios de Coworking**
-                var coworkingSpaces = new List<CoworkingSpace>
-                {
-                    new CoworkingSpace
-                    {
-                        Name = "Coworking Space 1",
-                        Description = "A modern coworking space in Buenos Aires.",
-                        CapacityTotal = 20,
-                        IsActive = true,
-                        Address = addresses[0],
-                        HosterId = users.First(u => u.UserName == "carlosl").Id
-                    },
-                    new CoworkingSpace
-                    {
-                        Name = "Coworking Space 2",
-                        Description = "A cozy coworking space in Córdoba.",
-                        CapacityTotal = 15,
-                        IsActive = true,
-                        Address = addresses[1],
-                        HosterId = users.First(u => u.UserName == "carlosl").Id
-                    }
-                };
+            // Sembrar las relaciones CoworkingSpaceServiceOffered
+            await CoworkingSpaceServiceOfferedSeeder.SeedCoworkingSpaceServiceOfferedAsync(context);
 
-               
+            // Sembrar las relaciones CoworkingSpaceSpecialFeature
+            await CoworkingSpaceSpecialFeatureSeeder.SeedCoworkingSpaceSpecialFeatureAsync(context);
 
-                await context.CoworkingSpaces.AddRangeAsync(coworkingSpaces);
-                await context.SaveChangesAsync();
+            // Sembrar las fotos de los CoworkingSpaces
+            await CoworkingSpacePhotosSeeder.SeedCoworkingSpacePhotosAsync(context);
 
-                // **Reservas**
-                var reservations = new List<Reservation>
-                {
-                    new Reservation
-                    {
-                        UserId = users.First(u => u.UserName == "juanp").Id,
-                        CoworkingSpaceId = coworkingSpaces[0].Id,
-                        StartDate = DateTime.UtcNow.AddDays(1),
-                        EndDate = DateTime.UtcNow.AddDays(3),
-                        TotalPrice = 3000,
-                        Status = ReservationStatus.Confirmed
-                    },
-                    new Reservation
-                    {
-                        UserId = users.First(u => u.UserName == "mariag").Id,
-                        CoworkingSpaceId = coworkingSpaces[1].Id,
-                        StartDate = DateTime.UtcNow.AddDays(2),
-                        EndDate = DateTime.UtcNow.AddDays(4),
-                        TotalPrice = 2400,
-                        Status = ReservationStatus.Pending
-                    }
-                };
+            // Sembrar las áreas de los CoworkingSpaces
+            await CoworkingAreaSeeder.SeedCoworkingAreasAsync(context);
 
-                await context.Reservations.AddRangeAsync(reservations);
-                await context.SaveChangesAsync();
-
-                // **Favoritos**
-                var favorites = new List<FavoriteCoworkingSpace>
-                {
-                    new FavoriteCoworkingSpace
-                    {
-                        UserId = users.First(u => u.UserName == "juanp").Id,
-                        CoworkingSpaceId = coworkingSpaces[0].Id
-                    },
-                    new FavoriteCoworkingSpace
-                    {
-                        UserId = users.First(u => u.UserName == "mariag").Id,
-                        CoworkingSpaceId = coworkingSpaces[1].Id
-                    }
-                };
-
-                await context.FavoriteCoworkingSpaces.AddRangeAsync(favorites);
-                await context.SaveChangesAsync();
-
-            }
+            Console.WriteLine("🎉 ¡Seeding completo! Todas las relaciones many-to-many, fotos y áreas han sido creadas exitosamente:");
+            Console.WriteLine("   ✅ 300 CoworkingSpaces básicos");
+            Console.WriteLine("   ✅ BenefitCoworkingSpace (Benefits 1-10)");
+            Console.WriteLine("   ✅ CoworkingSpaceSafetyElement (SafetyElements 1-20)");
+            Console.WriteLine("   ✅ CoworkingSpaceServiceOffered (Services 1-10)");
+            Console.WriteLine("   ✅ CoworkingSpaceSpecialFeature (SpecialFeatures 1-20)");
+            Console.WriteLine("   ✅ CoworkingSpacePhotos (1500 fotos: 5 por espacio)");
+            Console.WriteLine("   ✅ CoworkingAreas (configuraciones variadas por espacio)");
         }
     }
 }
