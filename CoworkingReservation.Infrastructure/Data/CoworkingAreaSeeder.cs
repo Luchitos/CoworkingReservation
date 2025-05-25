@@ -68,7 +68,6 @@ namespace CoworkingReservation.Infrastructure.Data
             Console.WriteLine($"   • Espacios solo con oficinas privadas: {stats.PrivateOfficeOnlySpaces}");
             Console.WriteLine($"   • Espacios híbridos: {stats.HybridSpaces}");
             Console.WriteLine($"   • Total de escritorios individuales: {stats.TotalIndividualDesks}");
-            Console.WriteLine($"   • Total de escritorios compartidos: {stats.TotalSharedDesks}");
             Console.WriteLine($"   • Total de oficinas privadas: {stats.TotalPrivateOffices}");
         }
 
@@ -194,7 +193,7 @@ namespace CoworkingReservation.Infrastructure.Data
             var areas = new List<CoworkingArea>();
             var remainingCapacity = totalCapacity;
             
-            // Dividir capacidad entre diferentes tipos (60% individual/compartido, 40% oficinas)
+            // Dividir capacidad entre diferentes tipos (60% individual, 40% oficinas)
             var officeCapacity = (int)(totalCapacity * 0.4);
             var individualCapacity = totalCapacity - officeCapacity;
             
@@ -224,25 +223,18 @@ namespace CoworkingReservation.Infrastructure.Data
                 remainingCapacity -= officeSize;
             }
             
-            // Crear áreas de escritorios individuales y compartidos
+            // Crear áreas de escritorios individuales con la capacidad restante
             while (remainingCapacity > 0)
             {
-                var useSharedDesk = random.NextDouble() < 0.3; // 30% probabilidad de escritorio compartido
-                var areaCapacity = Math.Min(remainingCapacity, useSharedDesk ? random.Next(4, 12) : random.Next(1, 8));
-                
-                var areaType = useSharedDesk ? CoworkingAreaType.SharedDesks : CoworkingAreaType.IndividualDesk;
+                var areaCapacity = Math.Min(remainingCapacity, random.Next(1, 8));
                 
                 areas.Add(new CoworkingArea
                 {
                     CoworkingSpaceId = coworkingSpaceId,
-                    Type = areaType,
-                    Description = areaType == CoworkingAreaType.SharedDesks 
-                        ? GetSharedDeskDescription(areaCapacity) 
-                        : GetIndividualDeskDescription(areas.Count(a => a.Type == CoworkingAreaType.IndividualDesk) + 1),
+                    Type = CoworkingAreaType.IndividualDesk,
+                    Description = GetIndividualDeskDescription(areas.Count(a => a.Type == CoworkingAreaType.IndividualDesk) + 1),
                     Capacity = areaCapacity,
-                    PricePerDay = areaType == CoworkingAreaType.SharedDesks 
-                        ? GenerateSharedDeskPrice(random) 
-                        : GenerateIndividualDeskPrice(random),
+                    PricePerDay = GenerateIndividualDeskPrice(random),
                     Available = true
                 });
                 
@@ -268,11 +260,6 @@ namespace CoworkingReservation.Infrastructure.Data
             return descriptions[areaNumber % descriptions.Length];
         }
         
-        private static string GetSharedDeskDescription(int capacity)
-        {
-            return $"Área colaborativa con {capacity} puestos de trabajo compartidos, ideal para networking y proyectos en equipo";
-        }
-        
         private static string GetPrivateOfficeDescription(int capacity)
         {
             return $"Oficina privada para {capacity} personas con ventanas, climatización independiente y total privacidad";
@@ -288,12 +275,6 @@ namespace CoworkingReservation.Infrastructure.Data
             return Math.Round((decimal)(random.NextDouble() * 1700 + 800), 2);
         }
         
-        private static decimal GenerateSharedDeskPrice(Random random)
-        {
-            // Precios entre $600 y $1,800 pesos argentinos por día (más barato que individual)
-            return Math.Round((decimal)(random.NextDouble() * 1200 + 600), 2);
-        }
-        
         private static decimal GeneratePrivateOfficePrice(int capacity, Random random)
         {
             // Precio base + precio por persona
@@ -306,7 +287,7 @@ namespace CoworkingReservation.Infrastructure.Data
         #endregion
 
         private static (int IndividualOnlySpaces, int PrivateOfficeOnlySpaces, int HybridSpaces, 
-                       int TotalIndividualDesks, int TotalSharedDesks, int TotalPrivateOffices) CalculateStatistics(List<CoworkingArea> allAreas)
+                       int TotalIndividualDesks, int TotalPrivateOffices) CalculateStatistics(List<CoworkingArea> allAreas)
         {
             var spaceGroups = allAreas.GroupBy(a => a.CoworkingSpaceId);
             
@@ -336,7 +317,6 @@ namespace CoworkingReservation.Infrastructure.Data
                 privateOfficeOnlySpaces, 
                 hybridSpaces,
                 allAreas.Count(a => a.Type == CoworkingAreaType.IndividualDesk),
-                allAreas.Count(a => a.Type == CoworkingAreaType.SharedDesks),
                 allAreas.Count(a => a.Type == CoworkingAreaType.PrivateOffice)
             );
         }

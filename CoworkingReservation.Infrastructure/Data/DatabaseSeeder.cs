@@ -133,7 +133,16 @@ namespace CoworkingReservation.Infrastructure.Data
             // Sembrar las áreas de los CoworkingSpaces
             await CoworkingAreaSeeder.SeedCoworkingAreasAsync(context);
 
-            Console.WriteLine("🎉 ¡Seeding completo! Todas las relaciones many-to-many, fotos y áreas han sido creadas exitosamente:");
+            // Sembrar las disponibilidades de las áreas (debe ejecutarse antes de las reservas)
+            await CoworkingAvailabilitySeeder.SeedCoworkingAvailabilitiesAsync(context);
+
+            // Sembrar las reservas (pasadas, actuales y futuras)
+            await ReservationSeeder.SeedReservationsAsync(context);
+
+            // Sembrar las reviews basadas en reservas completadas
+            await ReviewSeeder.SeedReviewsAsync(context);
+
+            Console.WriteLine("🎉 ¡Seeding completo! Todas las relaciones many-to-many, fotos, áreas, disponibilidades, reservas y reviews han sido creadas exitosamente:");
             Console.WriteLine("   ✅ 300 CoworkingSpaces básicos");
             Console.WriteLine("   ✅ BenefitCoworkingSpace (Benefits 1-10)");
             Console.WriteLine("   ✅ CoworkingSpaceSafetyElement (SafetyElements 1-20)");
@@ -141,6 +150,9 @@ namespace CoworkingReservation.Infrastructure.Data
             Console.WriteLine("   ✅ CoworkingSpaceSpecialFeature (SpecialFeatures 1-20)");
             Console.WriteLine("   ✅ CoworkingSpacePhotos (1500 fotos: 5 por espacio)");
             Console.WriteLine("   ✅ CoworkingAreas (configuraciones variadas por espacio)");
+            Console.WriteLine("   ✅ CoworkingAvailabilities (disponibilidades para 12 meses)");
+            Console.WriteLine("   ✅ Reservations (1350-1850 reservas: pasadas, actuales y futuras)");
+            Console.WriteLine("   ✅ Reviews (basadas en reservas completadas del pasado)");
         }
     }
 }
