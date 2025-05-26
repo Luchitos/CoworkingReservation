@@ -3,6 +3,7 @@ using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.DTOs.Photo;
 using CoworkingReservation.Application.DTOs.CoworkingArea;
 using CoworkingReservation.Application.DTOs.Benefit;
+using CoworkingReservation.Application.DTOs.Review;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
@@ -502,6 +503,22 @@ namespace CoworkingReservation.Application.Services
                     .Select(sf => sf.Name ?? "")
                     .ToListAsync();
 
+                // Cargar reviews con información del usuario
+                var reviews = await _context.Reviews
+                    .Where(r => r.CoworkingSpaceId == id)
+                    .Include(r => r.User)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => new ReviewResponseDTO
+                    {
+                        Id = r.Id,
+                        UserId = r.UserId,
+                        UserName = r.User.Name + " " + r.User.Lastname,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt
+                    })
+                    .ToListAsync();
+
                 // Asegurarse de que la dirección tenga todos los campos necesarios
                 // incluso si algunos campos son nulos en la base de datos
                 var address = cs.Address ?? new Domain.Entities.Address();
@@ -545,7 +562,9 @@ namespace CoworkingReservation.Application.Services
                         Capacity = a.Capacity,
                         PricePerDay = a.PricePerDay,
                         Available = a.Available
-                    }).ToList()
+                    }).ToList(),
+                    // Agregar los reviews
+                    Reviews = reviews
                 };
 
                 return result;
