@@ -9,7 +9,7 @@ open -a Docker
 # 1. Esperar a que Docker esté operativo
 echo "⏳ Esperando a que Docker esté listo..."
 while ! docker info > /dev/null 2>&1; do
-  sleep 1
+  sleep 10
 done
 echo "✅ Docker está activo."
 
