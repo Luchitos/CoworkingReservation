@@ -37,7 +37,7 @@ namespace CoworkingReservation.API.Controllers
             try
             {
                 var space = await _coworkingSpaceService.GetByIdAsync(id);
-                
+
                 // Enriquecer la respuesta con información adicional
                 return Ok(Responses.Response.Success(new
                 {
@@ -46,7 +46,7 @@ namespace CoworkingReservation.API.Controllers
                     {
                         RequestedAt = DateTime.UtcNow,
                         Version = "1.1",
-                        AvailableOperations = new[] 
+                        AvailableOperations = new[]
                         {
                             new { Name = "Reservar", Endpoint = $"/api/reservation/create/{id}" },
                             new { Name = "Ver Disponibilidad", Endpoint = $"/api/availability/{id}" }
@@ -77,7 +77,7 @@ namespace CoworkingReservation.API.Controllers
             return Ok(Responses.Response.Success("Coworking space created successfully."));
         }
 
-        [HttpPut("{id}")]   
+        [HttpPut("{id}")]
         [Authorize(Roles = "Hoster")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCoworkingSpaceDTO dto)
         {
@@ -129,7 +129,7 @@ namespace CoworkingReservation.API.Controllers
                     userId = parsedUserId;
                 }
             }
-            
+
             var result = await _coworkingSpaceService.GetAllLightweightAsync(userId);
             return Ok(Responses.Response.Success(result));
         }
@@ -152,9 +152,9 @@ namespace CoworkingReservation.API.Controllers
                         userId = parsedUserId;
                     }
                 }
-                
+
                 var spaces = await _coworkingSpaceService.GetAllLightweightAsync(userId);
-                
+
                 // Log para depuración
                 Console.WriteLine("---------- CONTROLLER DEBUG - GetAll ----------");
                 foreach (var space in spaces)
@@ -162,7 +162,7 @@ namespace CoworkingReservation.API.Controllers
                     Console.WriteLine($"Controller GetAll: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
                     Console.WriteLine($"Controller GetAll: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
                     Console.WriteLine($"Controller GetAll: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
-                    
+
                     if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
                         space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
                     {
@@ -170,7 +170,7 @@ namespace CoworkingReservation.API.Controllers
                     }
                 }
                 Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
-                
+
                 var response = new CoworkingSpaceListResponseDTO
                 {
                     Spaces = spaces.ToList(),
@@ -180,7 +180,7 @@ namespace CoworkingReservation.API.Controllers
                         Version = "1.1"
                     }
                 };
-                
+
                 return Ok(Responses.Response.Success(response));
             }
             catch (Exception ex)
@@ -195,7 +195,7 @@ namespace CoworkingReservation.API.Controllers
         /// </summary>
         [HttpGet("filter")]
         public async Task<IActionResult> GetFiltered(
-            [FromQuery] int? capacity, 
+            [FromQuery] int? capacity,
             [FromQuery] string? location,
             [FromQuery] DateTime? date,
             [FromQuery] decimal? minPrice,
@@ -225,21 +225,21 @@ namespace CoworkingReservation.API.Controllers
 
                 // Registrar los filtros que se están aplicando para propósitos de depuración
                 var filterParams = new Dictionary<string, object>();
-                
+
                 // Agregar parámetros básicos
                 if (capacity.HasValue) filterParams["capacity"] = capacity.Value;
                 if (!string.IsNullOrEmpty(location)) filterParams["location"] = location;
                 if (date.HasValue) filterParams["date"] = date.Value;
-                
+
                 // Agregar parámetros de precio
                 if (minPrice.HasValue) filterParams["minPrice"] = minPrice.Value;
                 if (maxPrice.HasValue) filterParams["maxPrice"] = maxPrice.Value;
-                
+
                 // Agregar tipos de espacio
                 if (individualDesk.HasValue && individualDesk.Value) filterParams["individualDesk"] = true;
                 if (privateOffice.HasValue && privateOffice.Value) filterParams["privateOffice"] = true;
                 if (hybridSpace.HasValue && hybridSpace.Value) filterParams["hybridSpace"] = true;
-                
+
                 // Agregar servicios y beneficios
                 if (services.Any()) filterParams["services"] = string.Join(", ", services);
                 if (benefits.Any()) filterParams["benefits"] = string.Join(", ", benefits);
@@ -247,7 +247,7 @@ namespace CoworkingReservation.API.Controllers
                 // Llamar al servicio existente con los parámetros básicos (por ahora)
                 // En un futuro se deberá modificar el servicio para que acepte todos los parámetros
                 IEnumerable<CoworkingSpaceListItemDTO> spaces;
-                
+
                 try
                 {
                     // Imprimir en consola para depuración
@@ -256,7 +256,7 @@ namespace CoworkingReservation.API.Controllers
                     Console.WriteLine($"individualDesk={individualDesk}, privateOffice={privateOffice}, hybridSpace={hybridSpace}");
                     Console.WriteLine($"services (count={services.Count}): {string.Join(", ", services)}");
                     Console.WriteLine($"benefits (count={benefits.Count}): {string.Join(", ", benefits)}");
-                    
+
                     // Intentar usar el nuevo método avanzado
                     spaces = await _coworkingSpaceService.GetAdvancedFilteredAsync(
                         capacity, location, date, minPrice, maxPrice,
@@ -269,7 +269,7 @@ namespace CoworkingReservation.API.Controllers
                     Console.WriteLine("El método avanzado de filtrado no está implementado. Usando el método básico.");
                     spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location, userId);
                 }
-                
+
                 // Log para depuración
                 Console.WriteLine("---------- CONTROLLER DEBUG - GetFiltered RESULTS ----------");
                 Console.WriteLine($"Filtros aplicados: {string.Join(", ", filterParams.Select(kv => $"{kv.Key}={kv.Value}"))}");
@@ -278,13 +278,13 @@ namespace CoworkingReservation.API.Controllers
                 Console.WriteLine($"services={string.Join(", ", services ?? new List<string>())}");
                 Console.WriteLine($"benefits={string.Join(", ", benefits ?? new List<string>())}");
                 Console.WriteLine($"Número de espacios devueltos: {spaces.Count()}");
-                
+
                 foreach (var space in spaces)
                 {
                     Console.WriteLine($"Controller: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
                     Console.WriteLine($"Controller: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
                     Console.WriteLine($"Controller: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
-                    
+
                     if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
                         space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
                     {
@@ -292,7 +292,7 @@ namespace CoworkingReservation.API.Controllers
                     }
                 }
                 Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
-                
+
                 var response = new CoworkingSpaceListResponseDTO
                 {
                     Spaces = spaces.ToList(),
@@ -303,7 +303,7 @@ namespace CoworkingReservation.API.Controllers
                         AppliedFilters = filterParams
                     }
                 };
-                
+
                 return Ok(Responses.Response.Success(response));
             }
             catch (Exception ex)
@@ -326,5 +326,20 @@ namespace CoworkingReservation.API.Controllers
             await _coworkingSpaceService.DeleteAsync(id, hosterId);
             return Ok(Responses.Response.Success("Coworking space deleted successfully."));
         }
+
+        /// <summary>
+        /// Obtiene todos los espacios de coworking creados por el hoster autenticado.
+        /// </summary>
+        /// <returns>Lista de coworkings del hoster.</returns>
+        [HttpGet("my-coworkings")]
+        [Authorize(Roles = "Hoster")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMyCoworkings()
+        {
+            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var coworkings = await _coworkingSpaceService.GetByHosterAsync(hosterId);
+            return Ok(Responses.Response.Success(coworkings));
+        }
+
     }
 }
