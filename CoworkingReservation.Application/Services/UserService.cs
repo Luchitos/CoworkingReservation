@@ -315,7 +315,7 @@ namespace CoworkingReservation.Application.Services
             if (!favoriteSpaceIds.Any())
                 return Enumerable.Empty<CoworkingSpaceListItemDTO>();
 
-            var spaces = await _unitOfWork.CoworkingSpaces.GetAllLightweightByIdsAsync(favoriteSpaceIds);
+            var spaces = await _unitOfWork.CoworkingSpaces.GetAllLightweightByIdsAsync(favoriteSpaceIds, userId);
 
             return spaces;
         }
