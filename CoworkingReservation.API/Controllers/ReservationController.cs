@@ -155,5 +155,21 @@ namespace CoworkingReservation.API.Controllers
                 return new EmptyResult();
             }
         }
+
+        /// <summary>
+        /// Obtiene las reservas agrupadas por espacio del hoster.
+        /// </summary>
+        /// <returns>Lista de reservas agrupadas por espacio.</returns>
+        [HttpGet("hoster/by-space")]
+        [Authorize(Roles = "Hoster")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetReservationsByCoworking()
+        {
+            // var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _reservationService.GetReservationsByCoworkingAsync(10);
+            return Ok(Responses.Response.Success(result));
+        }
+
+
     }
-} 
+}

@@ -144,6 +144,29 @@ namespace CoworkingReservation.Application.Services
 
             _logger.LogInformation($"Deleted coworking area {id}");
         }
+        
+        /// <summary>
+        /// Cambia el estado de disponibilidad de un área (activar/desactivar).
+        /// </summary>
+        public async Task SetAvailabilityAsync(int id, int hosterId, bool available)
+        {
+            var area = await _unitOfWork.CoworkingAreas.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Coworking area not found.");
+
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(area.CoworkingSpaceId);
+            if (coworkingSpace.HosterId != hosterId)
+                throw new UnauthorizedAccessException("You do not have permission to modify this area.");
+
+            if (area.Available == available)
+                throw new InvalidOperationException($"The area is already {(available ? "enabled" : "disabled")}.");
+
+            area.Available = available;
+
+            await _unitOfWork.CoworkingAreas.UpdateAsync(area);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation($"Coworking area {id} was {(available ? "enabled" : "disabled")} by hoster {hosterId}");
+        }
 
         #endregion
 
@@ -156,7 +179,7 @@ namespace CoworkingReservation.Application.Services
         {
             return await _unitOfWork.CoworkingAreas
                 .GetQueryable()
-                .Where(ca => ca.CoworkingSpaceId == coworkingSpaceId)
+                .Where(ca => ca.CoworkingSpaceId == coworkingSpaceId && ca.Available)
                 .AsNoTracking()
                 .ToListAsync();
         }

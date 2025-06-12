@@ -39,6 +39,14 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <param name="hosterId">ID del hoster que realiza la eliminación.</param>
         Task DeleteAsync(int id, int hosterId);
 
+        /// <summary>
+        /// Cambia el estado de disponibilidad de un área de coworking (activar/desactivar).
+        /// </summary>
+        /// <param name="id">ID del área de coworking.</param>
+        /// <param name="hosterId">ID del hoster que realiza la operación.</param>
+        /// <param name="available">Nuevo estado de disponibilidad.</param>
+        Task SetAvailabilityAsync(int id, int hosterId, bool available);
+
         #endregion
 
         #region Métodos de Consulta

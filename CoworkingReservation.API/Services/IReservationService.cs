@@ -10,5 +10,12 @@ namespace CoworkingReservation.API.Services
         Task<object> GetUserReservationsAsync(string userId);
         Task CancelReservationAsync(int id, string userId);
         Task<object> CheckAvailabilityAsync(CheckAvailabilityRequest request);
+
+        /// <summary>
+        /// Obtiene todas las reservas agrupadas por coworking space del hoster.
+        /// </summary>
+        /// <param name="hosterId">ID del hoster autenticado.</param>
+        /// <returns>Reservas agrupadas por espacio.</returns>
+        Task<List<ReservationBySpaceResponseDTO>> GetReservationsByCoworkingAsync(int hosterId);
     }
 } 

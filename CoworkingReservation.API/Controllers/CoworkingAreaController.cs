@@ -124,6 +124,27 @@ namespace CoworkingReservation.API.Controllers
         }
 
         /// <summary>
+        /// Cambia el estado de disponibilidad de un área de coworking.
+        /// </summary>
+        /// <param name="areaId">ID del área a modificar.</param>
+        /// <param name="available">Nuevo estado (true = habilitar, false = deshabilitar).</param>
+        /// <returns>Mensaje de éxito.</returns>
+        [HttpPatch("{areaId}/availability")]
+        [Authorize(Roles = "Hoster")]
+        public async Task<IActionResult> SetAvailability(int areaId, [FromQuery] bool available)
+        {
+            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _coworkingAreaService.SetAvailabilityAsync(areaId, hosterId, available);
+
+            var message = available
+                ? "Área habilitada correctamente."
+                : "Área deshabilitada correctamente.";
+
+            return Ok(Responses.Response.Success(message));
+        }
+
+
+        /// <summary>
         /// Obtiene la capacidad total disponible de un espacio de coworking.
         /// </summary>
         /// <param name="coworkingSpaceId">ID del coworking space.</param>
