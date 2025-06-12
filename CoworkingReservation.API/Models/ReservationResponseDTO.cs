@@ -17,6 +17,7 @@ namespace CoworkingReservation.API.Models
         public string PaymentMethod { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<ReservationDetailDTO> Details { get; set; }
         public List<ReservationAreaDTO> Areas { get; set; } = new List<ReservationAreaDTO>();
     }
 
@@ -25,6 +26,14 @@ namespace CoworkingReservation.API.Models
         public int Id { get; set; }
         public int CoworkingAreaId { get; set; }
         public string AreaName { get; set; }
+        public string AreaType { get; set; }
+        public decimal PricePerDay { get; set; }
+    }
+
+        public class ReservationDetailDTO
+    {
+        public int Id { get; set; }
+        public int CoworkingAreaId { get; set; }
         public string AreaType { get; set; }
         public decimal PricePerDay { get; set; }
     }

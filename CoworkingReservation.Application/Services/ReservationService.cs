@@ -134,6 +134,25 @@ namespace CoworkingReservation.Application.Services
             return areas.Sum(a => a.PricePerDay * totalDays);
         }
 
+        public async Task<UserReservationsGroupedDTO> GetUserReservationsGroupedAsync(int userId)
+        {
+            var reservations = await _reservationRepository.GetUserReservationsAsync(userId);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var past = reservations
+                .Where(r => DateOnly.FromDateTime(r.EndDate) < today)
+                .Select(MapToResponseDTO);
+
+            var currentAndFuture = reservations
+                .Where(r => DateOnly.FromDateTime(r.EndDate) >= today)
+                .Select(MapToResponseDTO);
+
+            return new UserReservationsGroupedDTO
+            {
+                PastReservations = past,
+                CurrentAndFutureReservations = currentAndFuture
+            };
+        }
         private ReservationResponseDTO MapToResponseDTO(Reservation reservation)
         {
             return new ReservationResponseDTO
@@ -156,4 +175,4 @@ namespace CoworkingReservation.Application.Services
             };
         }
     }
-} 
+}

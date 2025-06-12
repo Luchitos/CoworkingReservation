@@ -1,4 +1,5 @@
 using CoworkingReservation.API.Models;
+using CoworkingReservation.Application.DTOs.Reservation;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
@@ -161,7 +162,7 @@ namespace CoworkingReservation.API.Services
             }
 
             // Mapear a DTO para evitar referencias circulares
-            var reservationDTO = new ReservationResponseDTO
+            var reservationDTO = new Models.ReservationResponseDTO
             {
                 Id = reservation.Id,
                 UserId = reservation.UserId,
@@ -198,7 +199,7 @@ namespace CoworkingReservation.API.Services
             var reservations = await _reservationRepository.GetUserReservationsAsync(userIdInt);
 
             // Mapear a DTOs para evitar referencias circulares
-            var reservationDTOs = reservations.Select(reservation => new ReservationResponseDTO
+            var reservationDTOs = reservations.Select(reservation => new Models.ReservationResponseDTO
             {
                 Id = reservation.Id,
                 UserId = reservation.UserId,
@@ -374,5 +375,45 @@ namespace CoworkingReservation.API.Services
 
             return availabilityResponse;
         }
+
+        public async Task<UserReservationsGroupedDTO> GetUserReservationsGroupedAsync(int userId)
+        {
+            var reservations = await _reservationRepository.GetUserReservationsAsync(userId);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var past = reservations
+                .Where(r => DateOnly.FromDateTime(r.EndDate) < today)
+                .Select(MapToResponseDTO);
+
+            var currentAndFuture = reservations
+                .Where(r => DateOnly.FromDateTime(r.EndDate) >= today)
+                .Select(MapToResponseDTO);
+
+            return new UserReservationsGroupedDTO
+            {
+                PastReservations = (IEnumerable<Application.DTOs.Reservation.ReservationResponseDTO>)past,
+                CurrentAndFutureReservations = (IEnumerable<Application.DTOs.Reservation.ReservationResponseDTO>)currentAndFuture
+            };
+        }
+
+        private Models.ReservationResponseDTO MapToResponseDTO(Reservation reservation) => new Models.ReservationResponseDTO
+        {
+            Id = reservation.Id,
+            CoworkingSpaceName = reservation.CoworkingSpace.Name,
+            StartDate = reservation.StartDate,
+            EndDate = reservation.EndDate,
+            Status = reservation.Status.ToString(),
+            TotalPrice = reservation.TotalPrice,
+            PaymentMethod = reservation.PaymentMethod.ToString(),
+            CreatedAt = reservation.CreatedAt,
+            Details = reservation.ReservationDetails.Select(d => new Models.ReservationDetailDTO
+            {
+                Id = d.Id,
+                CoworkingAreaId = d.CoworkingAreaId,
+                AreaType = d.CoworkingArea.Type.ToString(),
+                PricePerDay = d.PricePerDay
+            }).ToList()
+        };
+
     }
 }

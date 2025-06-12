@@ -14,5 +14,12 @@ namespace CoworkingReservation.Application.Services.Interfaces
         Task<ReservationResponseDTO> CancelReservationAsync(int id, int userId);
         Task<bool> CheckAvailabilityAsync(int coworkingSpaceId, DateTime startDate, DateTime endDate, List<int> areaIds);
         Task<decimal> CalculateTotalPriceAsync(int coworkingSpaceId, List<int> areaIds, DateTime startDate, DateTime endDate);
+
+        /// <summary>
+        /// Obtiene las reservas del usuario agrupadas en pasadas y actuales/futuras.
+        /// </summary>
+        /// <param name="userId">ID del usuario autenticado</param>
+        /// <returns>Objeto con dos listas de reservas</returns>
+        Task<UserReservationsGroupedDTO> GetUserReservationsGroupedAsync(int userId);
     }
 }

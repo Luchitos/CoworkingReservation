@@ -169,6 +169,21 @@ namespace CoworkingReservation.API.Controllers
             var result = await _reservationService.GetReservationsByCoworkingAsync(10);
             return Ok(Responses.Response.Success(result));
         }
+        [Authorize]
+        [HttpGet("grouped")]
+        public async Task<IActionResult> GetGroupedReservations()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var grouped = await _reservationService.GetUserReservationsGroupedAsync(userId);
+                return Ok(Responses.Response.Success(grouped));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Responses.Response.Failure(ex.Message));
+            }
+        }
 
 
     }
