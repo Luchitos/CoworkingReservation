@@ -70,14 +70,14 @@ namespace CoworkingReservation.Infrastructure.Data
         {
             // Generar rating con distribución realista (sesgada hacia valores altos)
             var rating = GenerateRealisticRating(random);
-            
+
             // Generar comentario basado en el rating
             var comment = GenerateCommentBasedOnRating(rating, random);
-            
+
             // Fecha de creación: entre 1-30 días después del fin de la reserva
             var daysAfterReservation = random.Next(1, 31);
             var createdAt = reservation.EndDate.AddDays(daysAfterReservation);
-            
+
             // Asegurar que no sea futuro
             if (createdAt > DateTime.UtcNow)
             {
@@ -87,6 +87,7 @@ namespace CoworkingReservation.Infrastructure.Data
             return new Review
             {
                 UserId = reservation.UserId,
+                ReservationId = reservation.Id,
                 CoworkingSpaceId = reservation.CoworkingSpaceId,
                 Rating = rating,
                 Comment = comment,
@@ -165,7 +166,7 @@ namespace CoworkingReservation.Infrastructure.Data
             return rating switch
             {
                 5 => positiveComments[random.Next(positiveComments.Length)],
-                4 => random.NextDouble() < 0.8 
+                4 => random.NextDouble() < 0.8
                     ? positiveComments[random.Next(positiveComments.Length)]
                     : neutralComments[random.Next(neutralComments.Length)],
                 3 => neutralComments[random.Next(neutralComments.Length)],
@@ -180,24 +181,24 @@ namespace CoworkingReservation.Infrastructure.Data
         private static async Task InsertReviewsInBatches(ApplicationDbContext context, List<Review> allReviews)
         {
             Console.WriteLine("💾 Insertando reviews en la base de datos...");
-            
+
             var batchSize = 100;
             var processedCount = 0;
-            
+
             for (int i = 0; i < allReviews.Count; i += batchSize)
             {
                 var batch = allReviews.Skip(i).Take(batchSize);
                 await context.Reviews.AddRangeAsync(batch);
                 await context.SaveChangesAsync();
-                
+
                 processedCount += batch.Count();
-                
+
                 if (processedCount % 200 == 0 || processedCount == allReviews.Count)
                 {
                     Console.WriteLine($"✅ Procesadas {processedCount}/{allReviews.Count} reviews...");
                 }
             }
-            
+
             Console.WriteLine($"🎉 ¡{allReviews.Count} reviews creadas exitosamente!");
         }
 
@@ -232,4 +233,4 @@ namespace CoworkingReservation.Infrastructure.Data
             Console.WriteLine($"   📅 Espacios con reviews: {reviewsBySpace.Count}/300");
         }
     }
-} 
+}

@@ -80,6 +80,11 @@ namespace CoworkingReservation.Infrastructure.Data
                 .HasForeignKey(r => r.CoworkingSpaceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Review>()
+    .HasOne(r => r.Reservation)
+    .WithMany()
+    .HasForeignKey(r => r.ReservationId)
+    .OnDelete(DeleteBehavior.Restrict);
             // Configuración para evitar truncamientos en decimales
 
             modelBuilder.Entity<CoworkingSpace>()
@@ -133,30 +138,30 @@ namespace CoworkingReservation.Infrastructure.Data
                 .Property(se => se.Name)
                 .IsRequired()
                 .HasMaxLength(100);
-                
+
             // Configure many-to-many relationships for Benefit, SafetyElement, ServiceOffered, and SpecialFeature
             // These were previously defined by navigation properties that have been removed
-            
+
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.Benefits)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("BenefitCoworkingSpace"));
-                
+
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.SafetyElements)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("CoworkingSpaceSafetyElement"));
-                
+
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.Services)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("CoworkingSpaceServiceOffered"));
-                
+
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.SpecialFeatures)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("CoworkingSpaceSpecialFeature"));
-                
+
             base.OnModelCreating(modelBuilder);
         }
     }
