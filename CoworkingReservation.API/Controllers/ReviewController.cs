@@ -58,7 +58,7 @@ namespace CoworkingReservation.API.Controllers
         public async Task<IActionResult> GetReviewsByCoworkingSpace([FromQuery] int id)
         {
             var response = await _reviewService.GetReviewsByCoworkingSpaceAsync(id);
-            return Ok(Response.Success(response));
+            return Ok(response); //Revisar Response
         }
 
     }

@@ -73,6 +73,8 @@ builder.Services.AddScoped<ISpecialFeatureService, SpecialFeatureService>();
 builder.Services.AddScoped<ISafetyElementService, SafetyElementService>();
 builder.Services.AddScoped<IImageUploadService, ImgBBImageUploadService>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
