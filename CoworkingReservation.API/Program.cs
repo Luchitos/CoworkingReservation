@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.API.Filters;
 using CoworkingReservation.API.Services;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
 // Registrar el repositorio genérico
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -59,6 +61,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<ISpecialFeatureRepository, SpecialFeatureRepository>();
 builder.Services.AddScoped<ISafetyElementRepository, SafetyElementRepository>();
+builder.Services.AddScoped<IReservationJobService, ReservationJobService>();
 
 
 // Registrar los servicios
@@ -75,6 +78,8 @@ builder.Services.AddScoped<IImageUploadService, ImgBBImageUploadService>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddHangfire(config => config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
@@ -168,7 +173,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseHangfireDashboard();
 app.UseHttpsRedirection();
 
 // Usar la política de CORS
@@ -183,5 +188,13 @@ using (var scope = app.Services.CreateScope())
     var approvalJob = scope.ServiceProvider.GetRequiredService<CoworkingApprovalJob>();
     _ = Task.Run(async () => await approvalJob.Run());
 }
+
+RecurringJob.AddOrUpdate<IReservationJobService>(
+    job => job.CompleteExpiredReservationsAsync(),
+    Cron.Daily(23) //Corre 23hs
+);
+
+// Ejecutar el job inmediatamente al levantar la app
+RecurringJob.Trigger("complete-expired-reservations-job");
 
 app.Run(); 

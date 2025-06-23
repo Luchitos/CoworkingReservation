@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace CoworkingReservation.Infrastructure.Repositories
@@ -33,7 +34,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
             {
                 // Si una reserva confirmada ya pasó COMPLETAMENTE su fecha de fin, marcarla como completada
                 // Solo marcar como completada si la fecha actual es POSTERIOR al día de finalización
-                if (reservation.Status == Domain.Enums.ReservationStatus.Confirmed && 
+                if (reservation.Status == Domain.Enums.ReservationStatus.Confirmed &&
                     reservation.EndDate.Date < today) // ✅ Comparar solo fechas, no horas
                 {
                     reservation.Status = Domain.Enums.ReservationStatus.Completed;
@@ -56,10 +57,10 @@ namespace CoworkingReservation.Infrastructure.Repositories
             // Normalizar las fechas para ignorar la hora
             var normalizedStartDate = startDate.Date;
             var normalizedEndDate = endDate.Date;
-            
+
             // Log para depuración
             Console.WriteLine($"Verificando disponibilidad para espacio {coworkingSpaceId} del {normalizedStartDate.ToString("yyyy-MM-dd")} al {normalizedEndDate.ToString("yyyy-MM-dd")}");
-            
+
             // Obtener todas las reservas que se solapan con las fechas solicitadas
             // Nota: Se comparan solo las fechas, no las horas
             var existingReservations = await _context.Reservations
@@ -68,16 +69,16 @@ namespace CoworkingReservation.Infrastructure.Repositories
                            r.Status != Domain.Enums.ReservationStatus.Cancelled &&
                            (r.StartDate.Date <= normalizedEndDate && r.EndDate.Date >= normalizedStartDate))
                 .ToListAsync();
-            
+
             // Log para depuración
             Console.WriteLine($"Se encontraron {existingReservations.Count} reservas existentes que solapan las fechas");
-            
+
             // Si no hay reservas existentes, todas las áreas están disponibles
             if (!existingReservations.Any())
             {
                 return true;
             }
-            
+
             // Verificar cada área solicitada
             foreach (var areaId in areaIds)
             {
@@ -85,14 +86,14 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 bool isAreaBooked = existingReservations
                     .Any(r => r.ReservationDetails
                         .Any(rd => rd.CoworkingAreaId == areaId));
-                
+
                 if (isAreaBooked)
                 {
                     Console.WriteLine($"El área {areaId} no está disponible para las fechas seleccionadas");
                     return false; // Al menos un área no está disponible
                 }
             }
-            
+
             // Todas las áreas están disponibles
             Console.WriteLine("Todas las áreas solicitadas están disponibles");
             return true;
@@ -107,6 +108,14 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     .ThenInclude(rd => rd.CoworkingArea)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
+
+        public async Task<IEnumerable<Reservation>> GetReservationsAsync(Expression<Func<Reservation, bool>> predicate)
+        {
+            return await _context.Reservations
+                .Where(predicate)
+                .ToListAsync();
+        }
+
     }
 }
 
