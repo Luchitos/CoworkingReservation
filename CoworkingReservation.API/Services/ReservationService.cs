@@ -383,16 +383,18 @@ namespace CoworkingReservation.API.Services
 
             var past = reservations
                 .Where(r => DateOnly.FromDateTime(r.EndDate) < today)
-                .Select(MapToResponseDTO);
+                .Select(MapToApplicationResponseDTO)
+                .ToList();
 
             var currentAndFuture = reservations
                 .Where(r => DateOnly.FromDateTime(r.EndDate) >= today)
-                .Select(MapToResponseDTO);
+                .Select(MapToApplicationResponseDTO)
+                .ToList();
 
             return new UserReservationsGroupedDTO
             {
-                PastReservations = (IEnumerable<Application.DTOs.Reservation.ReservationResponseDTO>)past,
-                CurrentAndFutureReservations = (IEnumerable<Application.DTOs.Reservation.ReservationResponseDTO>)currentAndFuture
+                PastReservations = past,
+                CurrentAndFutureReservations = currentAndFuture
             };
         }
 
@@ -407,6 +409,25 @@ namespace CoworkingReservation.API.Services
             PaymentMethod = reservation.PaymentMethod.ToString(),
             CreatedAt = reservation.CreatedAt,
             Details = reservation.ReservationDetails.Select(d => new Models.ReservationDetailDTO
+            {
+                Id = d.Id,
+                CoworkingAreaId = d.CoworkingAreaId,
+                AreaType = d.CoworkingArea.Type.ToString(),
+                PricePerDay = d.PricePerDay
+            }).ToList()
+        };
+
+        private Application.DTOs.Reservation.ReservationResponseDTO MapToApplicationResponseDTO(Reservation reservation) => new Application.DTOs.Reservation.ReservationResponseDTO
+        {
+            Id = reservation.Id,
+            CoworkingSpaceName = reservation.CoworkingSpace.Name,
+            StartDate = reservation.StartDate,
+            EndDate = reservation.EndDate,
+            Status = reservation.Status,
+            TotalPrice = reservation.TotalPrice,
+            PaymentMethod = reservation.PaymentMethod,
+            CreatedAt = reservation.CreatedAt,
+            Details = reservation.ReservationDetails.Select(d => new Application.DTOs.Reservation.ReservationDetailDTO
             {
                 Id = d.Id,
                 CoworkingAreaId = d.CoworkingAreaId,

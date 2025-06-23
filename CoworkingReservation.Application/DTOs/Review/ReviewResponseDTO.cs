@@ -18,9 +18,24 @@ namespace CoworkingReservation.Application.DTOs.Review
         public int UserId { get; set; }
 
         /// <summary>
+        /// ID del espacio de coworking.
+        /// </summary>
+        public int CoworkingSpaceId { get; set; }
+
+        /// <summary>
+        /// ID de la reserva asociada.
+        /// </summary>
+        public int ReservationId { get; set; }
+
+        /// <summary>
         /// Nombre del usuario que hizo el review.
         /// </summary>
         public string UserName { get; set; }
+
+        /// <summary>
+        /// Nombre del espacio de coworking.
+        /// </summary>
+        public string CoworkingSpaceName { get; set; }
 
         /// <summary>
         /// Calificación del 1 al 5.

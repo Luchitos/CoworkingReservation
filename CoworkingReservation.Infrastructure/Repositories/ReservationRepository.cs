@@ -26,17 +26,18 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .ToListAsync();
 
             // Actualizar automáticamente el estado de las reservas completadas
-            var now = DateTime.UtcNow;
+            var today = DateTime.UtcNow.Date; // Solo la fecha, sin hora
             var reservationsToUpdate = new List<Reservation>();
 
             foreach (var reservation in reservations)
             {
-                // Si una reserva confirmada ya pasó su fecha de fin, marcarla como completada
+                // Si una reserva confirmada ya pasó COMPLETAMENTE su fecha de fin, marcarla como completada
+                // Solo marcar como completada si la fecha actual es POSTERIOR al día de finalización
                 if (reservation.Status == Domain.Enums.ReservationStatus.Confirmed && 
-                    reservation.EndDate < now)
+                    reservation.EndDate.Date < today) // ✅ Comparar solo fechas, no horas
                 {
                     reservation.Status = Domain.Enums.ReservationStatus.Completed;
-                    reservation.UpdatedAt = now;
+                    reservation.UpdatedAt = DateTime.UtcNow;
                     reservationsToUpdate.Add(reservation);
                 }
             }

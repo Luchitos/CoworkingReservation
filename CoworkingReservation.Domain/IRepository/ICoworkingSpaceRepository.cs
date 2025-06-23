@@ -18,5 +18,6 @@ namespace CoworkingReservation.Domain.IRepository
         Task<bool> ExistsAsync(Expression<Func<CoworkingSpace, bool>> predicate);
         Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
         Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightByIdsAsync(IEnumerable<int> ids, int? userId = null);
+        Task UpdateRatingAsync(int coworkingSpaceId, float newRating);
     }
 }

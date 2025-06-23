@@ -14,8 +14,8 @@ namespace CoworkingReservation.Infrastructure.Migrations
                 name: "ReservationId",
                 table: "Reviews",
                 type: "int",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true,
+                defaultValue: null);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_ReservationId",
@@ -28,7 +28,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
                 column: "ReservationId",
                 principalTable: "Reservations",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />

@@ -7,4 +7,6 @@ public interface IReviewRepository : IRepository<Review>
 
     Task<List<Review>> GetReviewsByCoworkingSpaceAsync(int coworkingSpaceId);
 
+    Task<Review?> GetByUserAndReservationAsync(int userId, int reservationId);
+
 }

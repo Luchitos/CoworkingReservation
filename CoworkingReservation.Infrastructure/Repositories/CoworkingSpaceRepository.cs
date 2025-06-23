@@ -364,5 +364,18 @@ namespace CoworkingReservation.Infrastructure.Repositories
             });
         }
 
+        public async Task UpdateRatingAsync(int coworkingSpaceId, float newRating)
+        {
+            var coworkingSpace = await _context.CoworkingSpaces
+                .FirstOrDefaultAsync(cs => cs.Id == coworkingSpaceId);
+
+            if (coworkingSpace != null)
+            {
+                coworkingSpace.Rate = newRating;
+                _context.CoworkingSpaces.Update(coworkingSpace);
+                // No llamamos SaveChangesAsync aquí, el Unit of Work se encarga de eso
+            }
+        }
+
     }
 }

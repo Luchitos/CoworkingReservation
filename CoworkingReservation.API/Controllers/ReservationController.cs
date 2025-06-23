@@ -169,6 +169,14 @@ namespace CoworkingReservation.API.Controllers
             var result = await _reservationService.GetReservationsByCoworkingAsync(10);
             return Ok(Responses.Response.Success(result));
         }
+        
+        /// <summary>
+        /// Obtiene las reservas del usuario agrupadas por estado.
+        /// </summary>
+        /// <returns>Lista de reservas agrupadas por estado (Activas, Pasadas, Canceladas)</returns>
+        /// <response code="200">Retorna las reservas agrupadas exitosamente</response>
+        /// <response code="400">Si ocurre un error al procesar la solicitud</response>
+        /// <response code="401">Si el usuario no está autenticado</response>
         [Authorize]
         [HttpGet("grouped")]
         public async Task<IActionResult> GetGroupedReservations()
