@@ -117,7 +117,7 @@ namespace CoworkingReservation.API.Services
                     UserId = request.UserId, // Usar el ID del usuario de la solicitud
                     StartDate = request.StartDate,
                     EndDate = request.EndDate,
-                    Status = ReservationStatus.Confirmed, // Confirmar automáticamente por ahora
+                    Status = ReservationStatus.Pending, // Confirmar automáticamente por ahora
                     TotalPrice = totalPrice,
                     PaymentMethod = PaymentMethod.CreditCard, // Por defecto
                     CreatedAt = DateTime.UtcNow,
@@ -273,13 +273,6 @@ namespace CoworkingReservation.API.Services
             if (reservation.Status == Domain.Enums.ReservationStatus.Completed)
             {
                 throw new InvalidOperationException("No se puede cancelar una reserva ya completada");
-            }
-
-            // No permitir cancelar reservas que ya han comenzado (margen de 24 horas)
-            TimeSpan cancelationWindow = TimeSpan.FromHours(24);
-            if (DateTime.UtcNow > reservation.StartDate.Subtract(cancelationWindow))
-            {
-                throw new InvalidOperationException("No se puede cancelar la reserva con menos de 24 horas de anticipación");
             }
 
             // Cambiar el estado a cancelado
