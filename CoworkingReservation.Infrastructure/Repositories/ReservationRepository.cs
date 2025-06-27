@@ -14,6 +14,10 @@ namespace CoworkingReservation.Infrastructure.Repositories
     {
         public ReservationRepository(ApplicationDbContext context) : base(context) { }
 
+        public IQueryable<Reservation> GetQueryable()
+        {
+            return _context.Reservations.AsQueryable();
+        }
         public async Task<IEnumerable<Reservation>> GetUserReservationsAsync(int userId)
         {
             // Obtener todas las reservas del usuario con los detalles necesarios

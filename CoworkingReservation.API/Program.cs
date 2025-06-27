@@ -19,6 +19,7 @@ using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.API.Filters;
 using CoworkingReservation.API.Services;
 using Hangfire;
+using CoworkingReservation.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +81,8 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddHangfire(config => config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHangfireServer();
+builder.Services.AddHostedService<ReservationStatusBackgroundService>();
+builder.Services.AddScoped<ReservationStatusJob>();
 
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
@@ -197,4 +200,4 @@ RecurringJob.AddOrUpdate<IReservationJobService>(
 // Ejecutar el job inmediatamente al levantar la app
 RecurringJob.Trigger("complete-expired-reservations-job");
 
-app.Run(); 
+app.Run();

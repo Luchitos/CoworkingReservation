@@ -8,6 +8,7 @@ namespace CoworkingReservation.Domain.IRepository
 {
     public interface IReservationRepository : IRepository<Reservation>
     {
+        IQueryable<Reservation> GetQueryable();
         Task<IEnumerable<Reservation>> GetUserReservationsAsync(int userId);
         Task<bool> CheckAvailabilityAsync(int coworkingSpaceId, DateTime startDate, DateTime endDate, List<int> areaIds);
         Task<Reservation> GetByIdWithDetailsAsync(int id);
