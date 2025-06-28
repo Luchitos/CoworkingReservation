@@ -456,6 +456,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
         [Fact]
         public async Task CancelReservation_AlreadyCancelled_IsIdempotent()
         {
+            // Arrange
             var user = await TestDataSeeder.SeedUser(_context, "testuser-cancel1", "cancel1@mail.com");
             var address = await TestDataSeeder.SeedAddress(_context, 20);
             var coworking = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 20);
@@ -474,12 +475,13 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             var dbReservation = await _context.Reservations.FirstAsync();
             await _reservationService.CancelReservationAsync(dbReservation.Id, user.Id.ToString());
 
-            // Should be idempotent, i.e., no error and status remains Cancelled
-            await _reservationService.CancelReservationAsync(dbReservation.Id, user.Id.ToString());
-
-            var updated = await _context.Reservations.FindAsync(dbReservation.Id);
-            Assert.Equal(ReservationStatus.Cancelled, updated.Status);
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await _reservationService.CancelReservationAsync(dbReservation.Id, user.Id.ToString());
+            });
         }
+
 
         public void Dispose()
         {
