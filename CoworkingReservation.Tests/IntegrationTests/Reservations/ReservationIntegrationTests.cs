@@ -69,6 +69,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             _reservationService = new ReservationService(reservationRepository, coworkingAreaRepository, unitOfWork);
         }
 
+        /// <summary>
+        /// Validates that creating a reservation with multiple coworking areas
+        /// correctly persists all reservation details for the specified areas.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_WithMultipleAreas_ShouldPersistAllAreas()
         {
@@ -98,6 +102,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             Assert.Contains(reservation.ReservationDetails, d => d.CoworkingAreaId == area2.Id);
         }
 
+        /// <summary>
+        /// Ensures that creating overlapping reservations for the same area is not allowed.
+        /// The system should throw InvalidOperationException for an attempt to overlap.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_OverlappingDates_ShouldNotAllow()
         {
@@ -131,6 +139,9 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request2));
         }
 
+        /// <summary>
+        /// Checks that cancelling a reservation correctly sets its status to Cancelled.
+        /// </summary>
         [Fact]
         public async Task CancelReservation_ShouldSetStatusToCancelled()
         {
@@ -157,6 +168,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             Assert.Equal(ReservationStatus.Cancelled, updated.Status);
         }
 
+        /// <summary>
+        /// Verifies that only the user who made the reservation can cancel it.
+        /// Cancelling by a different user should throw UnauthorizedAccessException.
+        /// </summary>
         [Fact]
         public async Task CancelReservation_ByOtherUser_ShouldThrow()
         {
@@ -182,6 +197,9 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CancelReservationAsync(reservation.Id, user2.Id.ToString()));
         }
 
+        /// <summary>
+        /// Ensures that attempting to reserve a non-existent area throws InvalidOperationException.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_WithInvalidArea_ShouldThrow()
         {
@@ -202,6 +220,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
+        /// <summary>
+        /// Validates that all reserved areas must belong to the selected coworking space.
+        /// Attempting to reserve an area from a different space should throw InvalidOperationException.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_AreaDoesNotBelongToSpace_ShouldThrow()
         {
@@ -226,6 +248,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
+        /// <summary>
+        /// Ensures that reservations cannot be created for dates in the past.
+        /// The system should throw InvalidOperationException in such cases.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_InThePast_ShouldThrow()
         {
@@ -247,6 +273,10 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
+        /// <summary>
+        /// Validates that if an area is already booked for overlapping dates,
+        /// no other reservation can be created for the same period.
+        /// </summary>
         [Fact]
         public async Task CreateReservation_WhenAreaNotAvailable_ShouldThrow()
         {
@@ -279,6 +309,9 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(req2));
         }
 
+        /// <summary>
+        /// Cleans up the in-memory database and connection after each test run.
+        /// </summary>
         public void Dispose()
         {
             _context.Database.EnsureDeleted();
