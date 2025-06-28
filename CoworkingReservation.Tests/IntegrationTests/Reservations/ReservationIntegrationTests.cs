@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CoworkingReservation.API.Models;
 using CoworkingReservation.API.Services;
+using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Tests.Helpers;
 using Microsoft.Data.Sqlite;
@@ -17,18 +18,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
 {
     /// <summary>
     /// Integration tests for the Reservation business logic of the CoworkingReservation system.
-    /// 
-    /// This test suite verifies key business rules and workflows, including:
-    /// - Creating reservations with multiple areas
-    /// - Preventing overlapping bookings for the same area
-    /// - Cancelling reservations and enforcing correct status transitions
-    /// - Restricting cancellation to the reservation owner
-    /// - Validating that only existing areas can be reserved and that areas belong to the selected coworking space
-    /// - Preventing reservations in the past
-    /// - Enforcing area availability based on existing reservations
-    /// 
-    /// Uses in-memory SQLite for isolated database state per test.
-    /// Test data is seeded using TestDataSeeder to ensure repeatability and coverage.
+    /// This test suite verifies key business rules and workflows for reservations.
     /// </summary>
     public class ReservationIntegrationBusinessTests : IDisposable
     {
@@ -69,10 +59,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             _reservationService = new ReservationService(reservationRepository, coworkingAreaRepository, unitOfWork);
         }
 
-        /// <summary>
-        /// Validates that creating a reservation with multiple coworking areas
-        /// correctly persists all reservation details for the specified areas.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WithMultipleAreas_ShouldPersistAllAreas()
         {
@@ -91,7 +77,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 AreaIds = new List<int> { area1.Id, area2.Id }
             };
 
-            var result = await _reservationService.CreateReservationAsync(request);
+            await _reservationService.CreateReservationAsync(request);
 
             var reservations = await _context.Reservations.Include(r => r.ReservationDetails).ToListAsync();
             Assert.Single(reservations);
@@ -102,10 +88,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             Assert.Contains(reservation.ReservationDetails, d => d.CoworkingAreaId == area2.Id);
         }
 
-        /// <summary>
-        /// Ensures that creating overlapping reservations for the same area is not allowed.
-        /// The system should throw InvalidOperationException for an attempt to overlap.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_OverlappingDates_ShouldNotAllow()
         {
@@ -114,7 +96,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 2);
             var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
 
-            // Reserva 1
             var request1 = new CreateReservationRequest
             {
                 UserId = user.Id,
@@ -125,7 +106,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             };
             await _reservationService.CreateReservationAsync(request1);
 
-            // Reserva 2 (solapada)
             var request2 = new CreateReservationRequest
             {
                 UserId = user.Id,
@@ -139,9 +119,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request2));
         }
 
-        /// <summary>
-        /// Checks that cancelling a reservation correctly sets its status to Cancelled.
-        /// </summary>
         [Fact]
         public async Task CancelReservation_ShouldSetStatusToCancelled()
         {
@@ -159,7 +136,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 AreaIds = new List<int> { area.Id }
             };
 
-            var result = await _reservationService.CreateReservationAsync(request);
+            await _reservationService.CreateReservationAsync(request);
             var reservation = await _context.Reservations.FirstAsync();
 
             await _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString());
@@ -168,10 +145,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             Assert.Equal(ReservationStatus.Cancelled, updated.Status);
         }
 
-        /// <summary>
-        /// Verifies that only the user who made the reservation can cancel it.
-        /// Cancelling by a different user should throw UnauthorizedAccessException.
-        /// </summary>
         [Fact]
         public async Task CancelReservation_ByOtherUser_ShouldThrow()
         {
@@ -190,16 +163,13 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 AreaIds = new List<int> { area.Id }
             };
 
-            var result = await _reservationService.CreateReservationAsync(request);
+            await _reservationService.CreateReservationAsync(request);
             var reservation = await _context.Reservations.FirstAsync();
 
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 _reservationService.CancelReservationAsync(reservation.Id, user2.Id.ToString()));
         }
 
-        /// <summary>
-        /// Ensures that attempting to reserve a non-existent area throws InvalidOperationException.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WithInvalidArea_ShouldThrow()
         {
@@ -213,17 +183,13 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 CoworkingSpaceId = coworkingSpace.Id,
                 StartDate = DateTime.UtcNow.Date.AddDays(3),
                 EndDate = DateTime.UtcNow.Date.AddDays(3),
-                AreaIds = new List<int> { 999 } // No existe
+                AreaIds = new List<int> { 999 }
             };
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// Validates that all reserved areas must belong to the selected coworking space.
-        /// Attempting to reserve an area from a different space should throw InvalidOperationException.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_AreaDoesNotBelongToSpace_ShouldThrow()
         {
@@ -241,17 +207,13 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 CoworkingSpaceId = coworkingSpace1.Id,
                 StartDate = DateTime.UtcNow.Date.AddDays(5),
                 EndDate = DateTime.UtcNow.Date.AddDays(5),
-                AreaIds = new List<int> { area1.Id, area2.Id } // area2 no pertenece
+                AreaIds = new List<int> { area1.Id, area2.Id }
             };
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// Ensures that reservations cannot be created for dates in the past.
-        /// The system should throw InvalidOperationException in such cases.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_InThePast_ShouldThrow()
         {
@@ -273,10 +235,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// Validates that if an area is already booked for overlapping dates,
-        /// no other reservation can be created for the same period.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WhenAreaNotAvailable_ShouldThrow()
         {
@@ -300,7 +258,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             {
                 UserId = user2.Id,
                 CoworkingSpaceId = coworkingSpace.Id,
-                StartDate = DateTime.UtcNow.Date.AddDays(3), // Solapado
+                StartDate = DateTime.UtcNow.Date.AddDays(3),
                 EndDate = DateTime.UtcNow.Date.AddDays(4),
                 AreaIds = new List<int> { area.Id }
             };
@@ -308,9 +266,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CreateReservationAsync(req2));
         }
-        /// <summary>
-        /// If attempting to cancel an already cancelled reservation, should be idempotent or throw a specific exception.
-        /// </summary>
+
         [Fact]
         public async Task CancelReservation_AlreadyCancelled_ShouldBeIdempotentOrThrow()
         {
@@ -327,19 +283,15 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 EndDate = DateTime.UtcNow.Date.AddDays(2),
                 AreaIds = new List<int> { area.Id }
             };
-            var result = await _reservationService.CreateReservationAsync(request);
+            await _reservationService.CreateReservationAsync(request);
             var reservation = await _context.Reservations.FirstAsync();
 
             await _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString());
 
-            // Try to cancel again: should throw or do nothing depending on business logic
             await Assert.ThrowsAnyAsync<Exception>(() =>
                 _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString()));
         }
 
-        /// <summary>
-        /// Should not allow creating a reservation where the start date is after the end date.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WithInvertedDates_ShouldThrow()
         {
@@ -353,7 +305,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 UserId = user.Id,
                 CoworkingSpaceId = coworkingSpace.Id,
                 StartDate = DateTime.UtcNow.Date.AddDays(5),
-                EndDate = DateTime.UtcNow.Date.AddDays(2), // End before start
+                EndDate = DateTime.UtcNow.Date.AddDays(2),
                 AreaIds = new List<int> { area.Id }
             };
 
@@ -361,16 +313,13 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// Should not allow creating a reservation on a coworking space that is not approved or active.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_OnInactiveCoworking_ShouldThrow()
         {
             var user = await TestDataSeeder.SeedUser(_context, "testuser13", "testuser13@email.com");
             var address = await TestDataSeeder.SeedAddress(_context, 13);
             var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 13);
-            coworkingSpace.Status = CoworkingStatus.Pending; // or CoworkingStatus.Inactive according to your enum
+            coworkingSpace.Status = CoworkingStatus.Pending;
             await _context.SaveChangesAsync();
             var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
 
@@ -387,9 +336,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// If all areas are reserved for a given date range, should not allow new reservations for that period.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WhenAllAreasReserved_ShouldNotAllowMoreReservations()
         {
@@ -399,7 +345,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             var area1 = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
             var area2 = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 2);
 
-            // Reserve both areas
             var req1 = new CreateReservationRequest
             {
                 UserId = user.Id,
@@ -410,7 +355,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             };
             await _reservationService.CreateReservationAsync(req1);
 
-            // Another user tries to reserve any area in the same date range
             var user2 = await TestDataSeeder.SeedUser(_context, "testuser15", "testuser15@email.com");
             var req2 = new CreateReservationRequest
             {
@@ -425,9 +369,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(req2));
         }
 
-        /// <summary>
-        /// Should throw if a reservation requests more capacity than the area supports.
-        /// </summary>
         [Fact]
         public async Task CreateReservation_WithCapacityGreaterThanArea_ShouldThrow()
         {
@@ -436,7 +377,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 16);
             var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
 
-            // Simulate area with small capacity
             area.Capacity = 3;
             await _context.SaveChangesAsync();
 
@@ -447,46 +387,73 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 StartDate = DateTime.UtcNow.Date.AddDays(5),
                 EndDate = DateTime.UtcNow.Date.AddDays(5),
                 AreaIds = new List<int> { area.Id },
-                // If your model supports it, add: RequestedCapacity = 5
             };
 
-            // Adjust if your model supports capacity requests per reservation
+            // Si el request soporta cantidad, agregarlo aquí
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CreateReservationAsync(request));
         }
 
-        /// <summary>
-        /// Should not allow cancelling a reservation that is already completed or in the past.
-        /// </summary>
         [Fact]
         public async Task CancelReservation_Completed_ShouldThrow()
         {
-            var user = await TestDataSeeder.SeedUser(_context, "testuser17", "testuser17@email.com");
-            var address = await TestDataSeeder.SeedAddress(_context, 17);
-            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 17);
-            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+            var user = await TestDataSeeder.SeedUser(_context, "testuser-cancel2", "cancel2@mail.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 21);
+            var coworking = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 21);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworking, 21);
 
-            var request = new CreateReservationRequest
+            var reservation = new Reservation
             {
                 UserId = user.Id,
-                CoworkingSpaceId = coworkingSpace.Id,
-                StartDate = DateTime.UtcNow.Date.AddDays(-5),
-                EndDate = DateTime.UtcNow.Date.AddDays(-3),
-                AreaIds = new List<int> { area.Id }
+                CoworkingSpaceId = coworking.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(-3),
+                EndDate = DateTime.UtcNow.Date.AddDays(-1),
+                Status = ReservationStatus.Completed,
+                TotalPrice = area.PricePerDay * 2,
+                PaymentMethod = PaymentMethod.CreditCard,
+                CreatedAt = DateTime.UtcNow.AddDays(-4),
+                ReservationDetails = new List<ReservationDetail>
+                {
+                    new ReservationDetail { CoworkingAreaId = area.Id, PricePerDay = area.PricePerDay }
+                }
             };
-
-            var result = await _reservationService.CreateReservationAsync(request);
-            var reservation = await _context.Reservations.FirstAsync();
-            reservation.Status = ReservationStatus.Completed;
+            _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString()));
         }
 
-        /// <summary>
-        /// Should not allow a hoster user to reserve in their own coworking space.
-        /// </summary>
+        [Fact]
+        public async Task CancelReservation_PastReservation_ShouldThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser-cancel3", "cancel3@mail.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 22);
+            var coworking = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 22);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworking, 22);
+
+            var reservation = new Reservation
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworking.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(-2),
+                EndDate = DateTime.UtcNow.Date.AddDays(-1),
+                Status = ReservationStatus.Pending,
+                TotalPrice = area.PricePerDay * 2,
+                PaymentMethod = PaymentMethod.CreditCard,
+                CreatedAt = DateTime.UtcNow.AddDays(-3),
+                ReservationDetails = new List<ReservationDetail>
+                {
+                    new ReservationDetail { CoworkingAreaId = area.Id, PricePerDay = area.PricePerDay }
+                }
+            };
+            _context.Reservations.Add(reservation);
+            await _context.SaveChangesAsync();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString()));
+        }
+
         [Fact]
         public async Task CreateReservation_HosterInOwnCoworking_ShouldThrow()
         {
@@ -511,10 +478,34 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 _reservationService.CreateReservationAsync(request));
         }
 
+        [Fact]
+        public async Task CancelReservation_AlreadyCancelled_IsIdempotent()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser-cancel1", "cancel1@mail.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 20);
+            var coworking = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 20);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworking, 20);
 
-        /// <summary>
-        /// Cleans up the in-memory database and connection after each test run.
-        /// </summary>
+            var req = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworking.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(2),
+                EndDate = DateTime.UtcNow.Date.AddDays(3),
+                AreaIds = new List<int> { area.Id }
+            };
+
+            var reservation = await _reservationService.CreateReservationAsync(req);
+            var dbReservation = await _context.Reservations.FirstAsync();
+            await _reservationService.CancelReservationAsync(dbReservation.Id, user.Id.ToString());
+
+            // Should be idempotent, i.e., no error and status remains Cancelled
+            await _reservationService.CancelReservationAsync(dbReservation.Id, user.Id.ToString());
+
+            var updated = await _context.Reservations.FindAsync(dbReservation.Id);
+            Assert.Equal(ReservationStatus.Cancelled, updated.Status);
+        }
+
         public void Dispose()
         {
             _context.Database.EnsureDeleted();
