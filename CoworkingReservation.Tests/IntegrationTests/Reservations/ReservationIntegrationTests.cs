@@ -15,6 +15,21 @@ using Xunit;
 
 namespace CoworkingReservation.Tests.IntegrationTests.Reservations
 {
+    /// <summary>
+    /// Integration tests for the Reservation business logic of the CoworkingReservation system.
+    /// 
+    /// This test suite verifies key business rules and workflows, including:
+    /// - Creating reservations with multiple areas
+    /// - Preventing overlapping bookings for the same area
+    /// - Cancelling reservations and enforcing correct status transitions
+    /// - Restricting cancellation to the reservation owner
+    /// - Validating that only existing areas can be reserved and that areas belong to the selected coworking space
+    /// - Preventing reservations in the past
+    /// - Enforcing area availability based on existing reservations
+    /// 
+    /// Uses in-memory SQLite for isolated database state per test.
+    /// Test data is seeded using TestDataSeeder to ensure repeatability and coverage.
+    /// </summary>
     public class ReservationIntegrationBusinessTests : IDisposable
     {
         private readonly SqliteConnection _connection;
