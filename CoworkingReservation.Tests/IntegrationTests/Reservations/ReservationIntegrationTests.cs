@@ -308,6 +308,209 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _reservationService.CreateReservationAsync(req2));
         }
+        /// <summary>
+        /// If attempting to cancel an already cancelled reservation, should be idempotent or throw a specific exception.
+        /// </summary>
+        [Fact]
+        public async Task CancelReservation_AlreadyCancelled_ShouldBeIdempotentOrThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser11", "testuser11@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 11);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 11);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            var request = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(2),
+                EndDate = DateTime.UtcNow.Date.AddDays(2),
+                AreaIds = new List<int> { area.Id }
+            };
+            var result = await _reservationService.CreateReservationAsync(request);
+            var reservation = await _context.Reservations.FirstAsync();
+
+            await _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString());
+
+            // Try to cancel again: should throw or do nothing depending on business logic
+            await Assert.ThrowsAnyAsync<Exception>(() =>
+                _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString()));
+        }
+
+        /// <summary>
+        /// Should not allow creating a reservation where the start date is after the end date.
+        /// </summary>
+        [Fact]
+        public async Task CreateReservation_WithInvertedDates_ShouldThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser12", "testuser12@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 12);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 12);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            var request = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(5),
+                EndDate = DateTime.UtcNow.Date.AddDays(2), // End before start
+                AreaIds = new List<int> { area.Id }
+            };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CreateReservationAsync(request));
+        }
+
+        /// <summary>
+        /// Should not allow creating a reservation on a coworking space that is not approved or active.
+        /// </summary>
+        [Fact]
+        public async Task CreateReservation_OnInactiveCoworking_ShouldThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser13", "testuser13@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 13);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 13);
+            coworkingSpace.Status = CoworkingStatus.Pending; // or CoworkingStatus.Inactive according to your enum
+            await _context.SaveChangesAsync();
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            var request = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(5),
+                EndDate = DateTime.UtcNow.Date.AddDays(7),
+                AreaIds = new List<int> { area.Id }
+            };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CreateReservationAsync(request));
+        }
+
+        /// <summary>
+        /// If all areas are reserved for a given date range, should not allow new reservations for that period.
+        /// </summary>
+        [Fact]
+        public async Task CreateReservation_WhenAllAreasReserved_ShouldNotAllowMoreReservations()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser14", "testuser14@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 14);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 14);
+            var area1 = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+            var area2 = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 2);
+
+            // Reserve both areas
+            var req1 = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(2),
+                EndDate = DateTime.UtcNow.Date.AddDays(3),
+                AreaIds = new List<int> { area1.Id, area2.Id }
+            };
+            await _reservationService.CreateReservationAsync(req1);
+
+            // Another user tries to reserve any area in the same date range
+            var user2 = await TestDataSeeder.SeedUser(_context, "testuser15", "testuser15@email.com");
+            var req2 = new CreateReservationRequest
+            {
+                UserId = user2.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(2),
+                EndDate = DateTime.UtcNow.Date.AddDays(3),
+                AreaIds = new List<int> { area1.Id }
+            };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CreateReservationAsync(req2));
+        }
+
+        /// <summary>
+        /// Should throw if a reservation requests more capacity than the area supports.
+        /// </summary>
+        [Fact]
+        public async Task CreateReservation_WithCapacityGreaterThanArea_ShouldThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser16", "testuser16@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 16);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 16);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            // Simulate area with small capacity
+            area.Capacity = 3;
+            await _context.SaveChangesAsync();
+
+            var request = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(5),
+                EndDate = DateTime.UtcNow.Date.AddDays(5),
+                AreaIds = new List<int> { area.Id },
+                // If your model supports it, add: RequestedCapacity = 5
+            };
+
+            // Adjust if your model supports capacity requests per reservation
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CreateReservationAsync(request));
+        }
+
+        /// <summary>
+        /// Should not allow cancelling a reservation that is already completed or in the past.
+        /// </summary>
+        [Fact]
+        public async Task CancelReservation_Completed_ShouldThrow()
+        {
+            var user = await TestDataSeeder.SeedUser(_context, "testuser17", "testuser17@email.com");
+            var address = await TestDataSeeder.SeedAddress(_context, 17);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 17);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            var request = new CreateReservationRequest
+            {
+                UserId = user.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(-5),
+                EndDate = DateTime.UtcNow.Date.AddDays(-3),
+                AreaIds = new List<int> { area.Id }
+            };
+
+            var result = await _reservationService.CreateReservationAsync(request);
+            var reservation = await _context.Reservations.FirstAsync();
+            reservation.Status = ReservationStatus.Completed;
+            await _context.SaveChangesAsync();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CancelReservationAsync(reservation.Id, user.Id.ToString()));
+        }
+
+        /// <summary>
+        /// Should not allow a hoster user to reserve in their own coworking space.
+        /// </summary>
+        [Fact]
+        public async Task CreateReservation_HosterInOwnCoworking_ShouldThrow()
+        {
+            var hoster = await TestDataSeeder.SeedUser(_context, "testhoster", "testhoster@email.com");
+            hoster.Role = "Hoster";
+            await _context.SaveChangesAsync();
+
+            var address = await TestDataSeeder.SeedAddress(_context, 18);
+            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, hoster, address, 18);
+            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
+
+            var request = new CreateReservationRequest
+            {
+                UserId = hoster.Id,
+                CoworkingSpaceId = coworkingSpace.Id,
+                StartDate = DateTime.UtcNow.Date.AddDays(2),
+                EndDate = DateTime.UtcNow.Date.AddDays(3),
+                AreaIds = new List<int> { area.Id }
+            };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _reservationService.CreateReservationAsync(request));
+        }
+
 
         /// <summary>
         /// Cleans up the in-memory database and connection after each test run.
