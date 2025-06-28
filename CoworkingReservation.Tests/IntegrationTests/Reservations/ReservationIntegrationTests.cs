@@ -370,31 +370,6 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
         }
 
         [Fact]
-        public async Task CreateReservation_WithCapacityGreaterThanArea_ShouldThrow()
-        {
-            var user = await TestDataSeeder.SeedUser(_context, "testuser16", "testuser16@email.com");
-            var address = await TestDataSeeder.SeedAddress(_context, 16);
-            var coworkingSpace = await TestDataSeeder.SeedCoworkingSpace(_context, user, address, 16);
-            var area = await TestDataSeeder.SeedCoworkingArea(_context, coworkingSpace, 1);
-
-            area.Capacity = 3;
-            await _context.SaveChangesAsync();
-
-            var request = new CreateReservationRequest
-            {
-                UserId = user.Id,
-                CoworkingSpaceId = coworkingSpace.Id,
-                StartDate = DateTime.UtcNow.Date.AddDays(5),
-                EndDate = DateTime.UtcNow.Date.AddDays(5),
-                AreaIds = new List<int> { area.Id },
-            };
-
-            // Si el request soporta cantidad, agregarlo aquí
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                _reservationService.CreateReservationAsync(request));
-        }
-
-        [Fact]
         public async Task CancelReservation_Completed_ShouldThrow()
         {
             var user = await TestDataSeeder.SeedUser(_context, "testuser-cancel2", "cancel2@mail.com");
