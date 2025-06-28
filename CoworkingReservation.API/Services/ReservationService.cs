@@ -92,7 +92,15 @@ namespace CoworkingReservation.API.Services
                 {
                     throw new InvalidOperationException("Las áreas seleccionadas no están disponibles para las fechas especificadas.");
                 }
+                // Obtener coworking
+                var coworking = await _unitOfWork.CoworkingSpaces.GetByIdAsync(request.CoworkingSpaceId);
+                if (coworking == null || coworking.Status != CoworkingStatus.Approved)
+                    throw new InvalidOperationException("No se puede reservar en un coworking inactivo o no aprobado.");
 
+                // Obtener usuario
+                var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+                if (user != null && user.Role == "Hoster" && coworking.HosterId == user.Id)
+                    throw new InvalidOperationException("El hoster no puede reservar en su propio coworking.");
                 // 2. Obtener las áreas seleccionadas para calcular precio
                 var areas = await _areaRepository.GetAreasAsync(request.AreaIds);
                 if (areas == null || !areas.Any())
@@ -275,6 +283,11 @@ namespace CoworkingReservation.API.Services
                 throw new InvalidOperationException("No se puede cancelar una reserva ya completada");
             }
 
+            // No permitir cancelar reservas cuyo EndDate ya pasó (en el pasado)
+            if (reservation.EndDate < DateTime.UtcNow.Date)
+            {
+                throw new InvalidOperationException("No se puede cancelar una reserva ya finalizada.");
+            }
             // Cambiar el estado a cancelado
             reservation.Status = ReservationStatus.Cancelled;
             reservation.UpdatedAt = DateTime.UtcNow;
