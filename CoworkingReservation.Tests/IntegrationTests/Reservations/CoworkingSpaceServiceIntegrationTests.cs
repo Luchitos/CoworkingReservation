@@ -33,16 +33,63 @@ namespace CoworkingReservation.Tests.Integration.CoworkingSpaces
             var dbContext = new ApplicationDbContext(options);
             dbContext.Database.EnsureCreated();
 
-            dbContext.Users.Add(new User { Id = 1, Name = "Hoster", Role = "Client", Email = "hoster@mail.com", Cuit = "2033" });
-            dbContext.Users.Add(new User { Id = 2, Name = "Client", Role = "Client", Email = "client@mail.com", Cuit = "2044" });
-            dbContext.ServicesOffered.Add(new ServiceOffered { Id = 1, Name = "WiFi" });
-            dbContext.Benefits.Add(new Benefit { Id = 1, Name = "Café" });
-            dbContext.SafetyElements.Add(new SafetyElement { Id = 1, Name = "Cámaras" });
-            dbContext.SpecialFeatures.Add(new SpecialFeature { Id = 1, Name = "Vista" });
+            dbContext.Users.Add(new User
+            {
+                Id = 1,
+                Name = "Hoster",
+                Lastname = "Test",
+                UserName = "Hoster",
+                Role = "Client",
+                PasswordHash = "hashedpassword",
+                Email = "hoster@mail.com",
+                Cuit = "2033"
+            });
+            dbContext.Users.Add(new User
+            {
+                Id = 2,
+                Name = "Client",
+                Lastname = "Test2",
+                UserName = "Client",
+                PasswordHash = "hashedpassword",
+                Role = "Client",
+                Email = "client@mail.com",
+                Cuit = "2044"
+            });
+
+            dbContext.ServicesOffered.Add(new ServiceOffered
+            {
+                Id = 1,
+                Name = "WiFi",
+                Description = "Conexión WiFi de alta velocidad"
+            });
+
+            dbContext.Benefits.Add(new Benefit
+            {
+                Id = 1,
+                Name = "Café",
+                Description = "Café de cortesía"
+            });
+
+            dbContext.SafetyElements.Add(new SafetyElement
+            {
+                Id = 1,
+                Name = "Cámaras",
+                Description = "Cámaras de seguridad 24hs"
+            });
+
+            dbContext.SpecialFeatures.Add(new SpecialFeature
+            {
+                Id = 1,
+                Name = "Vista",
+                Description = "Vista panorámica a la ciudad"
+            });
+
             dbContext.SaveChanges();
 
             return dbContext;
         }
+
+
 
         private CoworkingSpaceService BuildService(ApplicationDbContext dbContext, Mock<ICoworkingAreaService> areaServiceMock = null)
         {
@@ -108,12 +155,14 @@ namespace CoworkingReservation.Tests.Integration.CoworkingSpaces
                 .ReturnsAsync(new Mock<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction>().Object);
 
             // FIX: Usar el DTO correcto (CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingAreaDTO)
+            // TODO Revisar los dto en el servicio porque se estan mezclando
             var areaService = areaServiceMock ?? new Mock<ICoworkingAreaService>();
             areaService.Setup(a => a.AddAreasToCoworkingAsync(It.IsAny<List<CoworkingReservation.Application.DTOs.CoworkingSpace.CoworkingAreaDTO>>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask);
 
             // Approval job
-            var approvalJobMock = new Mock<CoworkingApprovalJob>();
+
+            var approvalJobMock = new Mock<ICoworkingApprovalJob>();
             approvalJobMock.Setup(j => j.Run()).Returns(Task.CompletedTask);
 
             // Image upload
