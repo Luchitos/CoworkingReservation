@@ -1,6 +1,8 @@
-﻿using CoworkingReservation.Application.DTOs.User;
+﻿using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
+using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
@@ -303,7 +305,6 @@ namespace CoworkingReservation.Application.Services
                 // Si no existe, no hacemos nada (idempotente)
             }
         }
-
         public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFavoriteSpacesAsync(int userId)
         {
             var user = await _unitOfWork.Users.GetByIdWithFavoritesAsync(userId);
@@ -316,8 +317,134 @@ namespace CoworkingReservation.Application.Services
 
             var spaces = await _unitOfWork.CoworkingSpaces.GetAllLightweightByIdsAsync(favoriteSpaceIds, userId);
 
-            return spaces;
+            var result = spaces.Select(space =>
+            {
+                var availableAreas = space.Areas?.Where(a => a.Available).ToList() ?? new List<CoworkingArea>();
+
+                return new CoworkingSpaceListItemDTO
+                {
+                    Id = space.Id,
+                    Name = space.Name,
+                    Address = new AddressDTO
+                    {
+                        City = space.Address?.City,
+                        Country = space.Address?.Country,
+                        Apartment = space.Address?.Apartment,
+                        Floor = space.Address?.Floor,
+                        Number = space.Address?.Number,
+                        Province = space.Address?.Province,
+                        Street = space.Address?.Street,
+                        StreetOne = space.Address?.StreetOne,
+                        StreetTwo = space.Address?.StreetTwo,
+                        ZipCode = space.Address?.ZipCode,
+                        Latitude = space.Address?.Latitude,
+                        Longitude = space.Address?.Longitude
+                    },
+                    CoverPhotoUrl = space.Photos?.FirstOrDefault(p => p.IsCoverPhoto)?.FilePath
+                        ?? space.Photos?.FirstOrDefault()?.FilePath,
+                    Rate = space.Rate,
+                    HasConfiguredAreas = availableAreas.Any(),
+                    TotalCapacity = availableAreas.Sum(a => a.Capacity),
+                    PrivateOfficesCount = availableAreas.Count(a => a.Type == CoworkingAreaType.PrivateOffice),
+                    IndividualDesksCount = availableAreas.Count(a => a.Type == CoworkingAreaType.IndividualDesk),
+                    SharedDesksCount = availableAreas.Count(a => a.Type == CoworkingAreaType.SharedDesks),
+                    MinPrivateOfficePrice = availableAreas
+                        .Where(a => a.Type == CoworkingAreaType.PrivateOffice)
+                        .Select(a => (decimal?)a.PricePerDay)
+                        .DefaultIfEmpty()
+                        .Min(),
+                    MaxPrivateOfficePrice = availableAreas
+                        .Where(a => a.Type == CoworkingAreaType.PrivateOffice)
+                        .Select(a => (decimal?)a.PricePerDay)
+                        .DefaultIfEmpty()
+                        .Max(),
+                    MinIndividualDeskPrice = availableAreas
+                        .Where(a => a.Type == CoworkingAreaType.IndividualDesk)
+                        .Select(a => (decimal?)a.PricePerDay)
+                        .DefaultIfEmpty()
+                        .Min(),
+                    MaxIndividualDeskPrice = availableAreas
+                        .Where(a => a.Type == CoworkingAreaType.IndividualDesk)
+                        .Select(a => (decimal?)a.PricePerDay)
+                        .DefaultIfEmpty()
+                        .Max(),
+                    SharedDeskPrice = availableAreas
+                        .Where(a => a.Type == CoworkingAreaType.SharedDesks)
+                        .Select(a => (decimal?)a.PricePerDay)
+                        .FirstOrDefault(),
+                    IsFavorite = true // porque la query es solo de favoritos
+                };
+            }).ToList();
+
+            return result;
         }
+
+        // public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFavoriteSpacesAsync(int userId)
+        //     {
+        //         var user = await _unitOfWork.Users.GetByIdWithFavoritesAsync(userId);
+        //         if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
+
+        //     var favoriteSpaceIds = user.FavoriteCoworkingSpaces.Select(f => f.CoworkingSpaceId).ToList();
+
+        //         if (!favoriteSpaceIds.Any())
+        //             return Enumerable.Empty<CoworkingSpaceListItemDTO>();
+
+        //         var spaces = await _unitOfWork.CoworkingSpaces.GetAllLightweightByIdsAsync(favoriteSpaceIds, userId);
+        //     var result = spaces.Select(space => new CoworkingSpaceListItemDTO
+        //     {
+        //         Id = space.Id,
+        //         Name = space.Name,
+        //         Address = new AddressDTO
+        //         {
+        //             City = space.Address.City,
+        //             Country = space.Address.Country,
+        //             Apartment = space.Address.Apartment,
+        //             Floor = space.Address.Floor,
+        //             Number = space.Address.Number,
+        //             Province = space.Address.Province,
+        //             Street = space.Address.Street,
+        //             StreetOne = space.Address.StreetOne,
+        //             StreetTwo = space.Address.StreetTwo,
+        //             ZipCode = space.Address.ZipCode,
+        //             Latitude = space.Address.Latitude,
+        //             Longitude = space.Address.Longitude
+        //         },
+        //         CoverPhotoUrl = space.Photos.FirstOrDefault(p => p.IsCoverPhoto)?.FilePath
+        //  ?? space.Photos.FirstOrDefault()?.FilePath,
+        //         Rate = space.Rate,
+        //         HasConfiguredAreas = space.Areas != null && space.Areas.Any(),
+        //         TotalCapacity = space.Areas?.Sum(a => a.Capacity) ?? 0,
+        //         PrivateOfficesCount = space.Areas?.Count(a => a.Type == CoworkingAreaType.PrivateOffice) ?? 0,
+        //         IndividualDesksCount = space.Areas?.Count(a => a.Type == CoworkingAreaType.IndividualDesk) ?? 0,
+        //         SharedDesksCount = space.Areas?.Count(a => a.Type == CoworkingAreaType.SharedDesks) ?? 0,
+        //         MinPrivateOfficePrice = space.Areas?
+        //  .Where(a => a.Type == CoworkingAreaType.PrivateOffice)
+        //  .Select(a => (decimal?)a.PricePerDay)
+        //  .DefaultIfEmpty()
+        //  .Min(),
+        //         MaxPrivateOfficePrice = space.Areas?
+        //  .Where(a => a.Type == CoworkingAreaType.PrivateOffice)
+        //  .Select(a => (decimal?)a.PricePerDay)
+        //  .DefaultIfEmpty()
+        //  .Max(),
+        //         MinIndividualDeskPrice = space.Areas?
+        //  .Where(a => a.Type == CoworkingAreaType.IndividualDesk)
+        //  .Select(a => (decimal?)a.PricePerDay)
+        //  .DefaultIfEmpty()
+        //  .Min(),
+        //         MaxIndividualDeskPrice = space.Areas?
+        //  .Where(a => a.Type == CoworkingAreaType.IndividualDesk)
+        //  .Select(a => (decimal?)a.PricePerDay)
+        //  .DefaultIfEmpty()
+        //  .Max(),
+        //         SharedDeskPrice = space.Areas?
+        //  .Where(a => a.Type == CoworkingAreaType.SharedDesks)
+        //  .Select(a => (decimal?)a.PricePerDay)
+        //  .FirstOrDefault(),
+        //         IsFavorite = true // porque la query es solo de favoritos
+        //     }).ToList();
+        //         return result;
+        //     }
 
     }
 }
