@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CoworkingReservation.Domain.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using CoworkingReservation.Application.DTOs.Address;
+
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
 {

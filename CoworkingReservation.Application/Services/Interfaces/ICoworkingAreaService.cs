@@ -22,7 +22,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <param name="coworkingSpaceId">ID del espacio de coworking.</param>
         /// <param name="hosterId">ID del hoster que crea el área.</param>
         /// <returns>El área de coworking creada.</returns>
-        Task<CoworkingArea> CreateAsync(CreateCoworkingAreaDTO areaDto, int coworkingSpaceId, int hosterId);
+        Task<CoworkingAreaDTO> CreateAsync(CreateCoworkingAreaDTO areaDto, int coworkingSpaceId, int hosterId);
         Task AddAreasToCoworkingAsync(IEnumerable<CoworkingAreaDTO> areaDtos, int coworkingSpaceId, int hosterId);
         /// <summary>
         /// Actualiza un área de coworking existente.
@@ -56,20 +56,20 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// </summary>
         /// <param name="coworkingSpaceId">ID del espacio de coworking.</param>
         /// <returns>Lista de áreas de coworking.</returns>
-        Task<IEnumerable<CoworkingArea>> GetByCoworkingSpaceIdAsync(int coworkingSpaceId);
+        Task<IEnumerable<CoworkingAreaDTO>> GetByCoworkingSpaceIdAsync(int coworkingSpaceId);
 
         /// <summary>
         /// Obtiene todas las áreas de coworking registradas en el sistema.
         /// </summary>
         /// <returns>Lista de todas las áreas de coworking.</returns>
-        Task<IEnumerable<CoworkingArea>> GetAllAsync();
+        Task<IEnumerable<CoworkingAreaDTO>> GetAllAsync();
 
         /// <summary>
         /// Obtiene un área de coworking por su ID.
         /// </summary>
         /// <param name="id">ID del área de coworking.</param>
         /// <returns>El área de coworking encontrada o `null` si no existe.</returns>
-        Task<CoworkingArea?> GetByIdAsync(int id);
+        Task<CoworkingAreaDTO?> GetByIdAsync(int id);
 
         #endregion
 

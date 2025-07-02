@@ -1,6 +1,5 @@
 ﻿using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Identity;
@@ -48,7 +47,7 @@ namespace CoworkingReservation.Application.Services
             // **Verificar si el usuario ya existe usando un método más eficiente**
             if (await _unitOfWork.Users.ExistsByEmailOrCuit(userDto.Email, userDto.Cuit))
                 throw new InvalidOperationException("A user with this email or CUIT already exists.");
-           
+
             // Crear el usuario
             var newUser = new User
             {
@@ -62,18 +61,18 @@ namespace CoworkingReservation.Application.Services
 
             // **Corregido: Usar la instancia real en lugar de null**
             newUser.PasswordHash = _passwordHasher.HashPassword(newUser, userDto.Password);
-            
+
             await _unitOfWork.Users.AddAsync(newUser);
             await _unitOfWork.SaveChangesAsync(); // Guardar usuario antes de manejar la foto
 
             // Manejar la foto de perfil solo si está presente
             if (userDto.ProfilePhoto != null)
             {
-                try 
+                try
                 {
                     // Subir la imagen a ImgBB usando el nuevo método organizado por carpetas
                     string imageUrl = await _imageUploadService.UploadUserImageAsync(userDto.ProfilePhoto, newUser.Id);
-                    
+
                     // Crear el registro de foto en nuestra base de datos
                     var photo = new UserPhoto
                     {
@@ -148,7 +147,7 @@ namespace CoworkingReservation.Application.Services
             user.Role = "Hoster";
             await _unitOfWork.SaveChangesAsync();
         }
-        
+
         public async Task<User> UpdateProfileFieldAsync(int userId, string field, object value)
         {
             var user = await _unitOfWork.Users.GetByIdWithPhotoAsync(userId);
@@ -182,62 +181,62 @@ namespace CoworkingReservation.Application.Services
 
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return user;
         }
-        
+
         public async Task<User> UpdateProfilePhotoAsync(int userId, PhotoDTO photoDto)
         {
             var user = await _unitOfWork.Users.GetByIdWithPhotoAsync(userId);
             if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
-            
+
             await UpdateUserPhoto(user, photoDto);
-            
+
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return user;
         }
-        
+
         public async Task<User> UpdatePhoneAsync(int userId, string phone)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
-            
+
             user.Phone = phone;
-            
+
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return user;
         }
-        
+
         public async Task<User> UpdateCuitAsync(int userId, string cuit)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
-            
+
             user.Cuit = cuit;
-            
+
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return user;
         }
-        
+
         public async Task<User> UpdateAddressAsync(int userId, string address)
         {
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (user == null) throw new KeyNotFoundException("Usuario no encontrado.");
-            
+
             user.Address = address;
-            
+
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return user;
         }
-        
+
         private async Task UpdateUserPhoto(User user, PhotoDTO photoDto)
         {
             // Si el usuario ya tiene una foto
@@ -247,7 +246,7 @@ namespace CoworkingReservation.Application.Services
                 user.Photo.FilePath = photoDto.Url;
                 user.Photo.FileName = photoDto.FileName;
                 user.Photo.MimeType = photoDto.MimeType;
-                
+
                 await _unitOfWork.UserPhotos.UpdateAsync(user.Photo);
             }
             else
@@ -260,10 +259,10 @@ namespace CoworkingReservation.Application.Services
                     MimeType = photoDto.MimeType,
                     UserId = user.Id
                 };
-                
+
                 await _unitOfWork.UserPhotos.AddAsync(photo);
                 await _unitOfWork.SaveChangesAsync(); // Guardar para obtener el ID
-                
+
                 // Actualizar la relación con el usuario
                 user.PhotoId = photo.Id;
                 user.Photo = photo;

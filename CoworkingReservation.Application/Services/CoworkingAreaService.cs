@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
+using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -31,7 +32,7 @@ namespace CoworkingReservation.Application.Services
         /// <summary>
         /// Crea una nueva área dentro de un espacio de coworking.
         /// </summary>
-        public async Task<CoworkingArea> CreateAsync(CreateCoworkingAreaDTO areaDto, int coworkingSpaceId, int hosterId)
+        public async Task<CoworkingAreaDTO> CreateAsync(CreateCoworkingAreaDTO areaDto, int coworkingSpaceId, int hosterId)
         {
             var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
             if (coworkingSpace == null)
@@ -58,8 +59,18 @@ namespace CoworkingReservation.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation($"Created coworking area {area.Id} in space {coworkingSpaceId}");
+            var result = new CoworkingAreaDTO
+            {
+                Id = area.Id,
+                Type = (int)area.Type,
+                Description = area.Description,
+                Available = area.Available,
+                Capacity = area.Capacity,
+                PricePerDay = area.PricePerDay,
+                CoworkingSpaceId = area.CoworkingSpaceId
+            };
 
-            return area;
+            return result;
         }
         public async Task AddAreasToCoworkingAsync(IEnumerable<CoworkingAreaDTO> areaDtos, int coworkingSpaceId, int hosterId)
         {
@@ -79,15 +90,19 @@ namespace CoworkingReservation.Application.Services
             if (currentTotalCapacity + totalNewCapacity > coworkingSpace.CapacityTotal)
                 throw new InvalidOperationException("Total capacity of areas exceeds coworking space capacity.");
 
-            var areas = areaDtos.Select(dto => new CoworkingArea
+            var areas = areaDtos.Select(dto =>
             {
-                Capacity = dto.Capacity,
-                Description = dto.Description,
-                PricePerDay = dto.PricePerDay,
-                Available = dto.Available,
-                Type = dto.Type,
-                CoworkingSpaceId = coworkingSpaceId
+                return new CoworkingArea
+                {
+                    Capacity = dto.Capacity,
+                    Description = dto.Description,
+                    PricePerDay = dto.PricePerDay,
+                    Available = dto.Available,
+                    Type = (CoworkingAreaType)dto.Type,
+                    CoworkingSpaceId = coworkingSpaceId
+                };
             });
+
 
             await _unitOfWork.CoworkingAreas.AddRangeAsync(areas);
             await _unitOfWork.SaveChangesAsync();
@@ -144,7 +159,7 @@ namespace CoworkingReservation.Application.Services
 
             _logger.LogInformation($"Deleted coworking area {id}");
         }
-        
+
         /// <summary>
         /// Cambia el estado de disponibilidad de un área (activar/desactivar).
         /// </summary>
@@ -175,24 +190,44 @@ namespace CoworkingReservation.Application.Services
         /// <summary>
         /// Obtiene todas las áreas de un espacio de coworking.
         /// </summary>
-        public async Task<IEnumerable<CoworkingArea>> GetByCoworkingSpaceIdAsync(int coworkingSpaceId)
+        public async Task<IEnumerable<CoworkingAreaDTO>> GetByCoworkingSpaceIdAsync(int coworkingSpaceId)
         {
-            return await _unitOfWork.CoworkingAreas
+            var areas = await _unitOfWork.CoworkingAreas
                 .GetQueryable()
                 .Where(ca => ca.CoworkingSpaceId == coworkingSpaceId && ca.Available)
                 .AsNoTracking()
                 .ToListAsync();
+            return areas.Select(area => new CoworkingAreaDTO
+            {
+                Id = area.Id,
+                Type = (int)area.Type,
+                Description = area.Description,
+                Capacity = area.Capacity,
+                PricePerDay = area.PricePerDay,
+                Available = area.Available,
+                CoworkingSpaceId = area.CoworkingSpaceId
+            });
         }
 
         /// <summary>
         /// Obtiene un área de coworking por su ID.
         /// </summary>
-        public async Task<CoworkingArea> GetByIdAsync(int id)
+        public async Task<CoworkingAreaDTO> GetByIdAsync(int id)
         {
             var area = await _unitOfWork.CoworkingAreas.GetByIdAsync(id);
             if (area == null)
                 throw new KeyNotFoundException("Coworking area not found.");
-            return area;
+
+            return new CoworkingAreaDTO
+            {
+                Id = area.Id,
+                Type = (int)area.Type,
+                Description = area.Description,
+                Capacity = area.Capacity,
+                PricePerDay = area.PricePerDay,
+                Available = area.Available,
+                CoworkingSpaceId = area.CoworkingSpaceId
+            };
         }
 
         /// <summary>
@@ -206,9 +241,19 @@ namespace CoworkingReservation.Application.Services
         /// <summary>
         /// Obtiene todas las áreas de coworking.
         /// </summary>
-        public async Task<IEnumerable<CoworkingArea>> GetAllAsync()
+        public async Task<IEnumerable<CoworkingAreaDTO>> GetAllAsync()
         {
-            return await _unitOfWork.CoworkingAreas.GetAllAsync();
+            var areas = await _unitOfWork.CoworkingAreas.GetAllAsync();
+            return areas.Select(area => new CoworkingAreaDTO
+            {
+                Id = area.Id,
+                Type = (int)area.Type,
+                Description = area.Description,
+                Capacity = area.Capacity,
+                PricePerDay = area.PricePerDay,
+                Available = area.Available,
+                CoworkingSpaceId = area.CoworkingSpaceId
+            });
         }
 
         /// <summary>

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// using System;
+// using System.Collections.Generic;
+// using System.Linq;
+// using System.Text;
+// using System.Threading.Tasks;
 
-namespace CoworkingReservation.Domain.DTOs
-{
-    public class ServiceOfferedDTO
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
+// namespace CoworkingReservation.Domain.DTOs
+// {
+//     public class ServiceOfferedDTO
+//     {
+//         public int Id { get; set; }
+//         public string Name { get; set; }
+//     }
 
-}
+// }

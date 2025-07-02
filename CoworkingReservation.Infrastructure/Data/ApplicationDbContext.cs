@@ -1,5 +1,4 @@
-﻿using CoworkingReservation.Domain.DTOs;
-using CoworkingReservation.Domain.Entities;
+﻿using CoworkingReservation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -17,7 +16,7 @@ namespace CoworkingReservation.Infrastructure.Data
         public DbSet<ReservationDetail> ReservationDetails { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<UserPhoto> UserPhotos { get; set; }  
+        public DbSet<UserPhoto> UserPhotos { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Benefit> Benefits { get; set; }
         public DbSet<ServiceOffered> ServicesOffered { get; set; }
