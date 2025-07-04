@@ -1,12 +1,12 @@
-﻿using CoworkingReservation.Application.DTOs.Address;
+﻿using System.Security.Cryptography;
+using System.Text;
+using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace CoworkingReservation.Application.Services
 {

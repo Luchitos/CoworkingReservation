@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CoworkingReservation.Application.DTOs.CoworkingSpace;
-using CoworkingReservation.Domain.Entities;
+﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
 
 namespace CoworkingReservation.Application.Services.Interfaces
 {

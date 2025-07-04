@@ -1,16 +1,16 @@
-﻿using CoworkingReservation.Application.Jobs;
+﻿using System.Text.Json;
+using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.CoworkingArea;
+using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.DTOs.Review;
+using CoworkingReservation.Application.Jobs;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.Enums;
 using CoworkingReservation.Domain.IRepository;
+using CoworkingReservation.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using CoworkingReservation.Infrastructure.Data;
-using System.Text.Json;
-using CoworkingReservation.Application.DTOs.CoworkingSpace;
-using CoworkingReservation.Application.DTOs.Address;
-using CoworkingReservation.Application.DTOs.CoworkingArea;
-using CoworkingReservation.Application.DTOs.Review;
 
 namespace CoworkingReservation.Application.Services
 {

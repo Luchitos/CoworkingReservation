@@ -1,11 +1,10 @@
-﻿using CoworkingReservation.Application.DTOs.User;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services;
 using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace CoworkingReservation.API.Controllers
 {

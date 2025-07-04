@@ -1,8 +1,4 @@
 ﻿using CoworkingReservation.Application.DTOs.Reservation;
-using CoworkingReservation.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CoworkingReservation.Application.Services.Interfaces
 {
