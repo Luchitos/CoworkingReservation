@@ -1,4 +1,5 @@
-﻿using CoworkingReservation.Application.DTOs.User;
+﻿using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Domain.Entities;
 
 namespace CoworkingReservation.Application.Services.Interfaces

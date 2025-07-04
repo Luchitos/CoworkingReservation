@@ -188,101 +188,27 @@ namespace CoworkingReservation.Infrastructure.Repositories
         //     }).ToList();
         // }
 
-        // public async Task<IEnumerable<CoworkingSpace>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null)
-        // {
-        //     // Consulta base para obtener los espacios de coworking
-        //     var query = _context.CoworkingSpaces
-        //         .AsNoTracking()
-        //         .Include(cs => cs.Address)
-        //         .Include(cs => cs.Areas)
-        //         .Include(cs => cs.Photos)
-        //         .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
+        public async Task<IEnumerable<CoworkingSpace>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null)
+        {
+            var query = _context.CoworkingSpaces
+                .AsNoTracking()
+                .Include(cs => cs.Address)
+                .Include(cs => cs.Areas)
+                .Include(cs => cs.Photos)
+                .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
 
-        //     // Aplicar filtros si existen
-        //     if (capacity.HasValue)
-        //     {
-        //         query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
-        //     }
+            if (capacity.HasValue)
+                query = query.Where(cs => cs.CapacityTotal >= capacity.Value);
 
-        //     if (!string.IsNullOrEmpty(location))
-        //     {
-        //         query = query.Where(cs =>
-        //             cs.Address.City.Contains(location) ||
-        //             cs.Address.Province.Contains(location) ||
-        //             cs.Address.Street.Contains(location));
-        //     }
+            if (!string.IsNullOrEmpty(location))
+                query = query.Where(cs =>
+                    cs.Address.City.Contains(location) ||
+                    cs.Address.Province.Contains(location) ||
+                    cs.Address.Street.Contains(location));
 
-        //     var rawSpaces = await query.ToListAsync();
+            return await query.ToListAsync();
+        }
 
-        //     // Si hay un usuario autenticado, obtener sus espacios favoritos
-        //     List<int> userFavorites = new List<int>();
-        //     if (userId.HasValue)
-        //     {
-        //         userFavorites = await _context.FavoriteCoworkingSpaces
-        //             .Where(f => f.UserId == userId.Value)
-        //             .Select(f => f.CoworkingSpaceId)
-        //             .ToListAsync();
-        //     }
-
-        //     // Obtener los datos necesarios para la respuesta
-        //     var data = rawSpaces.Select(cs => new
-        //     {
-        //         cs.Id,
-        //         cs.Name,
-        //         Address = cs.Address,
-        //         CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault(),
-        //         Rate = cs.Rate,
-        //         Areas = cs.Areas.Select(a => new { a.Type, a.Capacity, a.PricePerDay, a.Available }).ToList(),
-        //         TotalCapacity = cs.CapacityTotal,
-        //         HasAreas = cs.Areas.Any(),
-        //         IsFavorite = userId.HasValue && userFavorites.Contains(cs.Id)
-        //     }).ToList();
-
-        //     // Mapear a DTOs
-        //     return data.Select(cs => new CoworkingSpaceListItemDTO
-        //     {
-        //         Id = cs.Id,
-        //         Name = cs.Name,
-        //         Address = cs.Address != null ? new AddressDTO
-        //         {
-        //             City = cs.Address.City,
-        //             Province = cs.Address.Province,
-        //             Street = cs.Address.Street,
-        //             Number = cs.Address.Number,
-        //             Country = cs.Address.Country,
-        //             ZipCode = cs.Address.ZipCode,
-        //             Latitude = cs.Address?.Latitude,
-        //             Longitude = cs.Address?.Longitude
-        //         } : null,
-        //         CoverPhotoUrl = cs.CoverPhotoUrl,
-        //         Rate = cs.Rate,
-        //         TotalCapacity = cs.TotalCapacity,
-        //         HasConfiguredAreas = cs.HasAreas,
-        //         PrivateOfficesCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available) : 0,
-        //         IndividualDesksCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available) : 0,
-        //         SharedDesksCount = cs.HasAreas ? cs.Areas.Count(a => a.Type == CoworkingAreaType.SharedDesks && a.Available) : 0,
-
-        //         MinPrivateOfficePrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available)
-        //             ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Min(a => a.PricePerDay)
-        //             : null,
-        //         MaxPrivateOfficePrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available)
-        //             ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Max(a => a.PricePerDay)
-        //             : null,
-
-        //         MinIndividualDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available)
-        //             ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Min(a => a.PricePerDay)
-        //             : null,
-        //         MaxIndividualDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available)
-        //             ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Max(a => a.PricePerDay)
-        //             : null,
-
-        //         SharedDeskPrice = cs.HasAreas && cs.Areas.Any(a => a.Type == CoworkingAreaType.SharedDesks && a.Available)
-        //             ? cs.Areas.Where(a => a.Type == CoworkingAreaType.SharedDesks && a.Available).Min(a => a.PricePerDay)
-        //             : null,
-
-        //         IsFavorite = cs.IsFavorite
-        //     });
-        // }
 
         public async Task<IEnumerable<CoworkingSpace>> GetAllLightweightByIdsAsync(IEnumerable<int> ids, int? userId = null)
         {

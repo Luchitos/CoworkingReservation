@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;

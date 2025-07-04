@@ -16,35 +16,29 @@ namespace CoworkingReservation.Application.Services.Interfaces
         Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetAllSummariesAsync();
         Task<IEnumerable<CoworkingSpaceSummaryDTO>> GetFilteredSummariesAsync(int? capacity, string? location);
 
-
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null);
         /// <summary>
         /// Obtiene todos los espacios de coworking creados por un hoster.
         /// </summary>
         /// <param name="hosterId">ID del hoster.</param>
         /// <returns>Lista de coworkings creados.</returns>
         Task<IEnumerable<CoworkingSpace>> GetByHosterAsync(int hosterId);
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAdvancedFilteredAsync(
+            int? capacity,
+            string? location,
+            DateTime? date,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? individualDesk,
+            bool? privateOffice,
+            bool? hybridSpace,
+            List<string> services,
+            List<string> benefits,
+            int? userId = null);
 
     }
 }
 
 //Task<IEnumerable<CoworkingSpaceResponseDTO>> GetAllLightFilteredAsync(int? capacity, string? location);
 //public Task<IEnumerable<CoworkingSpaceLightDTO>> GetAllLightweightAsync();
-
-// Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null);
-// Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFilteredLightweightAsync(int? capacity, string? location, int? userId = null);
-
-// /// <summary>
-// /// Versión mejorada de filtrado que permite múltiples criterios
-// /// </summary>
-// Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAdvancedFilteredAsync(
-//     int? capacity,
-//     string? location,
-//     DateTime? date,
-//     decimal? minPrice,
-//     decimal? maxPrice,
-//     bool? individualDesk,
-//     bool? privateOffice,
-//     bool? hybridSpace,
-//     List<string> services,
-//     List<string> benefits,
-//     int? userId = null);

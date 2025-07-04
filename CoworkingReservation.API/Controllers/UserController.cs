@@ -142,17 +142,7 @@ namespace CoworkingReservation.API.Controllers
             try
             {
                 var userId = GetUserIdFromToken();
-                var favorites = await _userService.GetFavoriteSpacesAsync(userId);
-
-                var response = new CoworkingSpaceListResponseDTO
-                {
-                    Spaces = favorites.ToList(),
-                    Metadata = new Metadata
-                    {
-                        RequestedAt = DateTime.UtcNow,
-                        Version = "1.1"
-                    }
-                };
+                var response = await _userService.GetFavoriteSpacesAsync(userId);
 
                 return Ok(Responses.Response.Success(response));
             }

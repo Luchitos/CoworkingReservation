@@ -1,4 +1,6 @@
 ﻿using System.Security.Claims;
+using Azure;
+using CoworkingReservation.API.Responses;
 using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -150,33 +152,7 @@ namespace CoworkingReservation.API.Controllers
                     }
                 }
 
-                var spaces = await _coworkingSpaceService.GetAllLightweightAsync(userId);
-
-                // Log para depuración
-                Console.WriteLine("---------- CONTROLLER DEBUG - GetAll ----------");
-                foreach (var space in spaces)
-                {
-                    Console.WriteLine($"Controller GetAll: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
-                    Console.WriteLine($"Controller GetAll: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
-                    Console.WriteLine($"Controller GetAll: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
-
-                    if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
-                        space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
-                    {
-                        Console.WriteLine($"WARNING: Space {space.Id} has HasConfiguredAreas=true but all counts are 0!");
-                    }
-                }
-                Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
-
-                var response = new CoworkingSpaceListResponseDTO
-                {
-                    Spaces = spaces.ToList(),
-                    Metadata = new Metadata
-                    {
-                        RequestedAt = DateTime.UtcNow,
-                        Version = "1.1"
-                    }
-                };
+                var response = await _coworkingSpaceService.GetAllLightweightAsync(userId);
 
                 return Ok(Responses.Response.Success(response));
             }
@@ -243,7 +219,7 @@ namespace CoworkingReservation.API.Controllers
 
                 // Llamar al servicio existente con los parámetros básicos (por ahora)
                 // En un futuro se deberá modificar el servicio para que acepte todos los parámetros
-                IEnumerable<CoworkingSpaceListItemDTO> spaces;
+
 
                 try
                 {
@@ -255,7 +231,7 @@ namespace CoworkingReservation.API.Controllers
                     Console.WriteLine($"benefits (count={benefits.Count}): {string.Join(", ", benefits)}");
 
                     // Intentar usar el nuevo método avanzado
-                    spaces = await _coworkingSpaceService.GetAdvancedFilteredAsync(
+                    var response = await _coworkingSpaceService.GetAdvancedFilteredAsync(
                         capacity, location, date, minPrice, maxPrice,
                         individualDesk, privateOffice, hybridSpace,
                         services, benefits, userId);
@@ -264,44 +240,10 @@ namespace CoworkingReservation.API.Controllers
                 {
                     // Fallback al método antiguo si el nuevo no está implementado
                     Console.WriteLine("El método avanzado de filtrado no está implementado. Usando el método básico.");
-                    spaces = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location, userId);
+                    var response = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location, userId);
                 }
 
-                // Log para depuración
-                Console.WriteLine("---------- CONTROLLER DEBUG - GetFiltered RESULTS ----------");
-                Console.WriteLine($"Filtros aplicados: {string.Join(", ", filterParams.Select(kv => $"{kv.Key}={kv.Value}"))}");
-                Console.WriteLine($"minPrice={minPrice}, maxPrice={maxPrice}");
-                Console.WriteLine($"individualDesk={individualDesk}, privateOffice={privateOffice}, hybridSpace={hybridSpace}");
-                Console.WriteLine($"services={string.Join(", ", services ?? new List<string>())}");
-                Console.WriteLine($"benefits={string.Join(", ", benefits ?? new List<string>())}");
-                Console.WriteLine($"Número de espacios devueltos: {spaces.Count()}");
-
-                foreach (var space in spaces)
-                {
-                    Console.WriteLine($"Controller: Space {space.Id} - HasConfiguredAreas: {space.HasConfiguredAreas}");
-                    Console.WriteLine($"Controller: Space {space.Id} - PrivateOfficesCount: {space.PrivateOfficesCount}");
-                    Console.WriteLine($"Controller: Space {space.Id} - MinPrivateOfficePrice: {space.MinPrivateOfficePrice}");
-
-                    if (space.HasConfiguredAreas == true && space.PrivateOfficesCount == 0 &&
-                        space.IndividualDesksCount == 0 && space.SharedDesksCount == 0)
-                    {
-                        Console.WriteLine($"WARNING: Space {space.Id} has HasConfiguredAreas=true but all counts are 0!");
-                    }
-                }
-                Console.WriteLine("---------- END CONTROLLER DEBUG ----------");
-
-                var response = new CoworkingSpaceListResponseDTO
-                {
-                    Spaces = spaces.ToList(),
-                    Metadata = new Metadata
-                    {
-                        RequestedAt = DateTime.UtcNow,
-                        Version = "1.1",
-                        AppliedFilters = filterParams
-                    }
-                };
-
-                return Ok(Responses.Response.Success(response));
+                return Ok(Responses.Response.Success(Response));
             }
             catch (Exception ex)
             {
