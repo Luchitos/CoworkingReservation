@@ -4,6 +4,7 @@ using CoworkingReservation.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoworkingReservation.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250705020106_relationareasbenefitsandservices")]
+    partial class relationareasbenefitsandservices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,14 +30,14 @@ namespace CoworkingReservation.Infrastructure.Migrations
                     b.Property<int>("BenefitId")
                         .HasColumnType("int");
 
-                    b.Property<int>("CoworkingSpacesId")
+                    b.Property<int>("CoworkingSpaceId")
                         .HasColumnType("int");
 
-                    b.HasKey("BenefitId", "CoworkingSpacesId");
+                    b.HasKey("BenefitId", "CoworkingSpaceId");
 
-                    b.HasIndex("CoworkingSpacesId");
+                    b.HasIndex("CoworkingSpaceId");
 
-                    b.ToTable("BenefitCoworkingSpace", (string)null);
+                    b.ToTable("BenefitCoworkingSpace");
                 });
 
             modelBuilder.Entity("CoworkingReservation.Domain.Entities.Address", b =>
@@ -576,13 +579,13 @@ namespace CoworkingReservation.Infrastructure.Migrations
 
             modelBuilder.Entity("CoworkingSpaceSafetyElement", b =>
                 {
-                    b.Property<int>("CoworkingSpacesId")
+                    b.Property<int>("CoworkingSpaceId")
                         .HasColumnType("int");
 
                     b.Property<int>("SafetyElementsId")
                         .HasColumnType("int");
 
-                    b.HasKey("CoworkingSpacesId", "SafetyElementsId");
+                    b.HasKey("CoworkingSpaceId", "SafetyElementsId");
 
                     b.HasIndex("SafetyElementsId");
 
@@ -591,17 +594,17 @@ namespace CoworkingReservation.Infrastructure.Migrations
 
             modelBuilder.Entity("CoworkingSpaceServiceOffered", b =>
                 {
-                    b.Property<int>("CoworkingSpacesId")
+                    b.Property<int>("CoworkingSpaceId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceOfferedId")
                         .HasColumnType("int");
 
-                    b.HasKey("CoworkingSpacesId", "ServiceOfferedId");
+                    b.HasKey("CoworkingSpaceId", "ServiceOfferedId");
 
                     b.HasIndex("ServiceOfferedId");
 
-                    b.ToTable("CoworkingSpaceServiceOffered", (string)null);
+                    b.ToTable("CoworkingSpaceServiceOffered");
                 });
 
             modelBuilder.Entity("CoworkingSpaceSpecialFeature", b =>
@@ -629,7 +632,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
 
                     b.HasOne("CoworkingReservation.Domain.Entities.CoworkingSpace", null)
                         .WithMany()
-                        .HasForeignKey("CoworkingSpacesId")
+                        .HasForeignKey("CoworkingSpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -799,7 +802,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
                 {
                     b.HasOne("CoworkingReservation.Domain.Entities.CoworkingSpace", null)
                         .WithMany()
-                        .HasForeignKey("CoworkingSpacesId")
+                        .HasForeignKey("CoworkingSpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -814,7 +817,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
                 {
                     b.HasOne("CoworkingReservation.Domain.Entities.CoworkingSpace", null)
                         .WithMany()
-                        .HasForeignKey("CoworkingSpacesId")
+                        .HasForeignKey("CoworkingSpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

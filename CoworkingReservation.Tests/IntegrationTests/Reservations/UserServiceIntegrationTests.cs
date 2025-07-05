@@ -1,10 +1,7 @@
 using CoworkingReservation.Application.DTOs.User;
 using CoworkingReservation.Application.Services;
 using CoworkingReservation.Application.Services.Interfaces;
-using CoworkingReservation.Domain.DTOs;
 using CoworkingReservation.Domain.Entities;
-using CoworkingReservation.Domain.Enums;
-using CoworkingReservation.Domain.IRepository;
 using CoworkingReservation.Infrastructure.Data;
 using CoworkingReservation.Infrastructure.Repositories;
 using CoworkingReservation.Tests.Helpers;
@@ -12,12 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace CoworkingReservation.Tests.IntegrationTests.Users
 {

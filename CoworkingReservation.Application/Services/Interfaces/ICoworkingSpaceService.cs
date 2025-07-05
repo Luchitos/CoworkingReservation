@@ -24,7 +24,7 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <param name="hosterId">ID del hoster.</param>
         /// <returns>Lista de coworkings creados.</returns>
         Task<IEnumerable<CoworkingSpace>> GetByHosterAsync(int hosterId);
-        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetAdvancedFilteredAsync(
+        Task<SpaceFilterResponseDTO> GetAdvancedFilteredAsync(
             int? capacity,
             string? location,
             DateTime? date,

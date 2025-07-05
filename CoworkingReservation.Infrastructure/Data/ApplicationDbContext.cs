@@ -142,20 +142,59 @@ namespace CoworkingReservation.Infrastructure.Data
             // Configure many-to-many relationships for Benefit, SafetyElement, ServiceOffered, and SpecialFeature
             // These were previously defined by navigation properties that have been removed
 
+            // BENEFITS  (quedó correcto)
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.Benefits)
                 .WithMany()
-                .UsingEntity(j => j.ToTable("BenefitCoworkingSpace"));
+                .UsingEntity<Dictionary<string, object>>(
+                    "BenefitCoworkingSpace",
+                    j => j.HasOne<Benefit>()
+                          .WithMany()
+                          .HasForeignKey("BenefitId"),   // ← nombre real
+                    j => j.HasOne<CoworkingSpace>()
+                          .WithMany()
+                          .HasForeignKey("CoworkingSpacesId"),
+                    j =>
+                    {
+                        j.HasKey("BenefitId", "CoworkingSpacesId");
+                        j.ToTable("BenefitCoworkingSpace");
+                    });
 
-            modelBuilder.Entity<CoworkingSpace>()
-                .HasMany(cs => cs.SafetyElements)
-                .WithMany()
-                .UsingEntity(j => j.ToTable("CoworkingSpaceSafetyElement"));
-
+            // SERVICES  (quedó correcto)
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.Services)
                 .WithMany()
-                .UsingEntity(j => j.ToTable("CoworkingSpaceServiceOffered"));
+                .UsingEntity<Dictionary<string, object>>(
+                    "CoworkingSpaceServiceOffered",
+                    j => j.HasOne<ServiceOffered>()
+                          .WithMany()
+                          .HasForeignKey("ServiceOfferedId"),
+                    j => j.HasOne<CoworkingSpace>()
+                          .WithMany()
+                          .HasForeignKey("CoworkingSpacesId"),
+                    j =>
+                    {
+                        j.HasKey("CoworkingSpacesId", "ServiceOfferedId");
+                        j.ToTable("CoworkingSpaceServiceOffered");
+                    });
+
+            // ✅ **SAFETY ELEMENTS**  → vuelve a ser many-to-many
+            modelBuilder.Entity<CoworkingSpace>()
+                .HasMany(cs => cs.SafetyElements)
+                .WithMany()
+                .UsingEntity<Dictionary<string, object>>(
+                    "CoworkingSpaceSafetyElement",
+                    j => j.HasOne<SafetyElement>()
+                          .WithMany()
+                          .HasForeignKey("SafetyElementsId"),
+                    j => j.HasOne<CoworkingSpace>()
+                          .WithMany()
+                          .HasForeignKey("CoworkingSpacesId"),
+                    j =>
+                    {
+                        j.HasKey("CoworkingSpacesId", "SafetyElementsId");
+                        j.ToTable("CoworkingSpaceSafetyElement");   // ← coincide con la BD
+                    });
 
             modelBuilder.Entity<CoworkingSpace>()
                 .HasMany(cs => cs.SpecialFeatures)

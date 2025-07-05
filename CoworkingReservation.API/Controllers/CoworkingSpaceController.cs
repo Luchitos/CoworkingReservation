@@ -168,93 +168,40 @@ namespace CoworkingReservation.API.Controllers
         /// </summary>
         [HttpGet("filter")]
         public async Task<IActionResult> GetFiltered(
-            [FromQuery] int? capacity,
-            [FromQuery] string? location,
-            [FromQuery] DateTime? date,
-            [FromQuery] decimal? minPrice,
-            [FromQuery] decimal? maxPrice,
-            [FromQuery] bool? individualDesk,
-            [FromQuery] bool? privateOffice,
-            [FromQuery] bool? hybridSpace,
-            [FromQuery] List<string> services,
-            [FromQuery] List<string> benefits)
+    [FromQuery] int? capacity,
+    [FromQuery] string? location,
+    [FromQuery] DateTime? date,
+    [FromQuery] decimal? minPrice,
+    [FromQuery] decimal? maxPrice,
+    [FromQuery] bool? individualDesk,
+    [FromQuery] bool? privateOffice,
+    [FromQuery] bool? hybridSpace,
+    [FromQuery] List<string> services,
+    [FromQuery] List<string> benefits)
         {
-            try
+            int? userId = null;
+            if (User.Identity?.IsAuthenticated == true)
             {
-                // Obtener el ID del usuario actual si está autenticado
-                int? userId = null;
-                if (User.Identity.IsAuthenticated)
-                {
-                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var parsedUserId))
-                    {
-                        userId = parsedUserId;
-                    }
-                }
-
-                // Asegurarnos de que las listas no sean null
-                services = services ?? new List<string>();
-                benefits = benefits ?? new List<string>();
-
-                // Registrar los filtros que se están aplicando para propósitos de depuración
-                var filterParams = new Dictionary<string, object>();
-
-                // Agregar parámetros básicos
-                if (capacity.HasValue) filterParams["capacity"] = capacity.Value;
-                if (!string.IsNullOrEmpty(location)) filterParams["location"] = location;
-                if (date.HasValue) filterParams["date"] = date.Value;
-
-                // Agregar parámetros de precio
-                if (minPrice.HasValue) filterParams["minPrice"] = minPrice.Value;
-                if (maxPrice.HasValue) filterParams["maxPrice"] = maxPrice.Value;
-
-                // Agregar tipos de espacio
-                if (individualDesk.HasValue && individualDesk.Value) filterParams["individualDesk"] = true;
-                if (privateOffice.HasValue && privateOffice.Value) filterParams["privateOffice"] = true;
-                if (hybridSpace.HasValue && hybridSpace.Value) filterParams["hybridSpace"] = true;
-
-                // Agregar servicios y beneficios
-                if (services.Any()) filterParams["services"] = string.Join(", ", services);
-                if (benefits.Any()) filterParams["benefits"] = string.Join(", ", benefits);
-
-                // Llamar al servicio existente con los parámetros básicos (por ahora)
-                // En un futuro se deberá modificar el servicio para que acepte todos los parámetros
-
-
-                try
-                {
-                    // Imprimir en consola para depuración
-                    Console.WriteLine("---------- CONTROLLER DEBUG - GetFiltered START ----------");
-                    Console.WriteLine($"minPrice={minPrice}, maxPrice={maxPrice}");
-                    Console.WriteLine($"individualDesk={individualDesk}, privateOffice={privateOffice}, hybridSpace={hybridSpace}");
-                    Console.WriteLine($"services (count={services.Count}): {string.Join(", ", services)}");
-                    Console.WriteLine($"benefits (count={benefits.Count}): {string.Join(", ", benefits)}");
-
-                    // Intentar usar el nuevo método avanzado
-                    var response = await _coworkingSpaceService.GetAdvancedFilteredAsync(
-                        capacity, location, date, minPrice, maxPrice,
-                        individualDesk, privateOffice, hybridSpace,
-                        services, benefits, userId);
-                }
-                catch (NotImplementedException)
-                {
-                    // Fallback al método antiguo si el nuevo no está implementado
-                    Console.WriteLine("El método avanzado de filtrado no está implementado. Usando el método básico.");
-                    var response = await _coworkingSpaceService.GetFilteredLightweightAsync(capacity, location, userId);
-                }
-
-                return Ok(Responses.Response.Success(Response));
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out var parsedUserId))
+                    userId = parsedUserId;
             }
-            catch (Exception ex)
+
+            var response = await _coworkingSpaceService.GetAdvancedFilteredAsync(
+                capacity, location, date, minPrice, maxPrice,
+                individualDesk, privateOffice, hybridSpace,
+                services, benefits, userId);
+
+            return Ok(new
             {
-                Console.WriteLine($"Error en GetFiltered: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                if (ex.InnerException != null)
+                status = 200,
+                data = new
                 {
-                    Console.WriteLine($"InnerException: {ex.InnerException.Message}");
-                }
-                return StatusCode(500, Responses.Response.Failure($"Error al obtener espacios filtrados: {ex.Message}", 500));
-            }
+                    spaces = response.Spaces,
+                    metadata = response.Metadata
+                },
+                error = (string)null
+            });
         }
 
         [HttpDelete("{id}")]
