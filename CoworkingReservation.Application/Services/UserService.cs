@@ -379,6 +379,22 @@ namespace CoworkingReservation.Application.Services
 
             return result;
         }
+        public async Task<CoworkingSpaceFavoritesResponseDTO> GetFavoriteSpacesResponseAsync(int userId)
+        {
+            var spaces = await GetFavoriteSpacesAsync(userId);
+
+            var response = new CoworkingSpaceFavoritesResponseDTO
+            {
+                Spaces = spaces.ToList(),
+                Metadata = new MetadataDTO
+                {
+                    RequestedAt = DateTime.UtcNow,
+                    Version = "1.0.0"
+                }
+            };
+
+            return response;
+        }
 
         // public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetFavoriteSpacesAsync(int userId)
         //     {

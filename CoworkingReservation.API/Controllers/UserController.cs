@@ -139,20 +139,18 @@ namespace CoworkingReservation.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetFavorites()
         {
-            try
-            {
-                var userId = GetUserIdFromToken();
-                var response = await _userService.GetFavoriteSpacesAsync(userId);
+            var userId = GetUserIdFromToken();
+            var data = await _userService.GetFavoriteSpacesResponseAsync(userId);
 
-                return Ok(Responses.Response.Success(response));
-            }
-            catch (Exception ex)
+            var result = new
             {
-                return BadRequest(Responses.Response.Failure(ex.Message));
-            }
+                status = 200,
+                data = data,
+                error = (string)null
+            };
+
+            return Ok(result);
         }
-
-
 
         [HttpGet("me")]
         [Authorize]

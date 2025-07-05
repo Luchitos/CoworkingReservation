@@ -79,5 +79,6 @@ namespace CoworkingReservation.Application.Services.Interfaces
 
         Task ToggleFavoriteAsync(int userId, int coworkingSpaceId, bool isFavorite);
 
+        Task<CoworkingSpaceFavoritesResponseDTO> GetFavoriteSpacesResponseAsync(int userId);
     }
 }
