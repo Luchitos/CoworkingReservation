@@ -658,36 +658,36 @@ namespace CoworkingReservation.Application.Services
                 // Cargar nombres de servicios directamente
                 var serviceNames = await _context.ServicesOffered
                     .FromSqlRaw(@"
-                        SELECT so.* FROM ServicesOffered so
-                        INNER JOIN CoworkingSpaceServiceOffered csso ON so.Id = csso.ServicesId
-                        WHERE csso.CoworkingSpacesId = {0}", id)
+        SELECT so.* FROM ServicesOffered so
+        INNER JOIN CoworkingSpaceServiceOffered csso ON so.Id = csso.ServiceOfferedId
+        WHERE csso.CoworkingSpacesId = {0}", id)
                     .Select(s => s.Name ?? "")
                     .ToListAsync();
 
                 // Cargar nombres de beneficios directamente
                 var benefitNames = await _context.Benefits
                     .FromSqlRaw(@"
-                        SELECT b.* FROM Benefits b
-                        INNER JOIN BenefitCoworkingSpace bcs ON b.Id = bcs.BenefitsId
-                        WHERE bcs.CoworkingSpacesId = {0}", id)
+        SELECT b.* FROM Benefits b
+        INNER JOIN BenefitCoworkingSpace bcs ON b.Id = bcs.BenefitId
+        WHERE bcs.CoworkingSpacesId = {0}", id)
                     .Select(b => b.Name ?? "")
                     .ToListAsync();
 
                 // Cargar nombres de elementos de seguridad directamente
                 var safetyElementNames = await _context.SafetyElements
                     .FromSqlRaw(@"
-                        SELECT se.* FROM SafetyElements se
-                        INNER JOIN CoworkingSpaceSafetyElement csse ON se.Id = csse.SafetyElementsId
-                        WHERE csse.CoworkingSpacesId = {0}", id)
+        SELECT se.* FROM SafetyElements se
+        INNER JOIN CoworkingSpaceSafetyElement csse ON se.Id = csse.SafetyElementsId
+        WHERE csse.CoworkingSpacesId = {0}", id)
                     .Select(se => se.Name ?? "")
                     .ToListAsync();
 
                 // Cargar nombres de características especiales directamente
                 var specialFeatureNames = await _context.SpecialFeatures
                     .FromSqlRaw(@"
-                        SELECT sf.* FROM SpecialFeatures sf
-                        INNER JOIN CoworkingSpaceSpecialFeature cssf ON sf.Id = cssf.SpecialFeaturesId
-                        WHERE cssf.CoworkingSpacesId = {0}", id)
+        SELECT sf.* FROM SpecialFeatures sf
+        INNER JOIN CoworkingSpaceSpecialFeature cssf ON sf.Id = cssf.SpecialFeaturesId
+        WHERE cssf.CoworkingSpacesId = {0}", id)
                     .Select(sf => sf.Name ?? "")
                     .ToListAsync();
 
@@ -1080,7 +1080,6 @@ namespace CoworkingReservation.Application.Services
                         (!areaTypes.Any() || areaTypes.Contains((int)a.Type))
                     ));
 
-            // --- Esta parte usa tu modelo real! ---
             if (services.Any())
                 foreach (var service in services)
                 {
