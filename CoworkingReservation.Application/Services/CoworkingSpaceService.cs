@@ -26,11 +26,11 @@ namespace CoworkingReservation.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICoworkingAreaService _coworkingAreaService;
-        private readonly CoworkingApprovalJob _approvalJob;
+        private readonly ICoworkingApprovalJob _approvalJob;
         private readonly IImageUploadService _imageUploadService;
         private readonly ApplicationDbContext _context;
 
-        public CoworkingSpaceService(IUnitOfWork unitOfWork, CoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService, IImageUploadService imageUploadService, ApplicationDbContext context)
+        public CoworkingSpaceService(IUnitOfWork unitOfWork, ICoworkingApprovalJob approvalJob, ICoworkingAreaService coworkingAreaService, IImageUploadService imageUploadService, ApplicationDbContext context)
         {
             _unitOfWork = unitOfWork;
             _approvalJob = approvalJob;
@@ -39,6 +39,7 @@ namespace CoworkingReservation.Application.Services
             _context = context;
         }
 
+  // TODO: Revisar los dto en el servicio porque se estan mezclando
         public async Task<CoworkingSpace> CreateAsync(CreateCoworkingSpaceDTO spaceDto, int userId)
         {
             await using var transaction = await _unitOfWork.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted);

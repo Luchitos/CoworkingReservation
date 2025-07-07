@@ -6,7 +6,7 @@ using CoworkingReservation.Domain.IRepository;
 
 namespace CoworkingReservation.Application.Jobs
 {
-    public class CoworkingApprovalJob
+    public class CoworkingApprovalJob : ICoworkingApprovalJob
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<CoworkingApprovalJob> _logger;
