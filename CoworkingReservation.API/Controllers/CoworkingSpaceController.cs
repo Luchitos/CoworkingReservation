@@ -333,12 +333,30 @@ namespace CoworkingReservation.API.Controllers
         /// <returns>Lista de coworkings del hoster.</returns>
         [HttpGet("my-coworkings")]
         [Authorize(Roles = "Hoster")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetMyCoworkings()
         {
-            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var coworkings = await _coworkingSpaceService.GetByHosterAsync(hosterId);
-            return Ok(Responses.Response.Success(coworkings));
+            try
+            {
+                var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var spaces = await _coworkingSpaceService.GetMyCoworkingsAsync(hosterId);
+
+                var response = new CoworkingSpaceListResponseDTO
+                {
+                    Spaces = spaces.ToList(),
+                    Metadata = new Metadata
+                    {
+                        RequestedAt = DateTime.UtcNow,
+                        Version = "1.1"
+                    }
+                };
+
+                return Ok(Responses.Response.Success(response));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetMyCoworkings: {ex.Message}");
+                return StatusCode(500, Responses.Response.Failure($"Error al obtener mis espacios de coworking: {ex.Message}", 500));
+            }
         }
 
     }

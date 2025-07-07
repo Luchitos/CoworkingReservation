@@ -55,15 +55,26 @@ namespace CoworkingReservation.API.Controllers
         }
 
         /// <summary>
-        /// Obtener todas las áreas de un coworking space.
+        /// Obtener información completa de un espacio de coworking para edición.
         /// </summary>
         /// <param name="coworkingSpaceId">ID del coworking space.</param>
-        /// <returns>Lista de áreas.</returns>
+        /// <returns>Información completa del espacio incluyendo áreas, servicios, beneficios, etc.</returns>
         [HttpGet("{coworkingSpaceId}")]
         public async Task<IActionResult> GetByCoworkingSpace(int coworkingSpaceId)
         {
-            var areas = await _coworkingAreaService.GetByCoworkingSpaceIdAsync(coworkingSpaceId);
-            return Ok(Responses.Response.Success(areas));
+            try
+            {
+                var coworkingSpaceInfo = await _coworkingAreaService.GetCoworkingSpaceForEditAsync(coworkingSpaceId);
+                return Ok(Responses.Response.Success(coworkingSpaceInfo));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(Responses.Response.Failure(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, Responses.Response.Failure($"Error al obtener información del espacio de coworking: {ex.Message}"));
+            }
         }
 
         /// <summary>

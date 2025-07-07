@@ -1078,6 +1078,79 @@ namespace CoworkingReservation.Application.Services
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<CoworkingSpaceListItemDTO>> GetMyCoworkingsAsync(int hosterId)
+        {
+            try
+            {
+                // Obtener todos los coworking spaces del hoster con sus relaciones
+                var spaces = await _context.CoworkingSpaces
+                    .AsNoTracking()
+                    .Include(cs => cs.Address)
+                    .Include(cs => cs.Areas)
+                    .Include(cs => cs.Photos)
+                    .Where(cs => cs.HosterId == hosterId)
+                    .ToListAsync();
+
+                // Obtener espacios favoritos del usuario (aunque sea el mismo hoster, por consistencia)
+                var userFavorites = await _context.FavoriteCoworkingSpaces
+                    .Where(f => f.UserId == hosterId)
+                    .Select(f => f.CoworkingSpaceId)
+                    .ToListAsync();
+
+                // Mapear a DTOs usando la misma lógica que GetAllLightweightAsync
+                var result = spaces.Select(cs => new CoworkingSpaceListItemDTO
+                {
+                    Id = cs.Id,
+                    Name = cs.Name,
+                    Address = cs.Address != null ? new Domain.DTOs.AddressDTO
+                    {
+                        City = cs.Address.City,
+                        Province = cs.Address.Province,
+                        Street = cs.Address.Street,
+                        Number = cs.Address.Number,
+                        Country = cs.Address.Country,
+                        ZipCode = cs.Address.ZipCode,
+                        Latitude = cs.Address?.Latitude,
+                        Longitude = cs.Address?.Longitude
+                    } : null,
+                    CoverPhotoUrl = cs.Photos.Where(p => p.IsCoverPhoto).Select(p => p.FilePath).FirstOrDefault(),
+                    Rate = cs.Rate,
+                    TotalCapacity = cs.CapacityTotal,
+                    HasConfiguredAreas = cs.Areas.Any(),
+                    PrivateOfficesCount = cs.Areas.Count(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available),
+                    IndividualDesksCount = cs.Areas.Count(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available),
+                    SharedDesksCount = cs.Areas.Count(a => a.Type == CoworkingAreaType.SharedDesks && a.Available),
+
+                    MinPrivateOfficePrice = cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available)
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Min(a => a.PricePerDay)
+                        : null,
+                    MaxPrivateOfficePrice = cs.Areas.Any(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available)
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.PrivateOffice && a.Available).Max(a => a.PricePerDay)
+                        : null,
+
+                    MinIndividualDeskPrice = cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available)
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Min(a => a.PricePerDay)
+                        : null,
+                    MaxIndividualDeskPrice = cs.Areas.Any(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available)
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.IndividualDesk && a.Available).Max(a => a.PricePerDay)
+                        : null,
+
+                    SharedDeskPrice = cs.Areas.Any(a => a.Type == CoworkingAreaType.SharedDesks && a.Available)
+                        ? cs.Areas.Where(a => a.Type == CoworkingAreaType.SharedDesks && a.Available).Min(a => a.PricePerDay)
+                        : null,
+
+                    IsFavorite = userFavorites.Contains(cs.Id)
+                }).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetMyCoworkingsAsync: {ex.Message}");
+                throw;
+            }
+        }
     }
 
     // Clase para estadísticas de reservas

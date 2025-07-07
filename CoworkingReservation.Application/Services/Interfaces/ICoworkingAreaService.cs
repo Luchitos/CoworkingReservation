@@ -97,6 +97,13 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <returns>True si hay capacidad disponible, False en caso contrario.</returns>
         Task<bool> HasAvailableCapacity(int coworkingSpaceId, int requiredCapacity);
 
+        /// <summary>
+        /// Obtiene información completa de un espacio de coworking para edición.
+        /// </summary>
+        /// <param name="coworkingSpaceId">ID del espacio de coworking.</param>
+        /// <returns>Información completa del espacio incluyendo áreas, servicios, beneficios, etc.</returns>
+        Task<CoworkingSpaceEditDTO> GetCoworkingSpaceForEditAsync(int coworkingSpaceId);
+
         #endregion
     }
 }

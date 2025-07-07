@@ -4,9 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CoworkingReservation.Application.DTOs.CoworkingSpace;
+using CoworkingReservation.Application.DTOs.CoworkingArea;
+using CoworkingReservation.Application.DTOs.Address;
+using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Application.DTOs.SafetyElementDTO;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Domain.IRepository;
+using CoworkingReservation.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -19,11 +24,13 @@ namespace CoworkingReservation.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CoworkingAreaService> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public CoworkingAreaService(IUnitOfWork unitOfWork, ILogger<CoworkingAreaService> logger)
+        public CoworkingAreaService(IUnitOfWork unitOfWork, ILogger<CoworkingAreaService> logger, ApplicationDbContext context)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         #region Crear Área
@@ -228,8 +235,149 @@ namespace CoworkingReservation.Application.Services
         /// </summary>
         public async Task<bool> HasAvailableCapacity(int coworkingSpaceId, int requiredCapacity)
         {
-            int totalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
+            var totalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
             return totalCapacity >= requiredCapacity;
+        }
+
+        /// <summary>
+        /// Obtiene información completa de un espacio de coworking para edición.
+        /// </summary>
+        public async Task<CoworkingSpaceEditDTO> GetCoworkingSpaceForEditAsync(int coworkingSpaceId)
+        {
+            try
+            {
+                // Obtener el coworking space básico con Address y Photos
+                var coworkingSpace = await _context.CoworkingSpaces
+                    .AsNoTracking()
+                    .Include(cs => cs.Address)
+                    .Include(cs => cs.Photos)
+                    .Include(cs => cs.Areas)
+                    .FirstOrDefaultAsync(cs => cs.Id == coworkingSpaceId);
+
+                if (coworkingSpace == null)
+                {
+                    throw new KeyNotFoundException($"Coworking space with ID {coworkingSpaceId} not found.");
+                }
+
+                // Obtener servicios por separado usando consulta directa
+                var services = await _context.ServicesOffered
+                    .FromSqlRaw(@"
+                        SELECT s.* FROM ServicesOffered s
+                        INNER JOIN CoworkingSpaceServiceOffered css ON s.Id = css.ServicesId
+                        WHERE css.CoworkingSpacesId = {0}", coworkingSpaceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Obtener beneficios por separado
+                var benefits = await _context.Benefits
+                    .FromSqlRaw(@"
+                        SELECT b.* FROM Benefits b
+                        INNER JOIN BenefitCoworkingSpace bcs ON b.Id = bcs.BenefitsId
+                        WHERE bcs.CoworkingSpacesId = {0}", coworkingSpaceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Obtener elementos de seguridad por separado
+                var safetyElements = await _context.SafetyElements
+                    .FromSqlRaw(@"
+                        SELECT se.* FROM SafetyElements se
+                        INNER JOIN CoworkingSpaceSafetyElement csse ON se.Id = csse.SafetyElementsId
+                        WHERE csse.CoworkingSpacesId = {0}", coworkingSpaceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Obtener características especiales por separado
+                var specialFeatures = await _context.SpecialFeatures
+                    .FromSqlRaw(@"
+                        SELECT sf.* FROM SpecialFeatures sf
+                        INNER JOIN CoworkingSpaceSpecialFeature cssf ON sf.Id = cssf.SpecialFeaturesId
+                        WHERE cssf.CoworkingSpacesId = {0}", coworkingSpaceId)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Mapear a DTO
+                var result = new CoworkingSpaceEditDTO
+                {
+                    // Coworking Space Basic Information
+                    Id = coworkingSpace.Id,
+                    Name = coworkingSpace.Name,
+                    Description = coworkingSpace.Description,
+                    CapacityTotal = coworkingSpace.CapacityTotal,
+                    IsActive = coworkingSpace.IsActive,
+                    Rate = coworkingSpace.Rate,
+                    Status = coworkingSpace.Status,
+                    HosterId = coworkingSpace.HosterId,
+
+                    // Address
+                    Address = coworkingSpace.Address != null ? new AddressDTO
+                    {
+                        Street = coworkingSpace.Address.Street,
+                        Number = coworkingSpace.Address.Number,
+                        Apartment = coworkingSpace.Address.Apartment,
+                        Floor = coworkingSpace.Address.Floor,
+                        City = coworkingSpace.Address.City,
+                        Province = coworkingSpace.Address.Province,
+                        Country = coworkingSpace.Address.Country,
+                        ZipCode = coworkingSpace.Address.ZipCode,
+                        Latitude = coworkingSpace.Address.Latitude,
+                        Longitude = coworkingSpace.Address.Longitude
+                    } : new AddressDTO(),
+
+                    // Photos
+                    Photos = coworkingSpace.Photos?.Select(p => new PhotoResponseDTO
+                    {
+                        FileName = p.FileName,
+                        IsCoverPhoto = p.IsCoverPhoto,
+                        FilePath = p.FilePath
+                    }).ToList() ?? new List<PhotoResponseDTO>(),
+
+                    // Services
+                    Services = services.Select(s => new ServiceOfferedDTO
+                    {
+                        Id = s.Id,
+                        Name = s.Name
+                    }).ToList(),
+
+                    // Benefits
+                    Benefits = benefits.Select(b => new BenefitDTO
+                    {
+                        Id = b.Id,
+                        Name = b.Name
+                    }).ToList(),
+
+                    // Safety Elements
+                    SafetyElements = safetyElements.Select(se => new CoworkingReservation.Application.DTOs.SafetyElementDTO.SafetyElementDTO
+                    {
+                        Id = se.Id,
+                        Name = se.Name
+                    }).ToList(),
+
+                    // Special Features
+                    SpecialFeatures = specialFeatures.Select(sf => new SpecialFeatureDTO
+                    {
+                        Id = sf.Id,
+                        Name = sf.Name
+                    }).ToList(),
+
+                    // Areas
+                    Areas = coworkingSpace.Areas?.Select(area => new CoworkingAreaResponseDTO
+                    {
+                        Id = area.Id,
+                        Type = area.Type,
+                        Description = area.Description,
+                        Capacity = area.Capacity,
+                        PricePerDay = area.PricePerDay,
+                        Available = area.Available
+                    }).ToList() ?? new List<CoworkingAreaResponseDTO>()
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting coworking space {CoworkingSpaceId} for edit", coworkingSpaceId);
+                throw;
+            }
         }
 
         #endregion

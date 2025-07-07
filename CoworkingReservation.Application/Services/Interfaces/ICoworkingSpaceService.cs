@@ -52,5 +52,12 @@ namespace CoworkingReservation.Application.Services.Interfaces
         /// <returns>Lista de coworkings creados.</returns>
         Task<IEnumerable<CoworkingSpace>> GetByHosterAsync(int hosterId);
 
+        /// <summary>
+        /// Obtiene todos los espacios de coworking creados por un hoster en formato lightweight.
+        /// </summary>
+        /// <param name="hosterId">ID del hoster.</param>
+        /// <returns>Lista de coworkings del hoster en formato lightweight.</returns>
+        Task<IEnumerable<CoworkingSpaceListItemDTO>> GetMyCoworkingsAsync(int hosterId);
+
     }
 }
