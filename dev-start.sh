@@ -18,11 +18,13 @@ echo "📦 Iniciando contenedor Docker 'sql-coworking'..."
 docker start sql-coworking
 
 # 3. Backend .NET
-echo "⚙️ Levantando backend .NET..."
+# 3. Backend .NET en modo debug con perfil http
+echo "⚙️ Levantando backend .NET en modo debug..."
 cd CoworkingReservation.API || { echo "❌ No se encontró la carpeta CoworkingReservation.API"; exit 1; }
-dotnet run &
+dotnet watch run --launch-profile "http" &
 BACKEND_PID=$!
 cd ..
+
 
 # 4. Frontend Angular
 echo "🌐 Levantando frontend Angular..."

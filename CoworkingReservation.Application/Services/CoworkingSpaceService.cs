@@ -290,7 +290,7 @@ namespace CoworkingReservation.Application.Services
                     foreach (var service in services)
                     {
                         await _context.Database.ExecuteSqlRawAsync(
-                            "INSERT INTO CoworkingSpaceServiceOffered (CoworkingSpacesId, ServicesId) VALUES ({0}, {1})",
+                            "INSERT INTO CoworkingSpaceServiceOffered (CoworkingSpacesId, ServiceOfferedId) VALUES ({0}, {1})",
                             coworkingSpace.Id, service.Id);
                     }
                 }
@@ -300,7 +300,7 @@ namespace CoworkingReservation.Application.Services
                     foreach (var benefit in benefits)
                     {
                         await _context.Database.ExecuteSqlRawAsync(
-                            "INSERT INTO BenefitCoworkingSpace (CoworkingSpacesId, BenefitsId) VALUES ({0}, {1})",
+                            "INSERT INTO BenefitCoworkingSpace (CoworkingSpacesId, BenefitId) VALUES ({0}, {1})",
                             coworkingSpace.Id, benefit.Id);
                     }
                 }
@@ -384,6 +384,7 @@ namespace CoworkingReservation.Application.Services
                         CreatedAt = r.CreatedAt
                     }).ToList() ?? new List<ReviewResponseDTO>()
                 };
+                _ = Task.Run(async () => await _approvalJob.Run());
 
                 return response;
             }
