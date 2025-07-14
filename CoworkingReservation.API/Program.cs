@@ -84,6 +84,7 @@ builder.Services.AddHangfireServer();
 builder.Services.AddHostedService<ReservationStatusBackgroundService>();
 builder.Services.AddScoped<ReservationStatusJob>();
 
+builder.Services.AddScoped<ICoworkingApprovalJob, CoworkingApprovalJob>();
 builder.Services.AddScoped<CoworkingApprovalJob>();
 builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
 
