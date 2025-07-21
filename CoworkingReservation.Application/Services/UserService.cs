@@ -113,7 +113,9 @@ namespace CoworkingReservation.Application.Services
 
             // Verificar la contraseña
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            return result == PasswordVerificationResult.Success ? user : null;
+            
+            // Aceptar tanto Success como SuccessRehashNeeded
+            return (result == PasswordVerificationResult.Success || result == PasswordVerificationResult.SuccessRehashNeeded) ? user : null;
         }
 
         private string HashPassword(string password)

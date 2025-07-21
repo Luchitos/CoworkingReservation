@@ -81,8 +81,11 @@ namespace CoworkingReservation.Application.Services
                         Number = spaceDto.Address.Number,
                         Province = spaceDto.Address.Province,
                         Street = spaceDto.Address.Street,
-                        StreetOne = spaceDto.Address.StreetOne,
-                        StreetTwo = spaceDto.Address.StreetTwo,
+                        // Manejar campos opcionales con valores por defecto
+                        // Si no se envía StreetOne, usar Street como valor por defecto
+                        StreetOne = spaceDto.Address.StreetOne ?? spaceDto.Address.Street ?? "",
+                        // Si no se envía StreetTwo, usar string vacío
+                        StreetTwo = spaceDto.Address.StreetTwo ?? "",
                         ZipCode = spaceDto.Address.ZipCode,
                         Latitude = spaceDto.Address.Latitude,
                         Longitude = spaceDto.Address.Longitude,
@@ -209,9 +212,10 @@ namespace CoworkingReservation.Application.Services
 
         public async Task UpdateAsync(int id, UpdateCoworkingSpaceDTO dto, int hosterId, string userRole)
         {
-            var coworkingSpace = await _unitOfWork.CoworkingSpaces
-                .GetByIdAsync(id, "Address,Photos,Services,Benefits");
+            Console.WriteLine($"🔍 DEBUG: UpdateAsync called with id={id}, hosterId={hosterId}, userRole={userRole}");
 
+            // **1. Validar que el espacio existe (cargando la dirección para poder actualizarla)**
+            var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(id, "Address");
             if (coworkingSpace == null)
             {
                 await _unitOfWork.AuditLogs.LogAsync(new AuditLog
@@ -222,11 +226,10 @@ namespace CoworkingReservation.Application.Services
                     Success = false,
                     Description = $"Coworking space with ID {id} not found."
                 });
-
                 throw new KeyNotFoundException("Coworking space not found.");
             }
 
-            // Validar permisos (Solo el hoster del espacio o un Admin pueden modificarlo)
+            // **2. Validar permisos**
             bool isAdmin = userRole == "Admin";
             if (coworkingSpace.HosterId != hosterId && !isAdmin)
             {
@@ -238,54 +241,202 @@ namespace CoworkingReservation.Application.Services
                     Success = false,
                     Description = $"User {hosterId} attempted to modify coworking space {id} without permission."
                 });
-
                 throw new UnauthorizedAccessException("You do not have permission to perform this action.");
             }
 
-            // **Actualizar propiedades principales**
+            Console.WriteLine("🔍 DEBUG: Permissions validated successfully");
+
+            // **3. Actualizar datos básicos del espacio**
             coworkingSpace.Name = dto.Name;
             coworkingSpace.Description = dto.Description;
             coworkingSpace.CapacityTotal = dto.CapacityTotal;
 
-            // **Actualizar Dirección**
-            coworkingSpace.Address.City = dto.Address.City;
-            coworkingSpace.Address.Country = dto.Address.Country;
-            coworkingSpace.Address.Apartment = dto.Address.Apartment;
-            coworkingSpace.Address.Floor = dto.Address.Floor;
-            coworkingSpace.Address.Number = dto.Address.Number;
-            coworkingSpace.Address.Province = dto.Address.Province;
-            coworkingSpace.Address.Street = dto.Address.Street;
-            coworkingSpace.Address.StreetOne = dto.Address.StreetOne;
-            coworkingSpace.Address.StreetTwo = dto.Address.StreetTwo;
-            coworkingSpace.Address.ZipCode = dto.Address.ZipCode;
-
-            // **Actualizar Servicios**
-            coworkingSpace.Services.Clear();
-            if (dto.ServiceIds?.Any() == true)
+            // **4. Actualizar dirección directamente en la entidad cargada**
+            if (dto.Address != null)
             {
-                coworkingSpace.Services = (await _unitOfWork.Services
-                    .GetAllAsync(s => dto.ServiceIds.Contains(s.Id))).ToList();
+                var address = coworkingSpace.Address;
+                if (address != null)
+                {
+                    Console.WriteLine($"🔍 DEBUG: Updating address - Old City: {address.City}, New City: {dto.Address.City}");
+                    Console.WriteLine($"🔍 DEBUG: Updating address - Old Street: {address.Street}, New Street: {dto.Address.Street}");
+                    
+                    address.City = dto.Address.City;
+                    address.Country = dto.Address.Country;
+                    address.Apartment = dto.Address.Apartment;
+                    address.Floor = dto.Address.Floor;
+                    address.Number = dto.Address.Number;
+                    address.Province = dto.Address.Province;
+                    address.Street = dto.Address.Street;
+                    // Manejar campos opcionales con valores por defecto
+                    // Si no se envía StreetOne, usar Street como valor por defecto
+                    address.StreetOne = dto.Address.StreetOne ?? dto.Address.Street ?? "";
+                    // Si no se envía StreetTwo, usar string vacío
+                    address.StreetTwo = dto.Address.StreetTwo ?? "";
+                    address.ZipCode = dto.Address.ZipCode;
+                    address.Latitude = dto.Address.Latitude;
+                    address.Longitude = dto.Address.Longitude;
+                    
+                    Console.WriteLine($"🔍 DEBUG: Address properties updated - City: {address.City}, Street: {address.Street}");
+                }
+                else
+                {
+                    Console.WriteLine("🔍 DEBUG: Address is null, cannot update");
+                }
+            }
+            else
+            {
+                Console.WriteLine("🔍 DEBUG: DTO Address is null, skipping address update");
             }
 
-            // **Actualizar Beneficios**
-            coworkingSpace.Benefits.Clear();
+            Console.WriteLine("🔍 DEBUG: Basic data and address updated");
+
+            // **5. Actualizar relaciones many-to-many por separado**
+            if (dto.Services?.Any() == true)
+            {
+                await UpdateCoworkingSpaceServices(id, dto.Services.ToList());
+                Console.WriteLine("🔍 DEBUG: Services updated");
+            }
+
             if (dto.Benefits?.Any() == true)
             {
-                coworkingSpace.Benefits = (await _unitOfWork.Benefits
-                    .GetAllAsync(b => dto.Benefits.Contains(b.Id))).ToList();
+                await UpdateCoworkingSpaceBenefits(id, dto.Benefits.ToList());
+                Console.WriteLine("🔍 DEBUG: Benefits updated");
             }
 
+            if (dto.SafetyElements?.Any() == true)
+            {
+                await UpdateCoworkingSpaceSafetyElements(id, dto.SafetyElements.ToList());
+                Console.WriteLine("🔍 DEBUG: SafetyElements updated");
+            }
+
+            if (dto.SpecialFeatures?.Any() == true)
+            {
+                await UpdateCoworkingSpaceSpecialFeatures(id, dto.SpecialFeatures.ToList());
+                Console.WriteLine("🔍 DEBUG: SpecialFeatures updated");
+            }
+
+            // **6. Actualizar áreas**
+            if (dto.Areas?.Any() == true)
+            {
+                await UpdateCoworkingSpaceAreas(id, dto.Areas);
+                Console.WriteLine("🔍 DEBUG: Areas updated");
+            }
+
+            // **7. Guardar cambios del espacio principal**
             await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
             await _unitOfWork.SaveChangesAsync();
 
+            Console.WriteLine("🔍 DEBUG: All changes saved successfully");
+
+            // **8. Log de auditoría exitoso**
             await _unitOfWork.AuditLogs.LogAsync(new AuditLog
             {
                 Action = "UpdateCoworkingSpace",
                 UserId = hosterId,
                 UserRole = userRole,
                 Success = true,
-                Description = $"Coworking space {coworkingSpace.Name} (ID: {id}) updated successfully."
+                Description = $"Coworking space {id} updated successfully by user {hosterId}."
             });
+
+            Console.WriteLine("🔍 DEBUG: UpdateAsync completed successfully");
+        }
+
+        /// <summary>
+        /// Actualiza los servicios de un espacio de coworking usando SQL directo
+        /// </summary>
+        private async Task UpdateCoworkingSpaceServices(int coworkingSpaceId, List<int> serviceIds)
+        {
+            // Eliminar servicios existentes
+            await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM CoworkingSpaceServiceOffered WHERE CoworkingSpacesId = {0}", 
+                coworkingSpaceId);
+
+            // Insertar nuevos servicios
+            if (serviceIds.Any())
+            {
+                var insertValues = string.Join(",", serviceIds.Select(id => $"({coworkingSpaceId}, {id})"));
+                await _context.Database.ExecuteSqlRawAsync(
+                    $"INSERT INTO CoworkingSpaceServiceOffered (CoworkingSpacesId, ServicesId) VALUES {insertValues}");
+            }
+        }
+
+        /// <summary>
+        /// Actualiza los beneficios de un espacio de coworking usando SQL directo
+        /// </summary>
+        private async Task UpdateCoworkingSpaceBenefits(int coworkingSpaceId, List<int> benefitIds)
+        {
+            // Eliminar beneficios existentes
+            await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM BenefitCoworkingSpace WHERE CoworkingSpacesId = {0}", 
+                coworkingSpaceId);
+
+            // Insertar nuevos beneficios
+            if (benefitIds.Any())
+            {
+                var insertValues = string.Join(",", benefitIds.Select(id => $"({id}, {coworkingSpaceId})"));
+                await _context.Database.ExecuteSqlRawAsync(
+                    $"INSERT INTO BenefitCoworkingSpace (BenefitsId, CoworkingSpacesId) VALUES {insertValues}");
+            }
+        }
+
+        /// <summary>
+        /// Actualiza los elementos de seguridad de un espacio de coworking usando SQL directo
+        /// </summary>
+        private async Task UpdateCoworkingSpaceSafetyElements(int coworkingSpaceId, List<int> safetyElementIds)
+        {
+            // Eliminar elementos de seguridad existentes
+            await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM CoworkingSpaceSafetyElement WHERE CoworkingSpacesId = {0}", 
+                coworkingSpaceId);
+
+            // Insertar nuevos elementos de seguridad
+            if (safetyElementIds.Any())
+            {
+                var insertValues = string.Join(",", safetyElementIds.Select(id => $"({coworkingSpaceId}, {id})"));
+                await _context.Database.ExecuteSqlRawAsync(
+                    $"INSERT INTO CoworkingSpaceSafetyElement (CoworkingSpacesId, SafetyElementsId) VALUES {insertValues}");
+            }
+        }
+
+        /// <summary>
+        /// Actualiza las características especiales de un espacio de coworking usando SQL directo
+        /// </summary>
+        private async Task UpdateCoworkingSpaceSpecialFeatures(int coworkingSpaceId, List<int> specialFeatureIds)
+        {
+            // Eliminar características especiales existentes
+            await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM CoworkingSpaceSpecialFeature WHERE CoworkingSpacesId = {0}", 
+                coworkingSpaceId);
+
+            // Insertar nuevas características especiales
+            if (specialFeatureIds.Any())
+            {
+                var insertValues = string.Join(",", specialFeatureIds.Select(id => $"({coworkingSpaceId}, {id})"));
+                await _context.Database.ExecuteSqlRawAsync(
+                    $"INSERT INTO CoworkingSpaceSpecialFeature (CoworkingSpacesId, SpecialFeaturesId) VALUES {insertValues}");
+            }
+        }
+
+        /// <summary>
+        /// Actualiza las áreas de un espacio de coworking
+        /// </summary>
+        private async Task UpdateCoworkingSpaceAreas(int coworkingSpaceId, List<UpdateCoworkingAreaDTO> areas)
+        {
+            foreach (var areaDto in areas)
+            {
+                var existingArea = await _unitOfWork.CoworkingAreas.GetByIdAsync(areaDto.Id);
+                if (existingArea != null && existingArea.CoworkingSpaceId == coworkingSpaceId)
+                {
+                    // Actualizar área existente
+                    existingArea.Type = areaDto.Type;
+                    existingArea.Description = areaDto.Description;
+                    existingArea.Capacity = areaDto.Capacity;
+                    existingArea.PricePerDay = areaDto.PricePerDay;
+                    existingArea.Available = areaDto.Available;
+                    
+                    await _unitOfWork.CoworkingAreas.UpdateAsync(existingArea);
+                }
+            }
         }
 
         private async Task AddPhotosToCoworkingSpace(List<IFormFile> photos, int coworkingSpaceId)

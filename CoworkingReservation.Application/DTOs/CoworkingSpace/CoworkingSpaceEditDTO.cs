@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.Photo;
 using CoworkingReservation.Application.DTOs.CoworkingArea;
+using CoworkingReservation.Application.DTOs.Review;
 using CoworkingReservation.Domain.Enums;
 
 namespace CoworkingReservation.Application.DTOs.CoworkingSpace
@@ -46,6 +47,11 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// Calificación promedio del espacio.
         /// </summary>
         public double Rate { get; set; }
+
+        /// <summary>
+        /// Número total de evaluaciones.
+        /// </summary>
+        public int EvaluationsCount { get; set; }
 
         /// <summary>
         /// ID del hoster propietario.
@@ -111,6 +117,11 @@ namespace CoworkingReservation.Application.DTOs.CoworkingSpace
         /// Lista de características especiales del espacio.
         /// </summary>
         public List<SpecialFeatureDTO> SpecialFeatures { get; set; } = new List<SpecialFeatureDTO>();
+
+        /// <summary>
+        /// Lista de reviews del espacio de coworking.
+        /// </summary>
+        public List<ReviewResponseDTO> Reviews { get; set; } = new List<ReviewResponseDTO>();
 
         #endregion
 

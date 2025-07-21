@@ -7,6 +7,7 @@ using CoworkingReservation.Application.DTOs.CoworkingSpace;
 using CoworkingReservation.Application.DTOs.CoworkingArea;
 using CoworkingReservation.Application.DTOs.Address;
 using CoworkingReservation.Application.DTOs.Photo;
+using CoworkingReservation.Application.DTOs.Review;
 using CoworkingReservation.Application.DTOs.SafetyElementDTO;
 using CoworkingReservation.Application.Services.Interfaces;
 using CoworkingReservation.Domain.Entities;
@@ -120,7 +121,7 @@ namespace CoworkingReservation.Application.Services
             area.Description = dto.Description;
             area.Capacity = dto.Capacity;
             area.PricePerDay = dto.PricePerDay;
-            area.Available = dto.available;
+            area.Available = dto.Available;
             area.Type = dto.Type;
 
             await _unitOfWork.CoworkingAreas.UpdateAsync(area);
@@ -295,6 +296,22 @@ namespace CoworkingReservation.Application.Services
                     .AsNoTracking()
                     .ToListAsync();
 
+                // Obtener reviews con información del usuario
+                var reviews = await _context.Reviews
+                    .Where(r => r.CoworkingSpaceId == coworkingSpaceId)
+                    .Include(r => r.User)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => new ReviewResponseDTO
+                    {
+                        Id = r.Id,
+                        UserId = r.UserId,
+                        UserName = r.User.Name + " " + r.User.Lastname,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt
+                    })
+                    .ToListAsync();
+
                 // Mapear a DTO
                 var result = new CoworkingSpaceEditDTO
                 {
@@ -358,6 +375,10 @@ namespace CoworkingReservation.Application.Services
                         Id = sf.Id,
                         Name = sf.Name
                     }).ToList(),
+
+                    // Reviews
+                    Reviews = reviews,
+                    EvaluationsCount = reviews.Count,
 
                     // Areas
                     Areas = coworkingSpace.Areas?.Select(area => new CoworkingAreaResponseDTO

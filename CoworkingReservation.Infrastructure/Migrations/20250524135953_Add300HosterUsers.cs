@@ -41,7 +41,7 @@ namespace CoworkingReservation.Infrastructure.Migrations
             };
 
             // Password hash for "Password123!" - this should be a consistent hash for all users
-            var passwordHash = "AQAAAAIAAYagAAAAEF0tiR+lvAIdSE6DyHk1oCbVinKEMAk+Jf1jEokRfMEmMVV7frZI0QWBfykCAwk0Eg==";
+            var passwordHash = "AQAAAAEAACcQAAAAECQsnOGH0l9INUuK1uc6w8s2TbH/1TFvOMDSQKwkSZwtctHJnkEKOJwuc0l4sFE4CA==";
             var creationDate = DateTime.UtcNow;
             var random = new Random(42); // Fixed seed for reproducible results
 
