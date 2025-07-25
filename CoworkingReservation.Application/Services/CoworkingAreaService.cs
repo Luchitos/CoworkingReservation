@@ -165,8 +165,12 @@ namespace CoworkingReservation.Application.Services
             if (coworkingSpace.HosterId != hosterId)
                 throw new UnauthorizedAccessException("You do not have permission to modify this area.");
 
+            // Si el área ya tiene el estado deseado, simplemente retornar sin hacer cambios
             if (area.Available == available)
-                throw new InvalidOperationException($"The area is already {(available ? "enabled" : "disabled")}.");
+            {
+                _logger.LogInformation($"Coworking area {id} is already {(available ? "enabled" : "disabled")}, no changes needed.");
+                return;
+            }
 
             area.Available = available;
 
