@@ -69,10 +69,12 @@ namespace CoworkingReservation.Application.Services
             // Manejar la foto de perfil solo si está presente
             if (userDto.ProfilePhoto != null)
             {
+                Console.WriteLine($"📸 Foto de perfil recibida: {userDto.ProfilePhoto.FileName}, Tamaño: {userDto.ProfilePhoto.Length} bytes");
                 try 
                 {
                     // Subir la imagen a ImgBB usando el nuevo método organizado por carpetas
                     string imageUrl = await _imageUploadService.UploadUserImageAsync(userDto.ProfilePhoto, newUser.Id);
+                    Console.WriteLine($"✅ Foto subida exitosamente a: {imageUrl}");
                     
                     // Crear el registro de foto en nuestra base de datos
                     var photo = new UserPhoto
@@ -90,13 +92,18 @@ namespace CoworkingReservation.Application.Services
                     newUser.PhotoId = photo.Id;
                     await _unitOfWork.Users.UpdateAsync(newUser);
                     await _unitOfWork.SaveChangesAsync();
+                    Console.WriteLine($"✅ Foto asociada al usuario {newUser.Id} con PhotoId: {photo.Id}");
                 }
                 catch (Exception ex)
                 {
                     // Si hay un error al subir la foto, lo registramos pero no fallamos el registro del usuario
-                    Console.WriteLine($"Error al subir foto de perfil: {ex.Message}");
+                    Console.WriteLine($"❌ Error al subir foto de perfil: {ex.Message}");
                     // Aquí podríamos usar un ILogger adecuado
                 }
+            }
+            else
+            {
+                Console.WriteLine("⚠️ No se recibió foto de perfil en el registro");
             }
 
             return newUser;
