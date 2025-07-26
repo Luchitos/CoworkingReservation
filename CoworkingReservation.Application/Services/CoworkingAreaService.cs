@@ -48,10 +48,6 @@ namespace CoworkingReservation.Application.Services
             if (coworkingSpace.HosterId != hosterId)
                 throw new UnauthorizedAccessException("You do not have permission to add an area.");
 
-            var currentTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
-            if (currentTotalCapacity + areaDto.Capacity > coworkingSpace.CapacityTotal)
-                throw new InvalidOperationException("Total area capacity exceeds the coworking space's maximum capacity.");
-
             var area = new CoworkingArea
             {
                 Type = areaDto.Type,
@@ -63,9 +59,15 @@ namespace CoworkingReservation.Application.Services
             };
 
             await _unitOfWork.CoworkingAreas.AddAsync(area);
+            
+            // Actualizar automáticamente la capacidad total del espacio
+            var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
+            coworkingSpace.CapacityTotal = newTotalCapacity;
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation($"Created coworking area {area.Id} in space {coworkingSpaceId}");
+            _logger.LogInformation($"Created coworking area {area.Id} in space {coworkingSpaceId}. Updated total capacity to {newTotalCapacity}");
 
             return area;
         }
@@ -74,18 +76,12 @@ namespace CoworkingReservation.Application.Services
             if (areaDtos == null || !areaDtos.Any())
                 return;
 
-            int currentTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
-            int totalNewCapacity = areaDtos.Sum(a => a.Capacity);
-
             var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
             if (coworkingSpace == null)
                 throw new KeyNotFoundException("Coworking space not found.");
 
             if (coworkingSpace.HosterId != hosterId)
                 throw new UnauthorizedAccessException("You do not have permission to add areas to this space.");
-
-            if (currentTotalCapacity + totalNewCapacity > coworkingSpace.CapacityTotal)
-                throw new InvalidOperationException("Total capacity of areas exceeds coworking space capacity.");
 
             var areas = areaDtos.Select(dto => new CoworkingArea
             {
@@ -98,7 +94,15 @@ namespace CoworkingReservation.Application.Services
             });
 
             await _unitOfWork.CoworkingAreas.AddRangeAsync(areas);
+            
+            // Actualizar automáticamente la capacidad total del espacio
+            var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
+            coworkingSpace.CapacityTotal = newTotalCapacity;
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            
             await _unitOfWork.SaveChangesAsync();
+            
+            _logger.LogInformation($"Added {areas.Count()} areas to space {coworkingSpaceId}. Updated total capacity to {newTotalCapacity}");
         }
 
         #endregion
@@ -125,9 +129,15 @@ namespace CoworkingReservation.Application.Services
             area.Type = dto.Type;
 
             await _unitOfWork.CoworkingAreas.UpdateAsync(area);
+            
+            // Actualizar automáticamente la capacidad total del espacio
+            var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(area.CoworkingSpaceId);
+            coworkingSpace.CapacityTotal = newTotalCapacity;
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation($"Updated coworking area {id}");
+            _logger.LogInformation($"Updated coworking area {id}. Updated total capacity to {newTotalCapacity}");
         }
 
         #endregion
@@ -148,9 +158,15 @@ namespace CoworkingReservation.Application.Services
                 throw new UnauthorizedAccessException("You do not have permission to delete this area.");
 
             await _unitOfWork.CoworkingAreas.DeleteAsync(id);
+            
+            // Actualizar automáticamente la capacidad total del espacio
+            var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(area.CoworkingSpaceId);
+            coworkingSpace.CapacityTotal = newTotalCapacity;
+            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+            
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation($"Deleted coworking area {id}");
+            _logger.LogInformation($"Deleted coworking area {id}. Updated total capacity to {newTotalCapacity}");
         }
         
         /// <summary>
