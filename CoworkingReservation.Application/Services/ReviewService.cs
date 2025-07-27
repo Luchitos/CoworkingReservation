@@ -222,5 +222,36 @@ namespace CoworkingReservation.Application.Services
             }
         }
 
+        /// <summary>
+        /// Obtiene todas las reseñas escritas por un usuario específico.
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <returns>Lista de reseñas del usuario</returns>
+        public async Task<IEnumerable<ReviewResponseDTO>> GetReviewsByUserAsync(int userId)
+        {
+            try
+            {
+                var reviews = await _reviewRepository.GetReviewsByUserAsync(userId);
+
+                return reviews.Select(review => new ReviewResponseDTO
+                {
+                    Id = review.Id,
+                    UserId = review.UserId,
+                    CoworkingSpaceId = review.CoworkingSpaceId,
+                    ReservationId = review.ReservationId,
+                    Rating = review.Rating,
+                    Comment = review.Comment ?? "",
+                    CreatedAt = review.CreatedAt,
+                    UserName = $"{review.User?.Name ?? "Usuario"} {review.User?.Lastname ?? ""}".Trim(),
+                    CoworkingSpaceName = review.CoworkingSpace?.Name ?? "Espacio de coworking"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al obtener reseñas del usuario {userId}: {ex.Message}");
+                throw new InvalidOperationException($"Error al obtener las reseñas del usuario: {ex.Message}", ex);
+            }
+        }
+
     }
 }

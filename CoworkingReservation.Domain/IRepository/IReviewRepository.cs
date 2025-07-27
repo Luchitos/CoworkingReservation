@@ -9,4 +9,6 @@ public interface IReviewRepository : IRepository<Review>
 
     Task<Review?> GetByUserAndReservationAsync(int userId, int reservationId);
 
+    Task<List<Review>> GetReviewsByUserAsync(int userId);
+
 }

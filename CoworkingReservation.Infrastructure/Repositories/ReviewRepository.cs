@@ -48,4 +48,29 @@ public class ReviewRepository : Repository<Review>, IReviewRepository
             .FirstOrDefaultAsync(r => r.UserId == userId && r.ReservationId == reservationId);
     }
 
+    public async Task<List<Review>> GetReviewsByUserAsync(int userId)
+    {
+        try
+        {
+            return await _context.Reviews
+                .Include(r => r.User)
+                .Include(r => r.CoworkingSpace)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log del error específico para debugging
+            Console.WriteLine($"Error en GetReviewsByUserAsync: {ex.Message}");
+            Console.WriteLine($"UserId: {userId}");
+            
+            // Intentar una consulta más simple para identificar el problema
+            var reviewCount = await _context.Reviews.CountAsync(r => r.UserId == userId);
+            Console.WriteLine($"Total reviews para User {userId}: {reviewCount}");
+            
+            throw; // Re-lanzar la excepción para que el controlador la maneje
+        }
+    }
+
 }

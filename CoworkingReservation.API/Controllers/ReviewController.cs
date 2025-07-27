@@ -317,5 +317,52 @@ namespace CoworkingReservation.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Obtiene todas las reseñas escritas por el usuario autenticado.
+        /// </summary>
+        /// <returns>Lista de reseñas del usuario</returns>
+        /// <response code="200">Reseñas encontradas</response>
+        /// <response code="401">Usuario no autenticado</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("by-user")]
+        [Authorize]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetReviewsByUser()
+        {
+            try
+            {
+                if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId) || userId <= 0)
+                {
+                    return Unauthorized(new { 
+                        success = false, 
+                        error = "Usuario no autenticado correctamente.", 
+                        status = 401 
+                    });
+                }
+
+                var reviews = await _reviewService.GetReviewsByUserAsync(userId);
+                
+                return Ok(new { 
+                    success = true,
+                    data = reviews,
+                    status = 200
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log del error para debugging
+                Console.WriteLine($"Error en GetReviewsByUser: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                
+                return StatusCode(500, new { 
+                    success = false, 
+                    error = "Error interno del servidor al obtener las reseñas del usuario.", 
+                    status = 500 
+                });
+            }
+        }
+
     }
 }

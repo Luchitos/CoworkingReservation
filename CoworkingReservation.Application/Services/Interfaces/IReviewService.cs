@@ -10,5 +10,6 @@ namespace CoworkingReservation.Application.Services.Interfaces
         Task<int> CreateReviewAsync(CreateReviewRequest request, int userId);
         Task<CoworkingReviewResponse> GetReviewsByCoworkingSpaceAsync(int coworkingSpaceId);
         Task<ReviewResponseDTO?> GetReviewByUserAndReservationAsync(int userId, int reservationId);
+        Task<IEnumerable<ReviewResponseDTO>> GetReviewsByUserAsync(int userId);
     }
 }
