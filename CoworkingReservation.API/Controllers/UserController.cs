@@ -171,7 +171,60 @@ namespace CoworkingReservation.API.Controllers
         {
             var userId = TokenUtils.GetUserIdFromToken(User);
             var user = await _userService.GetByIdAsync(userId);
-            return Ok(Responses.Response.Success(user));
+            
+            if (user == null)
+            {
+                return NotFound(Responses.Response.Failure("Usuario no encontrado"));
+            }
+
+            var userDetails = new UserDetailsDTO
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Lastname = user.Lastname,
+                UserName = user.UserName ?? user.Email.Split('@')[0], // Fallback si UserName está vacío
+                Cuit = user.Cuit,
+                Email = user.Email,
+                Role = user.Role,
+                Phone = user.Phone,
+                Address = user.Address,
+                IsActive = user.IsActive,
+                CreationDate = user.CreationDate,
+                Photo = user.Photo
+            };
+
+            return Ok(Responses.Response.Success(userDetails));
+        }
+
+        /// <summary>
+        /// Endpoint temporal para verificar y actualizar usuarios sin UserName
+        /// </summary>
+        [HttpPost("fix-usernames")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> FixUsernames()
+        {
+            try
+            {
+                var users = await _userService.GetAllAsync();
+                var updatedCount = 0;
+
+                foreach (var user in users)
+                {
+                    if (string.IsNullOrEmpty(user.UserName))
+                    {
+                        // Generar un UserName basado en el email
+                        user.UserName = user.Email.Split('@')[0];
+                        await _userService.UpdateProfileFieldAsync(user.Id, "UserName", user.UserName);
+                        updatedCount++;
+                    }
+                }
+
+                return Ok(Responses.Response.Success($"Se actualizaron {updatedCount} usuarios"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(Responses.Response.Failure($"Error: {ex.Message}"));
+            }
         }
 
         /// <summary>
