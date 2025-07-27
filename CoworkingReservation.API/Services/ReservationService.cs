@@ -127,7 +127,7 @@ namespace CoworkingReservation.API.Services
                     EndDate = request.EndDate,
                     Status = ReservationStatus.Pending, // Confirmar automáticamente por ahora
                     TotalPrice = totalPrice,
-                    PaymentMethod = PaymentMethod.CreditCard, // Por defecto
+                    PaymentMethod = PaymentMethodType.CreditCard, // Por defecto
                     CreatedAt = DateTime.UtcNow,
                     ReservationDetails = new List<ReservationDetail>()
                 };

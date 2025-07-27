@@ -12,7 +12,7 @@ namespace CoworkingReservation.Application.DTOs.Reservation
         public DateTime EndDate { get; set; }
         public ReservationStatus Status { get; set; }
         public decimal TotalPrice { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
+        public PaymentMethodType PaymentMethod { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<ReservationDetailDTO> Details { get; set; }
     }

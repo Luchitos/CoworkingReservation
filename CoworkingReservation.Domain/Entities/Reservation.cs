@@ -13,7 +13,7 @@ namespace CoworkingReservation.Domain.Entities
         public DateTime EndDate { get; set; } // Fecha de fin
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending; // Estado de la reserva
         public decimal TotalPrice { get; set; } // Precio total
-        public PaymentMethod PaymentMethod { get; set; }
+        public PaymentMethodType PaymentMethod { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         

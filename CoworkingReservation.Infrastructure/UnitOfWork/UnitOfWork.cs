@@ -19,7 +19,9 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
 
         public UnitOfWork(ApplicationDbContext context, IUserRepository userRepository, ICoworkingSpaceRepository coworkingSpaceRepository, IAuditLogRepository auditLogRepository, IAddressRepository addressRepository,
             ICoworkingAreaRepository coworkingAreaRepository,
-            ICoworkingAvailabilityRepository coworkingAvailabilityRepository)
+            ICoworkingAvailabilityRepository coworkingAvailabilityRepository,
+            IPaymentMethodRepository paymentMethodRepository,
+            ITransactionRepository transactionRepository)
         {
             _context = context;
             Users = userRepository;
@@ -37,7 +39,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
             FavoriteCoworkingSpaces = new FavoriteCoworkingSpaceRepository(_context);
             CoworkingAreas = coworkingAreaRepository;
             CoworkingAvailabilities = coworkingAvailabilityRepository;
-
+            PaymentMethods = paymentMethodRepository;
+            Transactions = transactionRepository;
         }
         public IRepository<UserPhoto> UserPhotos { get; private set; }
 
@@ -55,6 +58,8 @@ namespace CoworkingReservation.Infrastructure.UnitOfWork
         public ICoworkingAreaRepository CoworkingAreas { get; private set; }
         public ICoworkingAvailabilityRepository CoworkingAvailabilities { get; private set; }
         public IFavoriteCoworkingSpaceRepository FavoriteCoworkingSpaces { get; private set; }
+        public IPaymentMethodRepository PaymentMethods { get; private set; }
+        public ITransactionRepository Transactions { get; private set; }
 
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)

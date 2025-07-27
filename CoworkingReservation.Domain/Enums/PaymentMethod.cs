@@ -1,6 +1,6 @@
 namespace CoworkingReservation.Domain.Enums
 {
-    public enum PaymentMethod
+    public enum PaymentMethodType
     {
         Cash = 1,
         CreditCard = 2,

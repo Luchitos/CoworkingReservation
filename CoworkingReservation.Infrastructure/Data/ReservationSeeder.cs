@@ -372,13 +372,13 @@ namespace CoworkingReservation.Infrastructure.Data
             };
         }
         
-        private static PaymentMethod GetRandomPaymentMethod(Random random)
+        private static PaymentMethodType GetRandomPaymentMethod(Random random)
         {
             return random.NextDouble() switch
             {
-                < 0.6 => PaymentMethod.CreditCard,  // 60%
-                < 0.9 => PaymentMethod.DebitCard,   // 30%
-                _ => PaymentMethod.Cash             // 10%
+                < 0.6 => PaymentMethodType.CreditCard,  // 60%
+                < 0.9 => PaymentMethodType.DebitCard,   // 30%
+                _ => PaymentMethodType.Cash             // 10%
             };
         }
         
@@ -459,9 +459,9 @@ namespace CoworkingReservation.Infrastructure.Data
             Console.WriteLine($"   ⏳ Pendientes: {stats.GetValueOrDefault(ReservationStatus.Pending, 0)}");
             Console.WriteLine($"   ✔️ Completadas: {stats.GetValueOrDefault(ReservationStatus.Completed, 0)}");
             Console.WriteLine($"   ❌ Canceladas: {stats.GetValueOrDefault(ReservationStatus.Cancelled, 0)}");
-            Console.WriteLine($"   💳 Pago con tarjeta de crédito: {paymentStats.GetValueOrDefault(PaymentMethod.CreditCard, 0)}");
-            Console.WriteLine($"   💳 Pago con tarjeta de débito: {paymentStats.GetValueOrDefault(PaymentMethod.DebitCard, 0)}");
-            Console.WriteLine($"   💵 Pago en efectivo: {paymentStats.GetValueOrDefault(PaymentMethod.Cash, 0)}");
+            Console.WriteLine($"   💳 Pago con tarjeta de crédito: {paymentStats.GetValueOrDefault(PaymentMethodType.CreditCard, 0)}");
+            Console.WriteLine($"   💳 Pago con tarjeta de débito: {paymentStats.GetValueOrDefault(PaymentMethodType.DebitCard, 0)}");
+            Console.WriteLine($"   💵 Pago en efectivo: {paymentStats.GetValueOrDefault(PaymentMethodType.Cash, 0)}");
             Console.WriteLine($"   💰 Ingresos totales (sin canceladas): ${totalRevenue:N2}");
         }
 

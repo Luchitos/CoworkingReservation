@@ -20,6 +20,6 @@ namespace CoworkingReservation.Application.DTOs.Reservation
         public List<int> AreaIds { get; set; }
 
         [Required]
-        public PaymentMethod PaymentMethod { get; set; }
+        public PaymentMethodType PaymentMethod { get; set; }
     }
 } 

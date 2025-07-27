@@ -151,7 +151,7 @@ namespace CoworkingReservation.Tests.Helpers
                 EndDate = endDate,
                 Status = status,
                 TotalPrice = area.PricePerDay * 2,
-                PaymentMethod = PaymentMethod.CreditCard,
+                PaymentMethod = PaymentMethodType.CreditCard,
                 CreatedAt = DateTime.UtcNow,
                 ReservationDetails = new List<ReservationDetail>
                 {

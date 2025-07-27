@@ -33,6 +33,12 @@ namespace CoworkingReservation.Domain.Entities
         // Relación con Reseñas
         public List<Review> Reviews { get; set; } = new List<Review>();
 
+        // Relación con Métodos de Pago
+        public ICollection<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>();
+
+        // Relación con Transacciones
+        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
         // Foto de perfil (archivo externo)
         public int? PhotoId { get; set; } // Clave foránea (nullable)
         public UserPhoto Photo { get; set; }

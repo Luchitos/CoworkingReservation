@@ -26,6 +26,8 @@ namespace CoworkingReservation.Infrastructure.Data
         public DbSet<CoworkingArea> CoworkingAreas { get; set; }
         public DbSet<CoworkingAvailability> CoworkingAvailabilities { get; set; }
         public DbSet<CoworkingSpacePhoto> CoworkingSpacePhotos { get; set; }
+        public DbSet<PaymentMethod> PaymentMethods { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configurar clave primaria compuesta para FavoriteCoworkingSpace
@@ -162,6 +164,41 @@ namespace CoworkingReservation.Infrastructure.Data
                 .HasMany(cs => cs.SpecialFeatures)
                 .WithMany()
                 .UsingEntity(j => j.ToTable("CoworkingSpaceSpecialFeature"));
+
+            // **Configuraciones para PaymentMethod y Transaction**
+
+            // **PaymentMethod -> User**
+            modelBuilder.Entity<PaymentMethod>()
+                .HasOne(pm => pm.User)
+                .WithMany(u => u.PaymentMethods)
+                .HasForeignKey(pm => pm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // **Transaction -> User**
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.User)
+                .WithMany(u => u.Transactions)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // **Transaction -> PaymentMethod**
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.PaymentMethod)
+                .WithMany(pm => pm.Transactions)
+                .HasForeignKey(t => t.PaymentMethodId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // **Transaction -> Reservation**
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Reservation)
+                .WithMany()
+                .HasForeignKey(t => t.ReservationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar el tipo de columna para Amount
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.Amount)
+                .HasColumnType("decimal(18,2)");
 
             base.OnModelCreating(modelBuilder);
         }

@@ -45,6 +45,8 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
             var auditLogRepository = new AuditLogRepository(_context);
             var addressRepository = new AddressRepository(_context);
             var coworkingAvailabilityRepository = new CoworkingAvailabilityRepository(_context);
+            var paymentMethodRepository = new PaymentMethodRepository(_context);
+            var transactionRepository = new TransactionRepository(_context);
 
             var unitOfWork = new UnitOfWork(
                 _context,
@@ -53,7 +55,9 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 auditLogRepository,
                 addressRepository,
                 coworkingAreaRepository,
-                coworkingAvailabilityRepository
+                coworkingAvailabilityRepository,
+                paymentMethodRepository,
+                transactionRepository
             );
 
             _reservationService = new ReservationService(reservationRepository, coworkingAreaRepository, unitOfWork);
@@ -385,7 +389,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 EndDate = DateTime.UtcNow.Date.AddDays(-1),
                 Status = ReservationStatus.Completed,
                 TotalPrice = area.PricePerDay * 2,
-                PaymentMethod = PaymentMethod.CreditCard,
+                PaymentMethod = PaymentMethodType.CreditCard,
                 CreatedAt = DateTime.UtcNow.AddDays(-4),
                 ReservationDetails = new List<ReservationDetail>
                 {
@@ -415,7 +419,7 @@ namespace CoworkingReservation.Tests.IntegrationTests.Reservations
                 EndDate = DateTime.UtcNow.Date.AddDays(-1),
                 Status = ReservationStatus.Pending,
                 TotalPrice = area.PricePerDay * 2,
-                PaymentMethod = PaymentMethod.CreditCard,
+                PaymentMethod = PaymentMethodType.CreditCard,
                 CreatedAt = DateTime.UtcNow.AddDays(-3),
                 ReservationDetails = new List<ReservationDetail>
                 {

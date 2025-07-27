@@ -46,6 +46,8 @@ namespace CoworkingReservation.Tests.IntegrationTests.Users
             var addressRepository = new AddressRepository(_context);
             var coworkingAreaRepository = new CoworkingAreaRepository(_context);
             var coworkingAvailabilityRepository = new CoworkingAvailabilityRepository(_context);
+            var paymentMethodRepository = new PaymentMethodRepository(_context);
+            var transactionRepository = new TransactionRepository(_context);
 
             var unitOfWork = new Infrastructure.UnitOfWork.UnitOfWork(
                 _context,
@@ -54,7 +56,9 @@ namespace CoworkingReservation.Tests.IntegrationTests.Users
                 auditLogRepository,
                 addressRepository,
                 coworkingAreaRepository,
-                coworkingAvailabilityRepository
+                coworkingAvailabilityRepository,
+                paymentMethodRepository,
+                transactionRepository
             );
 
             _userService = new UserService(
