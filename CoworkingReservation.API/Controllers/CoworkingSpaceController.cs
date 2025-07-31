@@ -328,17 +328,18 @@ namespace CoworkingReservation.API.Controllers
         }
 
         /// <summary>
-        /// Obtiene todos los espacios de coworking creados por el hoster autenticado.
+        /// Obtiene todos los espacios de coworking creados por el usuario autenticado.
+        /// Si el usuario no tiene espacios, devuelve una lista vacía en lugar de un error.
         /// </summary>
-        /// <returns>Lista de coworkings del hoster.</returns>
+        /// <returns>Lista de coworkings del usuario.</returns>
         [HttpGet("my-coworkings")]
-        [Authorize(Roles = "Hoster")]
+        [Authorize]
         public async Task<IActionResult> GetMyCoworkings()
         {
             try
             {
-                var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var spaces = await _coworkingSpaceService.GetMyCoworkingsAsync(hosterId);
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var spaces = await _coworkingSpaceService.GetMyCoworkingsAsync(userId);
 
                 var response = new CoworkingSpaceListResponseDTO
                 {
