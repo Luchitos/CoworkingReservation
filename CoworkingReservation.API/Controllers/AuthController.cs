@@ -4,6 +4,7 @@ using CoworkingReservation.Domain.Entities;
 using CoworkingReservation.Application.DTOs.User;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CoworkingReservation.API.Controllers
 {
@@ -76,6 +77,53 @@ namespace CoworkingReservation.API.Controllers
         public bool Logout()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Renueva el token JWT del usuario autenticado.
+        /// </summary>
+        /// <returns>Nuevo token JWT con 60 minutos de duración.</returns>
+        [HttpPost("refresh")]
+        [Authorize]
+        public async Task<IActionResult> RefreshToken()
+        {
+            try
+            {
+                // Obtener el userId del token actual
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                var emailClaim = User.FindFirst(ClaimTypes.Email);
+                var roleClaim = User.FindFirst(ClaimTypes.Role);
+
+                if (userIdClaim == null || emailClaim == null || roleClaim == null)
+                {
+                    return Unauthorized(Responses.Response.Failure("Token inválido o incompleto."));
+                }
+
+                var userId = int.Parse(userIdClaim.Value);
+                var email = emailClaim.Value;
+                var role = roleClaim.Value;
+
+                // Verificar que el usuario existe y está activo
+                var user = await _userService.GetByIdAsync(userId);
+                if (user == null || !user.IsActive)
+                {
+                    return Unauthorized(Responses.Response.Failure("Usuario no encontrado o inactivo."));
+                }
+
+                // Generar nuevo token
+                var newToken = _tokenService.GenerateToken(userId, email, role);
+
+                return Ok(Responses.Response.Success(new
+                {
+                    Token = newToken,
+                    ExpiresIn = 60 * 60, // 60 minutos en segundos
+                    Message = "Token renovado exitosamente"
+                }));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, Responses.Response.Failure($"Error al renovar el token: {ex.Message}"));
+            }
         }
     }
 } 
