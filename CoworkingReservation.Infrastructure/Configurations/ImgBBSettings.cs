@@ -26,5 +26,15 @@ namespace CoworkingReservation.Infrastructure.Configurations
         /// Tiempo de expiración en segundos para las imágenes (0 = nunca)
         /// </summary>
         public int ExpirationTime { get; set; } = 0;
+        
+        /// <summary>
+        /// Timeout en segundos para las peticiones HTTP a ImgBB
+        /// </summary>
+        public int TimeoutSeconds { get; set; } = 300;
+        
+        /// <summary>
+        /// Número máximo de reintentos para subir imágenes
+        /// </summary>
+        public int MaxRetries { get; set; } = 3;
     }
 } 

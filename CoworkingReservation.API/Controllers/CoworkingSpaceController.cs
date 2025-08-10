@@ -72,9 +72,25 @@ namespace CoworkingReservation.API.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromForm] CreateCoworkingSpaceDTO dto)
         {
-            var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var space = await _coworkingSpaceService.CreateAsync(dto, hosterId);
-            return Ok(Responses.Response.Success("Coworking space created successfully."));
+            try
+            {
+                var hosterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                Console.WriteLine($"🔍 DEBUG: Creando coworking space para hoster {hosterId}");
+                Console.WriteLine($"🔍 DEBUG: Título: {dto.Title}");
+                Console.WriteLine($"🔍 DEBUG: Capacidad Total: {dto.CapacityTotal}");
+                Console.WriteLine($"🔍 DEBUG: Áreas JSON recibido: {dto.AreasJson?.Length ?? 0} caracteres");
+                
+                var space = await _coworkingSpaceService.CreateAsync(dto, hosterId);
+                Console.WriteLine($"✅ DEBUG: Coworking space creado exitosamente con ID: {space.Id}");
+                
+                return Ok(Responses.Response.Success("Coworking space created successfully."));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ DEBUG: Error en Create: {ex.Message}");
+                Console.WriteLine($"❌ DEBUG: Stack trace: {ex.StackTrace}");
+                return StatusCode(500, Responses.Response.Failure($"Error creating coworking space: {ex.Message}"));
+            }
         }
 
         [HttpPut("{id}")]

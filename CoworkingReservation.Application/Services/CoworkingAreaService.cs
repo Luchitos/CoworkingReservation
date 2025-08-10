@@ -74,7 +74,12 @@ namespace CoworkingReservation.Application.Services
         public async Task AddAreasToCoworkingAsync(IEnumerable<CoworkingAreaDTO> areaDtos, int coworkingSpaceId, int hosterId)
         {
             if (areaDtos == null || !areaDtos.Any())
+            {
+                Console.WriteLine($"⚠️ DEBUG: No se recibieron áreas para procesar en el espacio {coworkingSpaceId}");
                 return;
+            }
+
+            Console.WriteLine($"🔍 DEBUG: Iniciando procesamiento de {areaDtos.Count()} áreas para el espacio {coworkingSpaceId}");
 
             var coworkingSpace = await _unitOfWork.CoworkingSpaces.GetByIdAsync(coworkingSpaceId);
             if (coworkingSpace == null)
@@ -83,26 +88,51 @@ namespace CoworkingReservation.Application.Services
             if (coworkingSpace.HosterId != hosterId)
                 throw new UnauthorizedAccessException("You do not have permission to add areas to this space.");
 
+            Console.WriteLine($"🔍 DEBUG: Validaciones de permisos pasadas para el espacio {coworkingSpaceId}");
+
             var areas = areaDtos.Select(dto => new CoworkingArea
             {
                 Capacity = dto.Capacity,
                 Description = dto.Description,
                 PricePerDay = dto.PricePerDay,
-                Available = dto.Available,
+                Available = dto.Available || dto.disponible, // Usar cualquiera de las dos propiedades
                 Type = dto.Type,
                 CoworkingSpaceId = coworkingSpaceId
-            });
+            }).ToList();
 
-            await _unitOfWork.CoworkingAreas.AddRangeAsync(areas);
+            Console.WriteLine($"🔍 DEBUG: {areas.Count} áreas mapeadas correctamente");
             
-            // Actualizar automáticamente la capacidad total del espacio
-            var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
-            coworkingSpace.CapacityTotal = newTotalCapacity;
-            await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
-            
-            await _unitOfWork.SaveChangesAsync();
-            
-            _logger.LogInformation($"Added {areas.Count()} areas to space {coworkingSpaceId}. Updated total capacity to {newTotalCapacity}");
+            // Log de las primeras áreas para verificar el mapeo
+            if (areas.Any())
+            {
+                var firstArea = areas.First();
+                Console.WriteLine($"🔍 DEBUG: Primera área - Available: {firstArea.Available}, Type: {firstArea.Type}, Description: {firstArea.Description}");
+                
+                var lastArea = areas.Last();
+                Console.WriteLine($"🔍 DEBUG: Última área - Available: {lastArea.Available}, Type: {lastArea.Type}, Description: {lastArea.Description}");
+            }
+
+            try
+            {
+                await _unitOfWork.CoworkingAreas.AddRangeAsync(areas);
+                Console.WriteLine($"✅ DEBUG: {areas.Count} áreas agregadas al contexto de Entity Framework");
+                
+                // Actualizar automáticamente la capacidad total del espacio
+                var newTotalCapacity = await GetTotalCapacityByCoworkingSpaceIdAsync(coworkingSpaceId);
+                coworkingSpace.CapacityTotal = newTotalCapacity;
+                await _unitOfWork.CoworkingSpaces.UpdateAsync(coworkingSpace);
+                
+                await _unitOfWork.SaveChangesAsync();
+                Console.WriteLine($"✅ DEBUG: Cambios guardados en la base de datos. Nueva capacidad total: {newTotalCapacity}");
+                
+                _logger.LogInformation($"Added {areas.Count()} areas to space {coworkingSpaceId}. Updated total capacity to {newTotalCapacity}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ DEBUG: Error al procesar áreas: {ex.Message}");
+                Console.WriteLine($"❌ DEBUG: Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         #endregion

@@ -138,6 +138,23 @@ namespace CoworkingReservation.Application.Services
                         PropertyNameCaseInsensitive = true
                     }) ?? new List<CoworkingAreaDTO>();
 
+                Console.WriteLine($"🔍 DEBUG: AreasJson deserializado: {areas.Count} áreas encontradas");
+                if (areas.Any())
+                {
+                    var firstArea = areas.First();
+                    Console.WriteLine($"🔍 DEBUG: Primera área - Type: {firstArea.Type}, Capacity: {firstArea.Capacity}, Available: {firstArea.Available}, disponible: {firstArea.disponible}");
+                    
+                    var lastArea = areas.Last();
+                    Console.WriteLine($"🔍 DEBUG: Última área - Type: {lastArea.Type}, Capacity: {lastArea.Capacity}, Available: {lastArea.Available}, disponible: {lastArea.disponible}");
+                }
+
+                // Validar límite de áreas para evitar problemas de performance
+                const int maxAreas = 1000;
+                if (areas.Count > maxAreas)
+                {
+                    throw new InvalidOperationException($"El número máximo de áreas permitidas es {maxAreas}. Se recibieron {areas.Count} áreas.");
+                }
+
                 // Create the coworking space first, without related entities
                 await _unitOfWork.CoworkingSpaces.AddAsync(coworkingSpace);
                 await _unitOfWork.SaveChangesAsync();
@@ -193,18 +210,31 @@ namespace CoworkingReservation.Application.Services
                 }
 
                 await AddPhotosToCoworkingSpace(spaceDto.Photos, coworkingSpace.Id);
+                
                 // Nueva línea: agregar áreas con servicio externo
                 if (areas.Any())
                 {
+                    Console.WriteLine($"🔍 DEBUG: Procesando {areas.Count()} áreas para el espacio {coworkingSpace.Id}");
+                    Console.WriteLine($"🔍 DEBUG: Primera área - Type: {areas.First().Type}, Capacity: {areas.First().Capacity}, Price: {areas.First().PricePerDay}");
+                    Console.WriteLine($"🔍 DEBUG: Última área - Type: {areas.Last().Type}, Capacity: {areas.Last().Capacity}, Price: {areas.Last().PricePerDay}");
+                    
                     await _coworkingAreaService.AddAreasToCoworkingAsync(areas, coworkingSpace.Id, userId);
+                    Console.WriteLine($"✅ DEBUG: Áreas procesadas exitosamente para el espacio {coworkingSpace.Id}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ DEBUG: No se encontraron áreas para procesar en el espacio {coworkingSpace.Id}");
                 }
                 await transaction.CommitAsync();
+                Console.WriteLine($"✅ DEBUG: Transacción completada exitosamente para el espacio {coworkingSpace.Id}");
 
                 _ = Task.Run(async () => await _approvalJob.Run());
                 return coworkingSpace;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"❌ DEBUG: Error en transacción: {ex.Message}");
+                Console.WriteLine($"❌ DEBUG: Haciendo rollback de la transacción");
                 await transaction.RollbackAsync();
                 throw;
             }
@@ -447,32 +477,76 @@ namespace CoworkingReservation.Application.Services
                     throw new ArgumentException("You can upload up to 6 photos only.");
 
                 var coworkingPhotos = new List<CoworkingSpacePhoto>();
+                var failedPhotos = new List<string>();
 
                 for (int i = 0; i < photos.Count; i++)
                 {
-                    // Renombrar el archivo antes de subir para garantizar que el índice sea explícito
-                    var originalFileName = photos[i].FileName;
-                    string extension = Path.GetExtension(originalFileName);
-                    string tempFileName = $"photo{i + 1}{extension}"; // Asegura índices secuenciales (1-based)
-
-                    // Usar el nuevo servicio para subir a ImgBB con organización por carpetas
-                    string imageUrl = await _imageUploadService.UploadCoworkingSpaceImageAsync(photos[i], coworkingSpaceId);
-
-                    var coworkingPhoto = new CoworkingSpacePhoto
+                    try
                     {
-                        FileName = tempFileName, // Guardar el nombre con índice
-                        FilePath = imageUrl, // URL de ImgBB con organización por carpetas
-                        MimeType = photos[i].ContentType,
-                        UploadedAt = DateTime.UtcNow,
-                        CoworkingSpaceId = coworkingSpaceId,
-                        IsCoverPhoto = (i == 0) // La primera imagen será la portada
-                    };
+                        // Validar tamaño de archivo (máximo 10MB por imagen)
+                        if (photos[i].Length > 10 * 1024 * 1024)
+                        {
+                            throw new InvalidOperationException($"La imagen {photos[i].FileName} excede el límite de 10MB");
+                        }
 
-                    coworkingPhotos.Add(coworkingPhoto);
+                        // Renombrar el archivo antes de subir para garantizar que el índice sea explícito
+                        var originalFileName = photos[i].FileName;
+                        string extension = Path.GetExtension(originalFileName);
+                        string tempFileName = $"photo{i + 1}{extension}"; // Asegura índices secuenciales (1-based)
+
+                        // Usar el nuevo servicio para subir a ImgBB con organización por carpetas
+                        string imageUrl = await _imageUploadService.UploadCoworkingSpaceImageAsync(photos[i], coworkingSpaceId);
+
+                        var coworkingPhoto = new CoworkingSpacePhoto
+                        {
+                            FileName = tempFileName, // Guardar el nombre con índice
+                            FilePath = imageUrl, // URL de ImgBB con organización por carpetas
+                            MimeType = photos[i].ContentType,
+                            UploadedAt = DateTime.UtcNow,
+                            CoworkingSpaceId = coworkingSpaceId,
+                            IsCoverPhoto = (i == 0) // La primera imagen será la portada
+                        };
+
+                        coworkingPhotos.Add(coworkingPhoto);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Registrar el error pero continuar con las demás imágenes
+                        Console.WriteLine($"Error al subir imagen {photos[i].FileName}: {ex.Message}");
+                        failedPhotos.Add(photos[i].FileName);
+                        
+                        // Si es la primera imagen (portada), usar una imagen por defecto
+                        if (i == 0)
+                        {
+                            var defaultPhoto = new CoworkingSpacePhoto
+                            {
+                                FileName = "default-cover.jpg",
+                                FilePath = "https://via.placeholder.com/800x600/cccccc/666666?text=Imagen+No+Disponible",
+                                MimeType = "image/jpeg",
+                                UploadedAt = DateTime.UtcNow,
+                                CoworkingSpaceId = coworkingSpaceId,
+                                IsCoverPhoto = true
+                            };
+                            coworkingPhotos.Add(defaultPhoto);
+                        }
+                    }
                 }
 
-                await _unitOfWork.CoworkingSpacePhotos.AddRangeAsync(coworkingPhotos);
-                await _unitOfWork.SaveChangesAsync();
+                // Guardar las imágenes que se subieron exitosamente
+                if (coworkingPhotos.Any())
+                {
+                    await _unitOfWork.CoworkingSpacePhotos.AddRangeAsync(coworkingPhotos);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Si hubo errores, lanzar una excepción con información
+                if (failedPhotos.Any())
+                {
+                    throw new InvalidOperationException(
+                        $"Error al subir algunas imágenes: {string.Join(", ", failedPhotos)}. " +
+                        $"Se subieron {coworkingPhotos.Count} de {photos.Count} imágenes correctamente."
+                    );
+                }
             }
         }
 

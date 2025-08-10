@@ -102,8 +102,13 @@ builder.Services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<ImgBBSettings>(builder.Configuration.GetSection("ImgBBSettings"));
 
-// Registrar HttpClient para ImgBB
-builder.Services.AddHttpClient<IImageUploadService, ImgBBImageUploadService>();
+// Registrar HttpClient para ImgBB con timeout configurado
+builder.Services.AddHttpClient<IImageUploadService, ImgBBImageUploadService>(client =>
+{
+    var imgBBSettings = builder.Configuration.GetSection("ImgBBSettings").Get<ImgBBSettings>();
+    client.Timeout = TimeSpan.FromSeconds(imgBBSettings?.TimeoutSeconds ?? 300); // 5 minutos por defecto
+    client.DefaultRequestHeaders.Add("User-Agent", "CoworkingReservation-API/1.0");
+});
 
 builder.Services.Configure<FormOptions>(options =>
 {

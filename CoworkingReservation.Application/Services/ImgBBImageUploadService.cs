@@ -155,6 +155,12 @@ namespace CoworkingReservation.Application.Services
         {
             try
             {
+                // Validar tamaño de imagen (máximo 32MB para ImgBB)
+                if (imageBytes.Length > 32 * 1024 * 1024)
+                {
+                    throw new InvalidOperationException($"La imagen {fileName} excede el límite de 32MB de ImgBB");
+                }
+
                 // Convertir la imagen a base64
                 var base64Image = Convert.ToBase64String(imageBytes);
                 
@@ -216,9 +222,58 @@ namespace CoworkingReservation.Application.Services
                     formContent.Add(new StringContent(_imgBBSettings.ExpirationTime.ToString()), "expiration");
                 }
                 
-                // Realizar la solicitud a ImgBB
-                var response = await _httpClient.PostAsync(_imgBBSettings.ApiUrl, formContent);
-                response.EnsureSuccessStatusCode();
+                // Realizar la solicitud a ImgBB con retry logic
+                HttpResponseMessage response = null;
+                int maxRetries = 3;
+                int currentRetry = 0;
+                
+                while (currentRetry < maxRetries)
+                {
+                    try
+                    {
+                        _logger.LogInformation($"Intentando subir imagen {fileName} a ImgBB (intento {currentRetry + 1}/{maxRetries})");
+                        
+                        response = await _httpClient.PostAsync(_imgBBSettings.ApiUrl, formContent);
+                        
+                        if (response.IsSuccessStatusCode)
+                        {
+                            break; // Éxito, salir del bucle
+                        }
+                        
+                        // Si no es exitoso, verificar si es un error temporal
+                        if (response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout ||
+                            response.StatusCode == System.Net.HttpStatusCode.RequestTimeout ||
+                            response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                        {
+                            currentRetry++;
+                            if (currentRetry < maxRetries)
+                            {
+                                _logger.LogWarning($"Timeout en intento {currentRetry} para {fileName}. Reintentando en {currentRetry * 2} segundos...");
+                                await Task.Delay(currentRetry * 2000); // Backoff exponencial
+                                continue;
+                            }
+                        }
+                        
+                        // Si no es un error temporal o se agotaron los reintentos, lanzar excepción
+                        response.EnsureSuccessStatusCode();
+                    }
+                    catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+                    {
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            _logger.LogWarning($"Timeout en intento {currentRetry} para {fileName}. Reintentando en {currentRetry * 2} segundos...");
+                            await Task.Delay(currentRetry * 2000);
+                            continue;
+                        }
+                        throw new TimeoutException($"Timeout al subir imagen {fileName} después de {maxRetries} intentos", ex);
+                    }
+                }
+                
+                if (response == null || !response.IsSuccessStatusCode)
+                {
+                    throw new HttpRequestException($"Error al subir imagen {fileName}. Status: {response?.StatusCode}");
+                }
                 
                 // Parsear la respuesta
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -230,12 +285,14 @@ namespace CoworkingReservation.Application.Services
                     throw new Exception("La respuesta de ImgBB no contiene datos válidos");
                 }
                 
+                _logger.LogInformation($"Imagen {fileName} subida exitosamente a ImgBB");
+                
                 // Devolver la URL de la imagen
                 return imgBBResponse.Data.Url;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al subir imagen a ImgBB");
+                _logger.LogError(ex, "Error al subir imagen {FileName} a ImgBB", fileName);
                 throw;
             }
         }
