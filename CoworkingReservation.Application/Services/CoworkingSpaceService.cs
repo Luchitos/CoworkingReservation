@@ -960,6 +960,12 @@ namespace CoworkingReservation.Application.Services
                     FROM CoworkingSpaces cs
                     WHERE cs.IsActive = 1 AND cs.Status = 1";
 
+                // Excluir espacios que pertenecen al usuario actual (si está autenticado)
+                if (userId.HasValue)
+                {
+                    baseQuery += $" AND cs.HosterId != {userId.Value}";
+                }
+
                 // Agregar filtro de capacidad si existe
                 if (capacity.HasValue)
                 {

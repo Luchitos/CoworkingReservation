@@ -66,6 +66,21 @@ namespace CoworkingReservation.API.Services
         {
             try
             {
+                // Log para debugging
+                Console.WriteLine($"🔍 DEBUG: Método de pago recibido: {request.PaymentMethod}");
+                Console.WriteLine($"🔍 DEBUG: Tipo de método de pago: {request.PaymentMethod.GetType().Name}");
+                
+                // Validaciones básicas
+                if (request.CoworkingSpaceId <= 0)
+                {
+                    throw new ArgumentException("ID de espacio de coworking inválido");
+                }
+
+                if (request.AreaIds == null || !request.AreaIds.Any())
+                {
+                    throw new ArgumentException("Debe seleccionar al menos un área para reservar");
+                }
+
                 // Normalizar las fechas para ignorar la hora
                 request.StartDate = request.StartDate.Date;
                 request.EndDate = request.EndDate.Date;
@@ -103,20 +118,26 @@ namespace CoworkingReservation.API.Services
                     throw new InvalidOperationException("El hoster no puede reservar en su propio coworking.");
                 // 2. Obtener las áreas seleccionadas para calcular precio
                 var areas = await _areaRepository.GetAreasAsync(request.AreaIds);
-                if (areas == null || !areas.Any())
+
+                // Verificar que todas las áreas existan
+                if (areas.Count != request.AreaIds.Count)
                 {
-                    throw new InvalidOperationException("No se encontraron las áreas seleccionadas.");
+                    var foundAreaIds = areas.Select(a => a.Id).ToList();
+                    var missingAreaIds = request.AreaIds.Where(id => !foundAreaIds.Contains(id)).ToList();
+
+                    throw new InvalidOperationException($"No se encontraron las siguientes áreas: {string.Join(", ", missingAreaIds)}");
                 }
 
-                // 2.1 Verificar que todas las áreas pertenezcan al coworkingSpace seleccionado
-                if (areas.Any(a => a.CoworkingSpaceId != request.CoworkingSpaceId))
+                // Verificar que todas las áreas pertenezcan al espacio seleccionado
+                var invalidAreas = areas.Where(a => a.CoworkingSpaceId != request.CoworkingSpaceId).ToList();
+                if (invalidAreas.Any())
                 {
-                    throw new InvalidOperationException("Una o más áreas seleccionadas no pertenecen al espacio de coworking especificado.");
+                    var invalidAreaIds = invalidAreas.Select(a => a.Id).ToList();
+                    throw new InvalidOperationException($"Las siguientes áreas no pertenecen al espacio seleccionado: {string.Join(", ", invalidAreaIds)}");
                 }
 
-                // 3. Calcular precio total (precio por día * número de días * número de áreas)
-                int days = (int)(request.EndDate - request.StartDate).TotalDays + 1;
-                decimal totalPrice = areas.Sum(a => a.PricePerDay) * days;
+                // 3. Calcular precio total
+                var totalPrice = areas.Sum(area => area.PricePerDay);
 
                 // 4. Crear nueva reserva
                 var reservation = new Reservation
@@ -127,10 +148,12 @@ namespace CoworkingReservation.API.Services
                     EndDate = request.EndDate,
                     Status = ReservationStatus.Pending, // Confirmar automáticamente por ahora
                     TotalPrice = totalPrice,
-                    PaymentMethod = PaymentMethodType.CreditCard, // Por defecto
+                    PaymentMethod = request.PaymentMethod, // Usar el método de pago enviado por el frontend
                     CreatedAt = DateTime.UtcNow,
                     ReservationDetails = new List<ReservationDetail>()
                 };
+
+                Console.WriteLine($"🔍 DEBUG: Método de pago asignado a la reserva: {reservation.PaymentMethod}");
 
                 // 5. Agregar detalles de reserva
                 foreach (var area in areas)
@@ -146,6 +169,8 @@ namespace CoworkingReservation.API.Services
                 await _reservationRepository.AddAsync(reservation);
                 await _unitOfWork.SaveChangesAsync();
 
+                Console.WriteLine($"✅ DEBUG: Reserva creada con ID {reservation.Id} y método de pago {reservation.PaymentMethod}");
+
                 // 7. Retornar resultado
                 return new
                 {
@@ -156,7 +181,7 @@ namespace CoworkingReservation.API.Services
             catch (Exception ex)
             {
                 // Log the exception
-                Console.WriteLine($"Error al crear reserva: {ex.Message}");
+                Console.WriteLine($"❌ ERROR al crear reserva: {ex.Message}");
                 throw;
             }
         }
@@ -181,7 +206,7 @@ namespace CoworkingReservation.API.Services
                 EndDate = reservation.EndDate,
                 Status = reservation.Status.ToString(),
                 TotalPrice = reservation.TotalPrice,
-                PaymentMethod = reservation.PaymentMethod.ToString(),
+                PaymentMethod = (int)reservation.PaymentMethod, // Enviar como número en lugar de string
                 CreatedAt = reservation.CreatedAt,
                 UpdatedAt = reservation.UpdatedAt,
                 Areas = reservation.ReservationDetails.Select(rd => new ReservationAreaDTO
@@ -218,7 +243,7 @@ namespace CoworkingReservation.API.Services
                 EndDate = reservation.EndDate,
                 Status = reservation.Status.ToString(),
                 TotalPrice = reservation.TotalPrice,
-                PaymentMethod = reservation.PaymentMethod.ToString(),
+                PaymentMethod = (int)reservation.PaymentMethod, // Enviar como número en lugar de string
                 CreatedAt = reservation.CreatedAt,
                 UpdatedAt = reservation.UpdatedAt,
                 Areas = reservation.ReservationDetails.Select(rd => new ReservationAreaDTO
@@ -412,7 +437,7 @@ namespace CoworkingReservation.API.Services
             EndDate = reservation.EndDate,
             Status = reservation.Status.ToString(),
             TotalPrice = reservation.TotalPrice,
-            PaymentMethod = reservation.PaymentMethod.ToString(),
+            PaymentMethod = (int)reservation.PaymentMethod, // Enviar como número en lugar de string
             CreatedAt = reservation.CreatedAt,
             Details = reservation.ReservationDetails.Select(d => new Models.ReservationDetailDTO
             {

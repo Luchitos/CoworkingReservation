@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using CoworkingReservation.Domain.Enums;
 
 namespace CoworkingReservation.API.Models
 {
@@ -33,5 +34,10 @@ namespace CoworkingReservation.API.Models
         /// ID del usuario que realiza la reserva. Se asigna automáticamente desde el token de autenticación.
         /// </summary>
         public int UserId { get; set; }
+        
+        /// <summary>
+        /// Método de pago para la reserva.
+        /// </summary>
+        public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.CreditCard;
     }
 } 

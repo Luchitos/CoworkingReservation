@@ -14,7 +14,7 @@ namespace CoworkingReservation.API.Models
         public DateTime EndDate { get; set; }
         public string Status { get; set; }
         public decimal TotalPrice { get; set; }
-        public string PaymentMethod { get; set; }
+        public int PaymentMethod { get; set; } // Cambiado de string a int
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public List<ReservationDetailDTO> Details { get; set; }

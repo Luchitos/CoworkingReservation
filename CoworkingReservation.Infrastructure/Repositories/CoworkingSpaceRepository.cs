@@ -98,7 +98,7 @@ namespace CoworkingReservation.Infrastructure.Repositories
             return await _context.CoworkingSpaces.AnyAsync(predicate);
         }
 
-        public async Task<List<CoworkingSpaceListItemDTO>> GetAllLightweightAsync()
+        public async Task<List<CoworkingSpaceListItemDTO>> GetAllLightweightAsync(int? userId = null)
         {
             var query = _context.CoworkingSpaces
                 .AsNoTracking()
@@ -106,6 +106,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Include(cs => cs.Areas)
                 .Include(cs => cs.Photos)
                 .Where(cs => cs.IsActive && cs.Status == CoworkingStatus.Approved);
+
+            // Excluir espacios que pertenecen al usuario actual (si está autenticado)
+            if (userId.HasValue)
+            {
+                query = query.Where(cs => cs.HosterId != userId.Value);
+            }
                 
             // Log the SQL query
             Console.WriteLine("DEBUG SQL QUERY: " + query.ToQueryString());
@@ -213,6 +219,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
                     cs.Address.Street.Contains(location));
             }
 
+            // Excluir espacios que pertenecen al usuario actual (si está autenticado)
+            if (userId.HasValue)
+            {
+                query = query.Where(cs => cs.HosterId != userId.Value);
+            }
+
             var rawSpaces = await query.ToListAsync();
 
             // Si hay un usuario autenticado, obtener sus espacios favoritos
@@ -293,6 +305,12 @@ namespace CoworkingReservation.Infrastructure.Repositories
                 .Include(cs => cs.Areas)
                 .Include(cs => cs.Photos)
                 .Where(cs => ids.Contains(cs.Id) && cs.IsActive && cs.Status == CoworkingStatus.Approved);
+
+            // Excluir espacios que pertenecen al usuario actual (si está autenticado)
+            if (userId.HasValue)
+            {
+                query = query.Where(cs => cs.HosterId != userId.Value);
+            }
 
             var rawSpaces = await query.ToListAsync();
 
